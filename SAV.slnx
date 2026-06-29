@@ -1,1 +1,13 @@
-<Solution />
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/SAV.Api/SAV.Api.csproj" />
+    <Project Path="src/SAV.Core/SAV.Core.csproj" />
+    <Project Path="src/SAV.Infrastructure/SAV.Infrastructure.csproj" />
+    <Project Path="src/SAV.UI/SAV.UI.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/SAV.Api.Tests/SAV.Api.Tests.csproj" />
+    <Project Path="tests/SAV.Core.Tests/SAV.Core.Tests.csproj" />
+    <Project Path="tests/SAV.Infrastructure.Tests/SAV.Infrastructure.Tests.csproj" />
+  </Folder>
+</Solution>
