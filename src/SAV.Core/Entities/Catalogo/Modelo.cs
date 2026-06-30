@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace SAV.Core.Entities.Catalogo
+﻿namespace SAV.Core.Entities.Catalogo
 {
     public class Modelo
     {
@@ -13,9 +9,7 @@ namespace SAV.Core.Entities.Catalogo
         public decimal? Descuento { get; set; }
         public string? PotenciaFiscal { get; set; }
         public string? Cilindrada { get; set; }
-        public string? Combustible { get; set; } //No en el modelo de dominio
-        public string? Transmision { get; set; } //No en el modelo de dominio
-
+        
         public Marca Marca { get; set; } = null!;
         public ICollection<ModeloSerie> EquipamientoDeSerie { get; set; } = new List<ModeloSerie>();
         public ICollection<ModeloExtra> ExtrasDisponibles { get; set; } = new List<ModeloExtra>();

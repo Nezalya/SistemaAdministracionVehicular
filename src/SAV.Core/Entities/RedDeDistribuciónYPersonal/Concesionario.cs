@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace SAV.Core.Entities.RedDeDistribuciónYPersonal
+﻿namespace SAV.Core.Entities.RedDeDistribuciónYPersonal
 {
     public class Concesionario
     {

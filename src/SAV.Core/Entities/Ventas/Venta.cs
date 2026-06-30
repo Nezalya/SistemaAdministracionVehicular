@@ -1,10 +1,4 @@
-﻿using SAV.Core.Entities.Inventario;
-using SAV.Core.Entities.RedDeDistribuciónYPersonal;
-using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace SAV.Core.Entities.Ventas
+﻿namespace SAV.Core.Entities.Ventas
 {
     public class Venta
     {

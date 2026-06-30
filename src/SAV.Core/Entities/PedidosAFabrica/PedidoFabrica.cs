@@ -1,10 +1,4 @@
-﻿using SAV.Core.Entities.RedDeDistribuciónYPersonal;
-using SAV.Core.Entities.Ventas;
-using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace SAV.Core.Entities.PedidosAFabrica
+﻿namespace SAV.Core.Entities.PedidosAFabrica
 {
     public class PedidoFabrica
     {
@@ -13,7 +7,7 @@ namespace SAV.Core.Entities.PedidosAFabrica
         public DateTime FechaSolicitud { get; set; }
         public DateTime FechaEstimadaEntrega { get; set; }
         public EstadoPedido Estado { get; set; }
-        public decimal TotalPedido { get; set; } //No en el modelo de dominio
+        public decimal TotalPedido { get; set; } 
 
         public Concesionario Concesionario { get; set; } = null!;
         public ICollection<ArticuloPedido> Articulos { get; set; } = new List<ArticuloPedido>();

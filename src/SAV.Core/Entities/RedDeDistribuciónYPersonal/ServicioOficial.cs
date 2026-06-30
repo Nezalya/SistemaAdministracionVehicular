@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace SAV.Core.Entities.RedDeDistribuciónYPersonal
+﻿namespace SAV.Core.Entities.RedDeDistribuciónYPersonal
 {
     public class ServicioOficial
     {
@@ -11,7 +7,7 @@ namespace SAV.Core.Entities.RedDeDistribuciónYPersonal
         public string Nombre { get; set; } = null!;
         public string Nif { get; set; } = null!;
         public string? Domicilio { get; set; }
-        public string? Telefono { get; set; } //No en el modelo de dominio
+        public string? Telefono { get; set; } 
 
         public Concesionario Concesionario { get; set; } = null!;
         public ICollection<Automovil> AutomovilesUbicados { get; set; } = new List<Automovil>();

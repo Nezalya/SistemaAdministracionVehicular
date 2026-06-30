@@ -1,9 +1,4 @@
-﻿using SAV.Core.Entities.Catalogo;
-using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace SAV.Core.Entities.Ventas
+﻿namespace SAV.Core.Entities.Ventas
 {
     public class VentaExtra
     {
