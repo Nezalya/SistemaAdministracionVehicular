@@ -1,10 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿global using System;
+global using System.Collections.Generic;
 
-namespace SAV.Core
-{
-    internal class GlobalUsings
-    {
-    }
-}
+global using SAV.Core.Entities.Catalogo;
+global using SAV.Core.Entities.Inventario;
+global using SAV.Core.Entities.PedidosAFabrica;
+global using SAV.Core.Entities.RedDeDistribuciónYPersonal;
+global using SAV.Core.Entities.Seguridad;
+global using SAV.Core.Entities.Ventas;
+global using System.Text.Json.Serialization;
+global using SAV.Core.Enums;
