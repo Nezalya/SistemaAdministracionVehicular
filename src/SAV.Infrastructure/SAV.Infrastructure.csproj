@@ -16,7 +16,6 @@
     <Folder Include="Persistence\Converters\" />
     <Folder Include="Options\" />
     <Folder Include="Persistence\Migrations\" />
-    <Folder Include="Persistence\Repositories\" />
     <Folder Include="Reporting\Export\" />
   </ItemGroup>
 
