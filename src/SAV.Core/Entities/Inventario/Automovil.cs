@@ -6,7 +6,7 @@
         public int ModeloId { get; set; }
         public string NumBastidor { get; set; } = null!;
         public string? Color { get; set; }
-        public int? AnioFabricacion { get; set; }
+        public int? AnoFabricacion { get; set; }
         public EstadoAutomovil Estado { get; set; }
 
         public int ConcesionarioPropietarioId { get; set; }
