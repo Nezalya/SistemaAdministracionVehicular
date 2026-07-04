@@ -1,10 +1,9 @@
-﻿using SAV.Core.Interfaces.Repositories;
-namespace SAV.Infrastructure.Persistence.Repositories
+﻿namespace SAV.Infrastructure.Persistence.Repositories
 {
     public class BaseRepository<T> : IRepository<T> where T : class
     {
-        private readonly SavDbContext _context;
-        private readonly DbSet<T> _entities;
+        protected readonly SavDbContext _context;
+        protected readonly DbSet<T> _entities;
 
         public BaseRepository(SavDbContext context)
         {
