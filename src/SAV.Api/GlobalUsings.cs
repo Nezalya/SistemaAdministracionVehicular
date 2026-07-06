@@ -1,6 +1,2 @@
-﻿namespace SAV.Api
-{
-    public class GlobalUsings
-    {
-    }
-}
+﻿global using Microsoft.AspNetCore.Mvc;
+global using SAV.Core.Interfaces.Services;

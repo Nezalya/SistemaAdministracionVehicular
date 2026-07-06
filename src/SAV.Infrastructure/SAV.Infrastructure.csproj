@@ -12,7 +12,6 @@
 
   <ItemGroup>
     <Folder Include="Identity\" />
-    <Folder Include="Services\" />
     <Folder Include="Persistence\Converters\" />
     <Folder Include="Options\" />
     <Folder Include="Persistence\Migrations\" />
@@ -31,6 +30,12 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="Data\Fabrica.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
 </Project>
