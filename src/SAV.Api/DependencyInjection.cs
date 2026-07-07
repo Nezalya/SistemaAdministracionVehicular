@@ -6,6 +6,9 @@ public static class DependencyInjection
     {
         services.AddTransient(typeof(IRepository<>), typeof(BaseRepository<>));
         services.AddTransient<IMarcaService, MarcaService>();
+        services.AddScoped<IAutomovilService, AutomovilService>();
+        services.AddScoped<IVentaService, VentaService>();
+        services.AddScoped<IUsuarioService, UsuarioService>();
         return services;
     }
 

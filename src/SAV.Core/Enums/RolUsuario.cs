@@ -3,5 +3,6 @@
 public enum RolUsuario
 {
     Administrador,
-    Vendedor
+    Vendedor,
+    Cliente
 }
