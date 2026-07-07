@@ -24,24 +24,27 @@
         public async Task<T> Add(T entity)
         {
             _entities.AddAsync(entity);
-            await _context.SaveChangesAsync();
             return entity;
         }
 
         public async Task<T> Update(T entity)
         {
             _entities.Update(entity);
-            await _context.SaveChangesAsync();
             return entity;
+    
         } 
 
         public async Task<T> Delete(int id)
         {
             var entity = await GetById(id);
-            _entities.Remove(entity);
-            await _context.SaveChangesAsync();
+            if (entity is not null)
+                _entities.Remove(entity);
             return entity;
 
+        }
+        public async Task<int> SaveChanges()
+        {
+            return await _context.SaveChangesAsync();  
         }
     }
 }

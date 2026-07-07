@@ -1,0 +1,520 @@
+﻿{
+  "fabrica": {
+    "nombre": "Vehicle Manufacturing Corp",
+    "version": "2026.1",
+    "fechaActualizacion": "2026-07-01"
+  },
+  "caracteristicas": [
+    {
+      "codigo": "CAR-001",
+      "nombre": "Aire acondicionado",
+      "descripcion": "Sistema de climatización manual",
+      "categoria": "Confort"
+    },
+    {
+      "codigo": "CAR-002",
+      "nombre": "Climatizador automático bizona",
+      "descripcion": "Control de temperatura independiente por zona",
+      "categoria": "Confort"
+    },
+    {
+      "codigo": "CAR-003",
+      "nombre": "Tapicería de cuero",
+      "descripcion": "Asientos y volante forrados en cuero",
+      "categoria": "Confort"
+    },
+    {
+      "codigo": "CAR-004",
+      "nombre": "Asientos calefactables",
+      "descripcion": "Calefacción en asientos delanteros",
+      "categoria": "Confort"
+    },
+    {
+      "codigo": "CAR-005",
+      "nombre": "Techo solar panorámico",
+      "descripcion": "Techo de cristal con apertura eléctrica",
+      "categoria": "Confort"
+    },
+    {
+      "codigo": "CAR-006",
+      "nombre": "Frenos ABS",
+      "descripcion": "Sistema antibloqueo de frenos",
+      "categoria": "Seguridad"
+    },
+    {
+      "codigo": "CAR-007",
+      "nombre": "Control de estabilidad (ESP)",
+      "descripcion": "Control electrónico de estabilidad",
+      "categoria": "Seguridad"
+    },
+    {
+      "codigo": "CAR-008",
+      "nombre": "Airbags frontales y laterales",
+      "descripcion": "6 airbags de serie",
+      "categoria": "Seguridad"
+    },
+    {
+      "codigo": "CAR-009",
+      "nombre": "Frenado autónomo de emergencia",
+      "descripcion": "Detecta obstáculos y frena automáticamente",
+      "categoria": "Seguridad"
+    },
+    {
+      "codigo": "CAR-010",
+      "nombre": "Control de crucero adaptativo",
+      "descripcion": "Mantiene velocidad y distancia automáticamente",
+      "categoria": "Seguridad"
+    },
+    {
+      "codigo": "CAR-011",
+      "nombre": "Cámara de visión trasera",
+      "descripcion": "Cámara de asistencia al estacionamiento",
+      "categoria": "Tecnología"
+    },
+    {
+      "codigo": "CAR-012",
+      "nombre": "Pantalla táctil 10 pulgadas",
+      "descripcion": "Sistema multimedia con Apple CarPlay y Android Auto",
+      "categoria": "Tecnología"
+    },
+    {
+      "codigo": "CAR-013",
+      "nombre": "Sistema de sonido premium",
+      "descripcion": "Equipo de audio de alta fidelidad con 9 altavoces",
+      "categoria": "Tecnología"
+    },
+    {
+      "codigo": "CAR-014",
+      "nombre": "Faros LED",
+      "descripcion": "Iluminación full LED delantera y trasera",
+      "categoria": "Tecnología"
+    },
+    {
+      "codigo": "CAR-015",
+      "nombre": "Llantas de aleación 18 pulgadas",
+      "descripcion": "Rines deportivos de aleación ligera",
+      "categoria": "Exterior"
+    },
+    {
+      "codigo": "CAR-016",
+      "nombre": "Barras de techo",
+      "descripcion": "Rieles portaequipaje en el techo",
+      "categoria": "Exterior"
+    },
+    {
+      "codigo": "CAR-017",
+      "nombre": "Enganche de remolque",
+      "descripcion": "Kit de arrastre con conector eléctrico",
+      "categoria": "Exterior"
+    },
+    {
+      "codigo": "CAR-018",
+      "nombre": "Pintura metalizada",
+      "descripcion": "Acabado de pintura con partículas metálicas",
+      "categoria": "Exterior"
+    }
+  ],
+  "marcas": [
+    {
+      "codigo": "MAR-001",
+      "nombre": "Toyota",
+      "paisOrigen": "Japón",
+      "modelos": [
+        {
+          "codigo": "MOD-001",
+          "nombre": "Corolla",
+          "precioBase": 24500.00,
+          "descuento": 5.00,
+          "potenciaFiscal": "13 CV",
+          "cilindrada": "1800 cc",
+          "equipamientoSerie": [ "CAR-001", "CAR-006", "CAR-007", "CAR-008", "CAR-011" ],
+          "extrasDisponibles": [
+            {
+              "codigoCaracteristica": "CAR-002",
+              "precioExtra": 950.00
+            },
+            {
+              "codigoCaracteristica": "CAR-003",
+              "precioExtra": 1400.00
+            },
+            {
+              "codigoCaracteristica": "CAR-012",
+              "precioExtra": 700.00
+            },
+            {
+              "codigoCaracteristica": "CAR-014",
+              "precioExtra": 850.00
+            },
+            {
+              "codigoCaracteristica": "CAR-018",
+              "precioExtra": 600.00
+            }
+          ]
+        },
+        {
+          "codigo": "MOD-002",
+          "nombre": "RAV4",
+          "precioBase": 34900.00,
+          "descuento": 3.50,
+          "potenciaFiscal": "16 CV",
+          "cilindrada": "2500 cc",
+          "equipamientoSerie": [ "CAR-001", "CAR-006", "CAR-007", "CAR-008", "CAR-009", "CAR-011", "CAR-012" ],
+          "extrasDisponibles": [
+            {
+              "codigoCaracteristica": "CAR-002",
+              "precioExtra": 1100.00
+            },
+            {
+              "codigoCaracteristica": "CAR-003",
+              "precioExtra": 1800.00
+            },
+            {
+              "codigoCaracteristica": "CAR-004",
+              "precioExtra": 500.00
+            },
+            {
+              "codigoCaracteristica": "CAR-005",
+              "precioExtra": 1600.00
+            },
+            {
+              "codigoCaracteristica": "CAR-010",
+              "precioExtra": 900.00
+            },
+            {
+              "codigoCaracteristica": "CAR-015",
+              "precioExtra": 1200.00
+            },
+            {
+              "codigoCaracteristica": "CAR-016",
+              "precioExtra": 450.00
+            },
+            {
+              "codigoCaracteristica": "CAR-017",
+              "precioExtra": 750.00
+            }
+          ]
+        },
+        {
+          "codigo": "MOD-003",
+          "nombre": "Camry",
+          "precioBase": 31200.00,
+          "descuento": 4.00,
+          "potenciaFiscal": "15 CV",
+          "cilindrada": "2500 cc",
+          "equipamientoSerie": [ "CAR-002", "CAR-006", "CAR-007", "CAR-008", "CAR-011", "CAR-012", "CAR-014" ],
+          "extrasDisponibles": [
+            {
+              "codigoCaracteristica": "CAR-003",
+              "precioExtra": 1600.00
+            },
+            {
+              "codigoCaracteristica": "CAR-004",
+              "precioExtra": 550.00
+            },
+            {
+              "codigoCaracteristica": "CAR-005",
+              "precioExtra": 1500.00
+            },
+            {
+              "codigoCaracteristica": "CAR-010",
+              "precioExtra": 850.00
+            },
+            {
+              "codigoCaracteristica": "CAR-013",
+              "precioExtra": 1300.00
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "codigo": "MAR-002",
+      "nombre": "Honda",
+      "paisOrigen": "Japón",
+      "modelos": [
+        {
+          "codigo": "MOD-004",
+          "nombre": "Civic",
+          "precioBase": 26300.00,
+          "descuento": 4.50,
+          "potenciaFiscal": "14 CV",
+          "cilindrada": "2000 cc",
+          "equipamientoSerie": [ "CAR-001", "CAR-006", "CAR-007", "CAR-008", "CAR-011", "CAR-012" ],
+          "extrasDisponibles": [
+            {
+              "codigoCaracteristica": "CAR-002",
+              "precioExtra": 900.00
+            },
+            {
+              "codigoCaracteristica": "CAR-003",
+              "precioExtra": 1350.00
+            },
+            {
+              "codigoCaracteristica": "CAR-013",
+              "precioExtra": 1100.00
+            },
+            {
+              "codigoCaracteristica": "CAR-014",
+              "precioExtra": 800.00
+            },
+            {
+              "codigoCaracteristica": "CAR-015",
+              "precioExtra": 1000.00
+            }
+          ]
+        },
+        {
+          "codigo": "MOD-005",
+          "nombre": "CR-V",
+          "precioBase": 36700.00,
+          "descuento": 3.00,
+          "potenciaFiscal": "16 CV",
+          "cilindrada": "2000 cc",
+          "equipamientoSerie": [ "CAR-002", "CAR-006", "CAR-007", "CAR-008", "CAR-009", "CAR-011", "CAR-012" ],
+          "extrasDisponibles": [
+            {
+              "codigoCaracteristica": "CAR-003",
+              "precioExtra": 1900.00
+            },
+            {
+              "codigoCaracteristica": "CAR-004",
+              "precioExtra": 600.00
+            },
+            {
+              "codigoCaracteristica": "CAR-005",
+              "precioExtra": 1700.00
+            },
+            {
+              "codigoCaracteristica": "CAR-010",
+              "precioExtra": 950.00
+            },
+            {
+              "codigoCaracteristica": "CAR-016",
+              "precioExtra": 500.00
+            },
+            {
+              "codigoCaracteristica": "CAR-017",
+              "precioExtra": 800.00
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "codigo": "MAR-003",
+      "nombre": "Ford",
+      "paisOrigen": "Estados Unidos",
+      "modelos": [
+        {
+          "codigo": "MOD-006",
+          "nombre": "Mustang",
+          "precioBase": 47500.00,
+          "descuento": 2.00,
+          "potenciaFiscal": "22 CV",
+          "cilindrada": "5000 cc",
+          "equipamientoSerie": [ "CAR-002", "CAR-006", "CAR-007", "CAR-008", "CAR-012", "CAR-014", "CAR-015" ],
+          "extrasDisponibles": [
+            {
+              "codigoCaracteristica": "CAR-003",
+              "precioExtra": 2200.00
+            },
+            {
+              "codigoCaracteristica": "CAR-004",
+              "precioExtra": 700.00
+            },
+            {
+              "codigoCaracteristica": "CAR-013",
+              "precioExtra": 1500.00
+            },
+            {
+              "codigoCaracteristica": "CAR-018",
+              "precioExtra": 900.00
+            }
+          ]
+        },
+        {
+          "codigo": "MOD-007",
+          "nombre": "Explorer",
+          "precioBase": 42800.00,
+          "descuento": 5.50,
+          "potenciaFiscal": "18 CV",
+          "cilindrada": "2300 cc",
+          "equipamientoSerie": [ "CAR-001", "CAR-006", "CAR-007", "CAR-008", "CAR-009", "CAR-011" ],
+          "extrasDisponibles": [
+            {
+              "codigoCaracteristica": "CAR-002",
+              "precioExtra": 1200.00
+            },
+            {
+              "codigoCaracteristica": "CAR-003",
+              "precioExtra": 2000.00
+            },
+            {
+              "codigoCaracteristica": "CAR-005",
+              "precioExtra": 1800.00
+            },
+            {
+              "codigoCaracteristica": "CAR-010",
+              "precioExtra": 1000.00
+            },
+            {
+              "codigoCaracteristica": "CAR-012",
+              "precioExtra": 850.00
+            },
+            {
+              "codigoCaracteristica": "CAR-016",
+              "precioExtra": 550.00
+            },
+            {
+              "codigoCaracteristica": "CAR-017",
+              "precioExtra": 900.00
+            }
+          ]
+        },
+        {
+          "codigo": "MOD-008",
+          "nombre": "F-150",
+          "precioBase": 51300.00,
+          "descuento": 6.00,
+          "potenciaFiscal": "20 CV",
+          "cilindrada": "3500 cc",
+          "equipamientoSerie": [ "CAR-001", "CAR-006", "CAR-007", "CAR-008", "CAR-011", "CAR-017" ],
+          "extrasDisponibles": [
+            {
+              "codigoCaracteristica": "CAR-002",
+              "precioExtra": 1300.00
+            },
+            {
+              "codigoCaracteristica": "CAR-003",
+              "precioExtra": 2100.00
+            },
+            {
+              "codigoCaracteristica": "CAR-004",
+              "precioExtra": 650.00
+            },
+            {
+              "codigoCaracteristica": "CAR-012",
+              "precioExtra": 900.00
+            },
+            {
+              "codigoCaracteristica": "CAR-013",
+              "precioExtra": 1400.00
+            },
+            {
+              "codigoCaracteristica": "CAR-015",
+              "precioExtra": 1350.00
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "codigo": "MAR-004",
+      "nombre": "Hyundai",
+      "paisOrigen": "Corea del Sur",
+      "modelos": [
+        {
+          "codigo": "MOD-009",
+          "nombre": "Elantra",
+          "precioBase": 22400.00,
+          "descuento": 7.00,
+          "potenciaFiscal": "13 CV",
+          "cilindrada": "2000 cc",
+          "equipamientoSerie": [ "CAR-001", "CAR-006", "CAR-007", "CAR-008", "CAR-011" ],
+          "extrasDisponibles": [
+            {
+              "codigoCaracteristica": "CAR-002",
+              "precioExtra": 850.00
+            },
+            {
+              "codigoCaracteristica": "CAR-012",
+              "precioExtra": 650.00
+            },
+            {
+              "codigoCaracteristica": "CAR-014",
+              "precioExtra": 750.00
+            },
+            {
+              "codigoCaracteristica": "CAR-018",
+              "precioExtra": 550.00
+            }
+          ]
+        },
+        {
+          "codigo": "MOD-010",
+          "nombre": "Tucson",
+          "precioBase": 29800.00,
+          "descuento": 4.00,
+          "potenciaFiscal": "15 CV",
+          "cilindrada": "1600 cc",
+          "equipamientoSerie": [ "CAR-001", "CAR-006", "CAR-007", "CAR-008", "CAR-009", "CAR-011", "CAR-012" ],
+          "extrasDisponibles": [
+            {
+              "codigoCaracteristica": "CAR-002",
+              "precioExtra": 1000.00
+            },
+            {
+              "codigoCaracteristica": "CAR-003",
+              "precioExtra": 1500.00
+            },
+            {
+              "codigoCaracteristica": "CAR-004",
+              "precioExtra": 500.00
+            },
+            {
+              "codigoCaracteristica": "CAR-005",
+              "precioExtra": 1400.00
+            },
+            {
+              "codigoCaracteristica": "CAR-010",
+              "precioExtra": 800.00
+            },
+            {
+              "codigoCaracteristica": "CAR-015",
+              "precioExtra": 1100.00
+            }
+          ]
+        },
+        {
+          "codigo": "MOD-011",
+          "nombre": "Santa Fe",
+          "precioBase": 38500.00,
+          "descuento": 3.50,
+          "potenciaFiscal": "17 CV",
+          "cilindrada": "2500 cc",
+          "equipamientoSerie": [ "CAR-002", "CAR-006", "CAR-007", "CAR-008", "CAR-009", "CAR-011", "CAR-012", "CAR-014" ],
+          "extrasDisponibles": [
+            {
+              "codigoCaracteristica": "CAR-003",
+              "precioExtra": 1750.00
+            },
+            {
+              "codigoCaracteristica": "CAR-004",
+              "precioExtra": 550.00
+            },
+            {
+              "codigoCaracteristica": "CAR-005",
+              "precioExtra": 1650.00
+            },
+            {
+              "codigoCaracteristica": "CAR-010",
+              "precioExtra": 900.00
+            },
+            {
+              "codigoCaracteristica": "CAR-013",
+              "precioExtra": 1250.00
+            },
+            {
+              "codigoCaracteristica": "CAR-016",
+              "precioExtra": 480.00
+            },
+            {
+              "codigoCaracteristica": "CAR-017",
+              "precioExtra": 820.00
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
