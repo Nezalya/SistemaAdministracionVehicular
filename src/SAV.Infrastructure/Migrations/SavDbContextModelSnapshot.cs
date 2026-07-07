@@ -439,6 +439,9 @@ namespace SAV.Infrastructure.Migrations
                     b.Property<bool>("Activo")
                         .HasColumnType("bit");
 
+                    b.Property<int?>("ClienteId")
+                        .HasColumnType("int");
+
                     b.Property<int?>("ConcesionarioId")
                         .HasColumnType("int");
 
@@ -460,6 +463,10 @@ namespace SAV.Infrastructure.Migrations
                         .HasColumnType("int");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("ClienteId")
+                        .IsUnique()
+                        .HasFilter("[ClienteId] IS NOT NULL");
 
                     b.HasIndex("ConcesionarioId");
 
@@ -699,6 +706,11 @@ namespace SAV.Infrastructure.Migrations
 
             modelBuilder.Entity("SAV.Core.Entities.Seguridad.Usuario", b =>
                 {
+                    b.HasOne("SAV.Core.Entities.RedDeDistribuciónYPersonal.Cliente", "Cliente")
+                        .WithOne("Usuario")
+                        .HasForeignKey("SAV.Core.Entities.Seguridad.Usuario", "ClienteId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
                     b.HasOne("SAV.Core.Entities.RedDeDistribuciónYPersonal.Concesionario", "Concesionario")
                         .WithMany("Usuarios")
                         .HasForeignKey("ConcesionarioId")
@@ -708,6 +720,8 @@ namespace SAV.Infrastructure.Migrations
                         .WithOne("Usuario")
                         .HasForeignKey("SAV.Core.Entities.Seguridad.Usuario", "VendedorId")
                         .OnDelete(DeleteBehavior.NoAction);
+
+                    b.Navigation("Cliente");
 
                     b.Navigation("Concesionario");
 
@@ -814,6 +828,8 @@ namespace SAV.Infrastructure.Migrations
 
             modelBuilder.Entity("SAV.Core.Entities.RedDeDistribuciónYPersonal.Cliente", b =>
                 {
+                    b.Navigation("Usuario");
+
                     b.Navigation("Ventas");
                 });
 

@@ -21,7 +21,10 @@ namespace SAV.Infrastructure
             services.AddScoped<IFabricaImportService, FabricaImportService>();
             services.AddScoped<IVendedorRepository, VendedorRepository>();
             services.AddScoped<IServicioOficialRepository, ServicioOficialRepository>();
-            services.AddScoped<IServicioOficialRepository, ServicioOficialRepository>();
+            services.AddScoped<IAutomovilRepository, AutomovilRepository>();
+            services.AddScoped<IVentaRepository, VentaRepository>();
+            services.AddScoped<IUsuarioRepository, UsuarioRepository>();
+            services.AddScoped<IConcesionarioRepository, ConcesionarioRepository>();
             return services;
         }
     }

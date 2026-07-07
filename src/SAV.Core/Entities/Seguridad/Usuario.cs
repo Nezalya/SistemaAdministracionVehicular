@@ -12,5 +12,7 @@
        
         public Vendedor? Vendedor { get; set; }
         public Concesionario? Concesionario { get; set; }
+        public int? ClienteId { get; set; }
+        public Cliente? Cliente { get; set; }
     }
 }

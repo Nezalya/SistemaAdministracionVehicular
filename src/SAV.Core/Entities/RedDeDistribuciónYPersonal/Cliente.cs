@@ -12,7 +12,8 @@ namespace SAV.Core.Entities.RedDeDistribuciónYPersonal
         public string? Domicilio { get; set; }
         public string? Telefono { get; set; } 
         public string? Email { get; set; } 
-        public DateTime FechaRegistro { get; set; } 
+        public DateTime FechaRegistro { get; set; }
+        public Usuario? Usuario { get; set; }
 
         public ICollection<Venta> Ventas { get; set; } = new List<Venta>();
     }
