@@ -14,3 +14,6 @@ global using SAV.Infrastructure.Data.Dtos;
 global using SAV.Infrastructure.Persistence;
 global using System.Text.Json;
 
+global using SAV.Core.Interfaces.Repositories;
+using SAV.Core.Services;
+using SAV.Infrastructure.Persistence.Repositories;

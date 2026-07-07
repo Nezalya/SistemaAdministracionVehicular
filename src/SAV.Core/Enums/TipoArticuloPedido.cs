@@ -3,6 +3,5 @@
 public enum TipoArticuloPedido
 {
     Vehiculo,
-    Pieza,
     Extra
 }

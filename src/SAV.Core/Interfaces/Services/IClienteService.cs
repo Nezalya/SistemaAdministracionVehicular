@@ -1,0 +1,11 @@
+﻿namespace SAV.Core.Interfaces.Services
+{
+    public interface IClienteService
+    {
+        Task<IEnumerable<Cliente>> ObtenerTodosLosClientes();
+        Task<Cliente?> ObtenerClientePorId(int id);
+        Task<Cliente> CrearCliente(Cliente cliente);
+        Task<Cliente> ActualizarCliente(int id, Cliente cliente);
+        Task EliminarCliente(int id);
+    }
+}
