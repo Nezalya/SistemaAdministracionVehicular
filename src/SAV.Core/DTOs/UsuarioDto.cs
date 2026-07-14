@@ -1,5 +1,4 @@
-﻿// DTOs/UsuarioDtos.cs
-namespace SAV.Api.DTOs;
+﻿namespace SAV.Api.DTOs;
 
 public class UsuarioDto
 {

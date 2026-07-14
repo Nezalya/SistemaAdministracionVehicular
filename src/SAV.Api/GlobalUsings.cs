@@ -3,6 +3,11 @@ global using SAV.Core.Interfaces.Services;
 global using SAV.Core.Interfaces.Repositories;
 global using SAV.Core.Services;
 global using SAV.Infrastructure.Persistence.Repositories;
-global using Microsoft.AspNetCore.Mvc;
-global using SAV.Core.Enums;
-global using SAV.Core.Interfaces.Services;
+global using AutoMapper;
+global using SAV.Api.DTOs;
+global using SAV.Core.Entities.Catalogo;
+global using SAV.Core.Entities.Inventario;
+global using SAV.Core.Entities.RedDeDistribuciónYPersonal;
+global using SAV.Core.Entities.Seguridad;
+global using SAV.Core.Entities.Ventas;
+
