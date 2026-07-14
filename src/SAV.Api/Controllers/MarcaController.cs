@@ -2,11 +2,11 @@
 {
     [ApiController]
     [Route("api/[controller]")]
-    public class MarcasController : ControllerBase
+    public class MarcaController : ControllerBase
     {
         private readonly IMarcaService _marcaService;
         private readonly IMapper _mapper;
-        public MarcasController(IMarcaService marcaService, IMapper mapper)
+        public MarcaController(IMarcaService marcaService, IMapper mapper)
         { 
             _marcaService = marcaService;
             _mapper = mapper; 
@@ -21,12 +21,10 @@
         }
 
             
-          
-
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(int id)
         {
-            var marca= await _marcaService.ObtenerMarcaPorId(id);
+            var marca = await _marcaService.ObtenerMarcaPorId(id);
             var marcaDto = _mapper.Map<MarcaDto>(marca);
             return Ok(marcaDto);
         }

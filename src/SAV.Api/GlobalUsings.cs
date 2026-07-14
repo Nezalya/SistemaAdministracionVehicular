@@ -10,4 +10,4 @@ global using SAV.Core.Entities.Inventario;
 global using SAV.Core.Entities.RedDeDistribuciónYPersonal;
 global using SAV.Core.Entities.Seguridad;
 global using SAV.Core.Entities.Ventas;
-
+global using SAV.Api.Mappings;
