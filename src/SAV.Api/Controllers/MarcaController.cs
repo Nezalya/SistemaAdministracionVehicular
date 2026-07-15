@@ -1,4 +1,4 @@
-﻿namespace SAV.Core.Controllers
+﻿namespace SAV.Api.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
@@ -22,7 +22,7 @@
 
             
         [HttpGet("{id}")]
-        public async Task<IActionResult> GetById(int id)
+        public async Task<IActionResult> ObtenerMarcasPorId(int id)
         {
             var marca = await _marcaService.ObtenerMarcaPorId(id);
             var marcaDto = _mapper.Map<MarcaDto>(marca);

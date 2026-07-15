@@ -33,9 +33,9 @@
         public async Task<IActionResult> CrearCliente(GuardarClienteDto clienteDto)
         {
             var cliente = _mapper.Map<Cliente>(clienteDto);
-            var fechaRegistro = cliente.FechaRegistro = DateTime.Now;
+            cliente.FechaRegistro = DateTime.Now;
             var clienteCreado = await _clienteService.CrearCliente(cliente);
-            return CreatedAtAction(nameof(ObtenerCliente), new { id = clienteCreado.Id }, _mapper.Map<ClienteDto>(clienteCreado));//revisar luego
+            return CreatedAtAction(nameof(ObtenerCliente), new { id = clienteCreado.Id }, _mapper.Map<ClienteDto>(clienteCreado));
         }
 
         [HttpPut("{id}")]
