@@ -9,12 +9,19 @@
         }
         public async Task<IEnumerable<Modelo>> ObtenerTodosLosModelos()
         {
-            return await _modeloRepository.GetAll();
+            return await _modeloRepository.ObtenerModelosConMarca();  
         }
 
         public async Task<Modelo?> ObtenerModeloPorId(int id)
         {
-            return await _modeloRepository.GetById(id);
+            return await _modeloRepository.ObtenerModeloConMarca(id);     
+        }
+
+        public async Task<IEnumerable<ModeloExtra>?> ObtenerExtrasDeModelo(int id)
+        {
+            var modelo = await _modeloRepository.ObtenerModeloConExtras(id);
+            if (modelo is null) return null;          
+            return modelo.ExtrasDisponibles;         
         }
     }
 }

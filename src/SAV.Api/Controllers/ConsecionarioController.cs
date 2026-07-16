@@ -24,7 +24,6 @@
         public async Task<IActionResult> ObtenerConsesionario(int id)
         {
             var concesionario = await _consesionarioService.ObtenerConcesionarioPorId(id);
-            if (concesionario is null) return NotFound();
             var concesionarioDto = _mapper.Map<ConcesionarioDto>(concesionario);
             return Ok(concesionarioDto);
         }

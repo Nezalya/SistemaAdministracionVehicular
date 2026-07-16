@@ -18,7 +18,6 @@ public class RegistrarAutomovilDto
     public string NumBastidor { get; set; } = null!;
     public string? Color { get; set; }
     public int? AnoFabricacion { get; set; }
-    public int ConcesionarioPropietarioId { get; set; }
     public int? ConcesionarioUbicacionId { get; set; }
     public int? ServicioOficialUbicacionId { get; set; }
 }
