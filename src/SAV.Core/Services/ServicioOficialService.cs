@@ -3,10 +3,13 @@
     public class ServicioOficialService : IServicioOficialService
     {
         private readonly IServicioOficialRepository _servicioOficialRepository;
+        private readonly IConcesionarioRepository _concesionarioRepository;
 
-        public ServicioOficialService(IServicioOficialRepository servicioOficialRepository)
+        public ServicioOficialService(IServicioOficialRepository servicioOficialRepository,
+                                       IConcesionarioRepository concesionarioRepository)
         {
             _servicioOficialRepository = servicioOficialRepository;
+            _concesionarioRepository = concesionarioRepository;
         }
 
         public async Task<IEnumerable<ServicioOficial>> ObtenerTodosLosServiciosOficiales()
@@ -21,6 +24,14 @@
 
         public async Task<ServicioOficial> CrearServicioOficial(ServicioOficial servicioOficial)
         {
+            // Regla: el servicio oficial pertenece al único concesionario del sistema
+            var concesionarios = await _concesionarioRepository.GetAll();
+            var concesionario = concesionarios.FirstOrDefault();
+            if (concesionario is null)
+                throw new InvalidOperationException("No hay un concesionario registrado en el sistema.");
+
+            servicioOficial.ConcesionarioId = concesionario.Id;
+
             await _servicioOficialRepository.Add(servicioOficial);
             await _servicioOficialRepository.SaveChanges();
             return servicioOficial;
@@ -36,7 +47,7 @@
             SoExitente.Nif = servicioOficial.Nif;
             SoExitente.Domicilio = servicioOficial.Domicilio;
             SoExitente.Telefono = servicioOficial.Telefono;
-            SoExitente.ConcesionarioId = servicioOficial.ConcesionarioId;
+
 
             await _servicioOficialRepository.Update(SoExitente);
             await _servicioOficialRepository.SaveChanges();
