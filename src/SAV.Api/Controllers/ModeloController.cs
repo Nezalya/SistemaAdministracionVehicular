@@ -28,5 +28,14 @@ namespace SAV.Api.Controllers
             var modeloDto = _mapper.Map<ModeloDto>(modelo);
             return Ok(modeloDto);
         }
+
+        [HttpGet("{id}/extras")]
+        public async Task<IActionResult> ObtenerExtrasDeModelo(int id)
+        {
+            var extras = await _modeloService.ObtenerExtrasDeModelo(id);
+            if (extras is null) return NotFound();
+            var extrasDto = _mapper.Map<IEnumerable<ExtraDisponibleDto>>(extras);
+            return Ok(extrasDto);
+        }
     }
 }

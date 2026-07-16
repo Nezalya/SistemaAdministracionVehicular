@@ -16,5 +16,4 @@ public class GuardarServicioOficialDto
     public string Nif { get; set; } = null!;
     public string? Domicilio { get; set; }
     public string? Telefono { get; set; }
-    public int ConcesionarioId { get; set; }
 }

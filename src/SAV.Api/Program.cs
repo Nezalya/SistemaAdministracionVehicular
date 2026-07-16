@@ -17,6 +17,9 @@ builder.Services.AddDbContext<SavDbContext>(options =>
 builder.Services.AddServices();//Injeccion de dependencias
 builder.Services.AddInfrastructure(builder.Configuration);//Injeccion de dependencias de infraestructura
 builder.Services.AddAutoMapper(cfg => cfg.AddMaps(typeof(MappingProfile).Assembly));//registro del mapeo 
+builder.Services.AddControllers()//Para el registro de los enums
+    .AddJsonOptions(o => o.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter()));
+
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())

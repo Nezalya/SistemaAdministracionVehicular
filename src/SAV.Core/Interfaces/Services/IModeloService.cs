@@ -4,5 +4,6 @@
     {
         Task<IEnumerable<Modelo>> ObtenerTodosLosModelos();
         Task<Modelo?> ObtenerModeloPorId(int id);
+        Task<IEnumerable<ModeloExtra>?> ObtenerExtrasDeModelo(int id);
     }
 }

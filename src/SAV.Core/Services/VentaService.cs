@@ -32,7 +32,7 @@
                     "La venta debe tener exactamente un responsable: Un vendedor o un servicio oficial, no ambos ni ninguno.");
 
             // Regla: el automóvil debe existir y estar en Stock
-            var automovil = await _automovilRepository.GetConModelo(venta.AutomovilId);
+            var automovil = await _automovilRepository.ObtenerAutomovil(venta.AutomovilId);
             if (automovil is null)
                 throw new InvalidOperationException("El automóvil no existe.");
 

@@ -44,7 +44,12 @@
             // ---- Usuario ----
             CreateMap<Usuario, UsuarioDto>();
             CreateMap<CrearUsuarioDto, Usuario>()
-                .ForMember(d => d.PasswordHash, options => options.Ignore()); 
+                .ForMember(d => d.PasswordHash, options => options.Ignore());
+
+
+            CreateMap<ModeloExtra, ExtraDisponibleDto>()
+                .ForMember(d => d.Nombre,
+               o => o.MapFrom(s => s.Caracteristica != null ? s.Caracteristica.Nombre : null));
         }
     }
 }

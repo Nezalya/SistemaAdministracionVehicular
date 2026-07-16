@@ -7,7 +7,7 @@ namespace SAV.Infrastructure.Persistence.Repositories
         public AutomovilRepository(SavDbContext context) : base(context)
         {
         }
-        public async Task<IEnumerable<Automovil>> GetDisponibles()
+        public async Task<IEnumerable<Automovil>> ObtenerAutomovilesDisponibles()
         {
             return await _entities
                 .Where(a => a.Estado == EstadoAutomovil.Stock)
@@ -16,12 +16,20 @@ namespace SAV.Infrastructure.Persistence.Repositories
                 .ToListAsync();
         }
 
-        public async Task<Automovil?> GetConModelo(int id)
+        public async Task<Automovil?> ObtenerAutomovil(int id)
         {
             return await _entities
                 .Include(a => a.Modelo)
                 .ThenInclude(m => m.ExtrasDisponibles)
                 .FirstOrDefaultAsync(a => a.Id == id);
+        }
+
+        public async Task<IEnumerable<Automovil>> ObternerTodosLosAutomoviles()
+        {
+            return await _entities
+                .Include(a => a.Modelo)
+                    .ThenInclude(m => m.Marca)
+                .ToListAsync();
         }
     }
 }
