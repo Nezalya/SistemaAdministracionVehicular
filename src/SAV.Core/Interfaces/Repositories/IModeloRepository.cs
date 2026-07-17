@@ -5,5 +5,6 @@
         Task<IEnumerable<Modelo>> ObtenerModelosConMarca();
         Task<Modelo?> ObtenerModeloConMarca(int id);
         Task<Modelo?> ObtenerModeloConExtras(int id);
+        Task<Modelo?> ObtenerModeloConEquipamiento(int id);
     }
 }

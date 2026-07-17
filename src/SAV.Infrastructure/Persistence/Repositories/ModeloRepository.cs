@@ -27,5 +27,15 @@
                     .ThenInclude(me => me.Caracteristica)
                 .FirstOrDefaultAsync(m => m.Id == id);
         }
+
+        public async Task<Modelo?> ObtenerModeloConEquipamiento(int id)
+        {
+            return await _entities
+                .Include(m => m.EquipamientoDeSerie)
+                    .ThenInclude(ms => ms.Caracteristica)
+                .Include(m => m.ExtrasDisponibles)
+                    .ThenInclude(me => me.Caracteristica)
+                .FirstOrDefaultAsync(m => m.Id == id);
+        }
     }
 }
