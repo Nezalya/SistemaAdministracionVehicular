@@ -20,9 +20,14 @@
 
         public async Task<Concesionario> CrearConcesionario(Concesionario concesionario)
         {
+
+            var nifExistente = await _concesionarioRepository.ObtenerConcesionarioPorNif(concesionario.Nif);
+            if (nifExistente is not null)
+                throw new InvalidOperationException("Ya existe un concesionario con ese NIF.");
+
             // Regla de negocio: el sistema administra UN solo concesionario
-            var existentes = await _concesionarioRepository.GetAll();
-            if (existentes.Any())
+            var concesionariosExistentes = await _concesionarioRepository.GetAll();
+            if (concesionariosExistentes.Any())
                 throw new InvalidOperationException("Ya existe un concesionario registrado. El sistema solo administra uno.");
 
             await _concesionarioRepository.Add(concesionario);
@@ -32,19 +37,24 @@
 
         public async Task<Concesionario> ActualizarConcesionario(int id, Concesionario concesionario)
         {
-            var existente = await _concesionarioRepository.GetById(id);
-            if (existente is null)
+            var concesionarioExistente = await _concesionarioRepository.GetById(id);
+            if (concesionarioExistente is null)
                 throw new InvalidOperationException("El concesionario no existe.");
 
-            existente.Nombre = concesionario.Nombre;
-            existente.Nif = concesionario.Nif;
-            existente.Domicilio = concesionario.Domicilio;
-            existente.Telefono = concesionario.Telefono;
-            existente.Email = concesionario.Email;
+            var conMismoNif = await _concesionarioRepository.ObtenerConcesionarioPorNif(concesionario.Nif);
+            if (conMismoNif is not null && conMismoNif.Id != id)
+                throw new InvalidOperationException("Ya existe otro concesionario con ese NIF.");
 
-            await _concesionarioRepository.Update(existente);
+
+            concesionarioExistente.Nombre = concesionario.Nombre;
+            concesionarioExistente.Nif = concesionario.Nif;
+            concesionarioExistente.Domicilio = concesionario.Domicilio;
+            concesionarioExistente.Telefono = concesionario.Telefono;
+            concesionarioExistente.Email = concesionario.Email;
+
+            await _concesionarioRepository.Update(concesionarioExistente);
             await _concesionarioRepository.SaveChanges();
-            return existente;
+            return concesionarioExistente;
         }
     }
 }

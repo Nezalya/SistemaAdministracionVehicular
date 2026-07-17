@@ -50,6 +50,8 @@
             CreateMap<ModeloExtra, ExtraDisponibleDto>()
                 .ForMember(d => d.Nombre,
                o => o.MapFrom(s => s.Caracteristica != null ? s.Caracteristica.Nombre : null));
+
+            CreateMap<ActualizarAutomovilDto, Automovil>();
         }
     }
 }

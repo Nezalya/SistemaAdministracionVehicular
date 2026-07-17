@@ -2,5 +2,6 @@
 {
     public interface IVendedorRepository : IRepository<Vendedor>
     {
+        Task<Vendedor?> ObtenerVendedorPorNif(string nif);
     }
 }

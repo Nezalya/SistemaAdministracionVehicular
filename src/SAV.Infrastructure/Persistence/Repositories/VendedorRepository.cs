@@ -9,5 +9,10 @@ namespace SAV.Infrastructure.Persistence.Repositories
         public VendedorRepository(SavDbContext context) : base(context)
         {
         }
+
+        public async Task<Vendedor?> ObtenerVendedorPorNif(string nif)
+        {
+            return await _entities.FirstOrDefaultAsync(v => v.Nif == nif);
+        }
     }
 }

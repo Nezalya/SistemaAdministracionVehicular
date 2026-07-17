@@ -9,5 +9,10 @@ namespace SAV.Infrastructure.Persistence.Repositories
         public ConcesionarioRepository(SavDbContext context) : base(context)
         {
         }
+
+        public async Task<Concesionario?> ObtenerConcesionarioPorNif(string nif)
+        {
+            return await _entities.FirstOrDefaultAsync(c => c.Nif == nif);
+        }
     }
 }

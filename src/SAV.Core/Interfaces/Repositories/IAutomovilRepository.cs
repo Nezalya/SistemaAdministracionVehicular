@@ -5,5 +5,7 @@
         Task<IEnumerable<Automovil>> ObtenerAutomovilesDisponibles();
         Task<Automovil?> ObtenerAutomovil(int id);
         Task<IEnumerable<Automovil>> ObternerTodosLosAutomoviles();
+        Task<Automovil?> ObtenerAutomovilPorBastidor(string numBastidor);
+        Task<IEnumerable<Automovil>> ObtenerAutomovilesVendidos();
     }
 }

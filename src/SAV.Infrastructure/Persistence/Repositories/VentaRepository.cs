@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace SAV.Infrastructure.Persistence.Repositories
+﻿namespace SAV.Infrastructure.Persistence.Repositories
 {
     public class VentaRepository:BaseRepository<Venta>, IVentaRepository
     {

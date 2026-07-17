@@ -31,5 +31,19 @@ namespace SAV.Infrastructure.Persistence.Repositories
                     .ThenInclude(m => m.Marca)
                 .ToListAsync();
         }
+
+        public async Task<Automovil?> ObtenerAutomovilPorBastidor(string numBastidor)
+        {
+            return await _entities.FirstOrDefaultAsync(a => a.NumBastidor == numBastidor);
+        }
+
+        public async Task<IEnumerable<Automovil>> ObtenerAutomovilesVendidos()
+        {
+            return await _entities
+                .Where(a => a.Estado == EstadoAutomovil.Vendido)
+                .Include(a => a.Modelo)
+                    .ThenInclude(m => m.Marca)
+                .ToListAsync();
+        }
     }
 }
