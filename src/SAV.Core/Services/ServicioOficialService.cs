@@ -24,6 +24,11 @@
 
         public async Task<ServicioOficial> CrearServicioOficial(ServicioOficial servicioOficial)
         {
+
+            var nifExistente = await _servicioOficialRepository.ObtenerServicioOficialPorNif(servicioOficial.Nif);
+            if (nifExistente is not null)
+                throw new InvalidOperationException("Ya existe un servicio oficial con ese NIF.");
+
             // Regla: el servicio oficial pertenece al único concesionario del sistema
             var concesionarios = await _concesionarioRepository.GetAll();
             var concesionario = concesionarios.FirstOrDefault();
@@ -42,6 +47,10 @@
             var SoExitente = await _servicioOficialRepository.GetById(id);
             if (SoExitente is null)
                 throw new InvalidOperationException("El servicio oficial no existe.");
+
+            var conMismoNif = await _servicioOficialRepository.ObtenerServicioOficialPorNif(servicioOficial.Nif);
+            if (conMismoNif is not null && conMismoNif.Id != id)
+                throw new InvalidOperationException("Ya existe otro servicio oficial con ese NIF.");
 
             SoExitente.Nombre = servicioOficial.Nombre;
             SoExitente.Nif = servicioOficial.Nif;

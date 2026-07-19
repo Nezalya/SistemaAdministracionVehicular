@@ -14,12 +14,16 @@ public class VentaDto
     public DateTime? FechaEntrega { get; set; }
     public string? Matricula { get; set; }
     public OrigenVenta Origen { get; set; }
+    public decimal PrecioBase { get; set; }     
+    public decimal TotalExtras { get; set; }    
+    public decimal PrecioTotal { get; set; }    
     public List<VentaExtraDto> Extras { get; set; } = new();
 }
 
 public class VentaExtraDto
 {
     public int CaracteristicaId { get; set; }
+    public string? Nombre { get; set; }
     public decimal PrecioCobrado { get; set; }
 }
 

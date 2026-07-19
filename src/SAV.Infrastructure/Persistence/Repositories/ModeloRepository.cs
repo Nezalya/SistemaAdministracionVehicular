@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace SAV.Infrastructure.Persistence.Repositories
+﻿namespace SAV.Infrastructure.Persistence.Repositories
 {
     public class ModeloRepository:BaseRepository<Modelo>,IModeloRepository
     {
@@ -27,6 +23,16 @@ namespace SAV.Infrastructure.Persistence.Repositories
         public async Task<Modelo?> ObtenerModeloConExtras(int id)
         {
             return await _entities
+                .Include(m => m.ExtrasDisponibles)
+                    .ThenInclude(me => me.Caracteristica)
+                .FirstOrDefaultAsync(m => m.Id == id);
+        }
+
+        public async Task<Modelo?> ObtenerModeloConEquipamiento(int id)
+        {
+            return await _entities
+                .Include(m => m.EquipamientoDeSerie)
+                    .ThenInclude(ms => ms.Caracteristica)
                 .Include(m => m.ExtrasDisponibles)
                     .ThenInclude(me => me.Caracteristica)
                 .FirstOrDefaultAsync(m => m.Id == id);

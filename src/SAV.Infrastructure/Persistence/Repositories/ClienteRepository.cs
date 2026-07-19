@@ -9,5 +9,9 @@ namespace SAV.Infrastructure.Persistence.Repositories
         public ClienteRepository(SavDbContext context) : base(context)
         {
         }
+        public async Task<Cliente?> ObtenerClientePorNif(string nif)
+        {
+            return await _entities.FirstOrDefaultAsync(c => c.Nif == nif);
+        }
     }
 }

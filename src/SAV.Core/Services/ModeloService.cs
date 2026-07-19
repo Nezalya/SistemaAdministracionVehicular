@@ -23,5 +23,17 @@
             if (modelo is null) return null;          
             return modelo.ExtrasDisponibles;         
         }
+
+        public async Task<IEnumerable<ModeloSerie>?> ObtenerSerieDeModelo(int id)
+        {
+            var modelo = await _modeloRepository.ObtenerModeloConEquipamiento(id);
+            if (modelo is null) return null;              
+            return modelo.EquipamientoDeSerie;
+        }
+
+        public async Task<Modelo?> ObtenerEquipamientoDeModelo(int id)
+        {
+            return await _modeloRepository.ObtenerModeloConEquipamiento(id);   
+        }
     }
 }

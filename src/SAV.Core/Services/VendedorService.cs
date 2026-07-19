@@ -19,6 +19,10 @@
         }
         public async Task<Vendedor> CrearVendedor(Vendedor vendedor)
         {
+            var nifExistente = await _vendedorRepository.ObtenerVendedorPorNif(vendedor.Nif);
+            if (nifExistente is not null)
+                throw new InvalidOperationException("Ya existe un vendedor con ese NIF.");
+
             var concesionarios = await _concesionarioRepository.GetAll();
             var concesionario = concesionarios.FirstOrDefault();
             if (concesionario is null)
@@ -36,11 +40,17 @@
             var VendedorExistente = await _vendedorRepository.GetById(id);
             if (VendedorExistente is null)
                 throw new InvalidOperationException("El vendedor no existe.");
+
+            var conMismoNif = await _vendedorRepository.ObtenerVendedorPorNif(vendedor.Nif);
+            if (conMismoNif is not null && conMismoNif.Id != id)
+                throw new InvalidOperationException("Ya existe otro vendedor con ese NIF.");
+
             VendedorExistente.Nombre = vendedor.Nombre;
             VendedorExistente.Nif = vendedor.Nif;
             VendedorExistente.Domicilio = vendedor.Domicilio;
             VendedorExistente.Telefono = vendedor.Telefono;
             VendedorExistente.Email = vendedor.Email;
+
             await _vendedorRepository.Update(VendedorExistente);
             await _vendedorRepository.SaveChanges();
             return VendedorExistente;

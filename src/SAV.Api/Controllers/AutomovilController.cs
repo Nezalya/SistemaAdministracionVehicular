@@ -43,5 +43,35 @@
             var automovilCreado = await _automovilService.RegistrarAutomovil(automovil);
             return CreatedAtAction(nameof(ObtenerAutomovil), new { id = automovilCreado.Id }, _mapper.Map<AutomovilDto>(automovilCreado));
         }
+
+        [HttpGet("vendidos")]
+        public async Task<IActionResult> ObtenerAutomovilesVendidos()
+        {
+            var automovilesVendidos = await _automovilService.ObtenerAutomovilesVendidos();
+            var automovilesVendidosDto = _mapper.Map<IEnumerable<AutomovilDto>>(automovilesVendidos);
+            return Ok(automovilesVendidosDto);
+        }
+
+        [HttpPut("{id}")]
+        public async Task<IActionResult> ActualizarAutomovil(int id, ActualizarAutomovilDto dto)
+        {
+            var automovil = _mapper.Map<Automovil>(dto);
+            var automovilActualizado = await _automovilService.ActualizarAutomovil(id, automovil);
+            return Ok(_mapper.Map<AutomovilDto>(automovilActualizado));
+        }
+
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> EliminarAutomovil(int id)
+        {
+            await _automovilService.EliminarAutomovil(id);
+            return NoContent();
+        }
+
+        [HttpGet("resumen-stock")]
+        public async Task<IActionResult> ObtenerResumenStock()
+        {
+            var stockResumen = await _automovilService.ObtenerResumenStock();
+            return Ok(stockResumen);
+        }
     }
 }

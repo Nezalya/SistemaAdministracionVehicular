@@ -50,6 +50,29 @@
             CreateMap<ModeloExtra, ExtraDisponibleDto>()
                 .ForMember(d => d.Nombre,
                o => o.MapFrom(s => s.Caracteristica != null ? s.Caracteristica.Nombre : null));
+
+            CreateMap<ActualizarAutomovilDto, Automovil>();
+
+            
+            CreateMap<ModeloSerie, EquipamientoSerieDto>()
+                .ForMember(d => d.Nombre,
+                           o => o.MapFrom(s => s.Caracteristica != null ? s.Caracteristica.Nombre : null))
+                .ForMember(d => d.Categoria,
+                           o => o.MapFrom(s => s.Caracteristica != null ? s.Caracteristica.Categoria : null));
+
+            
+            CreateMap<Modelo, ConfiguracionModeloDto>()
+                .ForMember(d => d.ModeloId, o => o.MapFrom(s => s.Id));
+
+            CreateMap<Venta, VentaDto>()
+    .ForMember(d => d.PrecioTotal, o => o.MapFrom(s => s.PrecioCobrado))
+    .ForMember(d => d.TotalExtras, o => o.MapFrom(s => s.Extras.Sum(e => e.PrecioCobrado)))
+    .ForMember(d => d.PrecioBase, o => o.MapFrom(s => s.PrecioCobrado - s.Extras.Sum(e => e.PrecioCobrado)));
+
+            
+            CreateMap<VentaExtra, VentaExtraDto>()
+                .ForMember(d => d.Nombre,
+                           o => o.MapFrom(s => s.Caracteristica != null ? s.Caracteristica.Nombre : null));
         }
     }
 }

@@ -13,12 +13,12 @@
 
         public async Task<IEnumerable<Venta>> ObtenerTodasLasVentas() 
         { 
-            return await _ventaRepository.GetAll();
+            return await _ventaRepository.ObtenerVentasConDetalle();
         }
 
         public async Task<Venta?> ObtenerVentaPorId(int id) 
         { 
-            return await _ventaRepository.GetById(id);
+            return await _ventaRepository.ObtenerVentaConDetalle(id);
         }
 
         public async Task<Venta> CrearVenta(Venta venta, List<int> caracteristicaIdsExtras)
@@ -30,6 +30,12 @@
             if (tieneVendedor == tieneServicioOficial)
                 throw new InvalidOperationException(
                     "La venta debe tener exactamente un responsable: Un vendedor o un servicio oficial, no ambos ni ninguno.");
+
+            if (venta.FechaEntrega is null)
+                throw new InvalidOperationException("La venta debe registrar una fecha de entrega.");
+
+            if (string.IsNullOrWhiteSpace(venta.Matricula))
+                throw new InvalidOperationException("La venta debe registrar la matrícula del vehículo.");
 
             // Regla: el automóvil debe existir y estar en Stock
             var automovil = await _automovilRepository.ObtenerAutomovil(venta.AutomovilId);
@@ -75,8 +81,7 @@
 
             // Un solo SaveChanges: la venta y el cambio de estado del auto se guardan juntos
             await _ventaRepository.SaveChanges();
-
-            return venta;
+            return await _ventaRepository.ObtenerVentaConDetalle(venta.Id) ?? venta;
         }
     }
 }

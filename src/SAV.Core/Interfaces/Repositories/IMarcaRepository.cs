@@ -6,6 +6,6 @@ namespace SAV.Core.Interfaces.Repositories
 {
     public interface IMarcaRepository: IRepository<Marca>
     {
-        Task<Marca?> GetByNombre(string nombre);
+        Task<Marca?> ObtenerMarcaPorNombre(string nombre);
     }
 }
