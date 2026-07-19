@@ -1,4 +1,6 @@
-﻿namespace SAV.Infrastructure.Persistence.Repositories
+﻿using SAV.Core.Dtos;
+
+namespace SAV.Infrastructure.Persistence.Repositories
 {
     public class VentaRepository:BaseRepository<Venta>, IVentaRepository
     {

@@ -1,4 +1,6 @@
-﻿namespace SAV.Core.Services
+﻿using SAV.Core.Dtos;
+
+namespace SAV.Core.Services
 {
     public class ClienteService : IClienteService
     {
@@ -31,33 +33,46 @@
 
         public async Task<Cliente> ActualizarCliente(int id, Cliente cliente)
         {
-            var ClienteExistente = await _clienteRepository.GetById(id);
-            if (ClienteExistente is null)
+            var clienteExistente = await _clienteRepository.GetById(id);
+            if (clienteExistente is null)
                 throw new InvalidOperationException("El cliente no existe.");
 
             var conMismoNif = await _clienteRepository.ObtenerClientePorNif(cliente.Nif);
             if (conMismoNif is not null && conMismoNif.Id != id)
                 throw new InvalidOperationException("Ya existe otro cliente con ese NIF.");
 
-            ClienteExistente.Nombre = cliente.Nombre;
-            ClienteExistente.Nif = cliente.Nif;
-            ClienteExistente.Domicilio = cliente.Domicilio;
-            ClienteExistente.Telefono = cliente.Telefono;
-            ClienteExistente.Email = cliente.Email;
+            clienteExistente.Nombre = cliente.Nombre;
+            clienteExistente.Nif = cliente.Nif;
+            clienteExistente.Domicilio = cliente.Domicilio;
+            clienteExistente.Telefono = cliente.Telefono;
+            clienteExistente.Email = cliente.Email;
 
-            await _clienteRepository.Update(ClienteExistente);
+            await _clienteRepository.Update(clienteExistente);
             await _clienteRepository.SaveChanges();
-            return ClienteExistente;
+            return clienteExistente;
         }
 
         public async Task EliminarCliente(int id)
         {
-            var ClienteExistente = await _clienteRepository.GetById(id);
-            if (ClienteExistente is null)
+            var clienteExistente = await _clienteRepository.GetById(id);
+            if (clienteExistente is null)
                 throw new InvalidOperationException("El cliente no existe.");
 
             await _clienteRepository.Delete(id);
             await _clienteRepository.SaveChanges();
+        }
+
+        public async Task<ResumenComprasClienteDto> ObtenerResumenCompras(int clienteId)
+        {
+            var compraResumen = await _clienteRepository.ObtenerResumenCompras(clienteId);
+           
+            if (compraResumen is null)
+                throw new InvalidOperationException("El cliente no existe.");
+            
+            if (compraResumen.TotalCompras == 0)
+                throw new InvalidOperationException("El cliente no tiene compras registradas.");
+       
+            return compraResumen;
         }
     }
 }

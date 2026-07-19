@@ -53,5 +53,12 @@
             await _vendedorService.EliminarVendedor(id);
             return NoContent();
         }
+
+        [HttpGet("{id}/resumen-ventas")]
+        public async Task<IActionResult> ObtenerResumenVentas(int id)
+        {
+            var resumen = await _vendedorService.ObtenerResumenVentas(id);
+            return Ok(resumen);
+        }
     }
 }
