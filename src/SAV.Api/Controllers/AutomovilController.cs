@@ -66,5 +66,12 @@
             await _automovilService.EliminarAutomovil(id);
             return NoContent();
         }
+
+        [HttpGet("resumen-stock")]
+        public async Task<IActionResult> ObtenerResumenStock()
+        {
+            var stockResumen = await _automovilService.ObtenerResumenStock();
+            return Ok(stockResumen);
+        }
     }
 }

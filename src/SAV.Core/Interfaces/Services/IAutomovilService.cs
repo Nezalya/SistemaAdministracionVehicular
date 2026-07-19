@@ -9,5 +9,6 @@
         Task<IEnumerable<Automovil>> ObtenerAutomovilesVendidos();   
         Task<Automovil> ActualizarAutomovil(int id, Automovil automovil);   
         Task EliminarAutomovil(int id);
+        Task<ResumenStockDto> ObtenerResumenStock();
     }
 }

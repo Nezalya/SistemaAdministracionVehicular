@@ -13,7 +13,7 @@
 
         public async Task<IEnumerable<Automovil>> ObtenerTodosLosAutomoviles()
         {
-            return await _automovilRepository.ObternerTodosLosAutomoviles();
+            return await _automovilRepository.ObtenerTodosLosAutomoviles();
         }
 
         public async Task<Automovil?> ObtenerAutomovilPorId(int id)
@@ -44,7 +44,6 @@
 
             automovil.ConcesionarioPropietarioId = concesionario.Id;
 
-            //HELPER: reusar la misma lógica de validación de ubicación que en ActualizarAutomovil
             ValidarUbicacion(automovil, concesionario.Id);
 
             automovil.Estado = EstadoAutomovil.Stock;
@@ -105,6 +104,11 @@
 
             if (!enConcesionario && !enServicioOficial)
                 automovil.ConcesionarioUbicacionId = concesionarioId;
+        }
+
+        public async Task<ResumenStockDto> ObtenerResumenStock()
+        {
+            return await _automovilRepository.ObtenerResumenStock();
         }
     }
 }
