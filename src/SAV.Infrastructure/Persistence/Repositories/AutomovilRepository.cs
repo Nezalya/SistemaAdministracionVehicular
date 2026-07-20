@@ -1,4 +1,5 @@
 ﻿using SAV.Api.DTOs;
+using SAV.Core.Dtos;
 using SAV.Core.Interfaces.Repositories;
 
 namespace SAV.Infrastructure.Persistence.Repositories
@@ -23,14 +24,6 @@ namespace SAV.Infrastructure.Persistence.Repositories
                 .Include(a => a.Modelo)
                 .ThenInclude(m => m.ExtrasDisponibles)
                 .FirstOrDefaultAsync(a => a.Id == id);
-        }
-
-        public async Task<IEnumerable<Automovil>> ObtenerTodosLosAutomoviles()
-        {
-            return await _entities
-                .Include(a => a.Modelo)
-                    .ThenInclude(m => m.Marca)
-                .ToListAsync();
         }
 
         public async Task<Automovil?> ObtenerAutomovilPorBastidor(string numBastidor)
@@ -79,6 +72,28 @@ namespace SAV.Infrastructure.Persistence.Repositories
                 TotalDisponibles = automovilesDisponibles.Count,
                 PorMarca = porMarca
             };
+        }
+
+        public async Task<IEnumerable<Automovil>> BuscarAutomoviles(FiltroAutomovilDto filtro)
+        {
+            var query = _entities
+                .Include(a => a.Modelo)
+                    .ThenInclude(m => m.Marca)
+                .AsQueryable();                       
+
+            if (!string.IsNullOrWhiteSpace(filtro.Marca))
+                query = query.Where(a => a.Modelo.Marca.Nombre == filtro.Marca);
+
+            if (!string.IsNullOrWhiteSpace(filtro.Modelo))
+                query = query.Where(a => a.Modelo.Nombre == filtro.Modelo);
+
+            if (filtro.Estado.HasValue)
+                query = query.Where(a => a.Estado == filtro.Estado.Value);
+
+            if (!string.IsNullOrWhiteSpace(filtro.NumBastidor))
+                query = query.Where(a => a.NumBastidor == filtro.NumBastidor);
+
+            return await query.ToListAsync();         
         }
 
     }

@@ -1,4 +1,6 @@
-﻿namespace SAV.Api.Controllers
+﻿using SAV.Core.Dtos;
+
+namespace SAV.Api.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
@@ -12,11 +14,10 @@
             _mapper = mapper; }
 
         [HttpGet]
-        public async Task<IActionResult> ObtenerAutomoviles()
+        public async Task<IActionResult> ObtenerAutomoviles([FromQuery] FiltroAutomovilDto filtro)
         {
-            var automoviles = await _automovilService.ObtenerTodosLosAutomoviles();
-            var automovilesDto = _mapper.Map<IEnumerable<AutomovilDto>>(automoviles);
-            return Ok(automovilesDto);
+            var automoviles = await _automovilService.BuscarAutomoviles(filtro);
+            return Ok(_mapper.Map<IEnumerable<AutomovilDto>>(automoviles));
         }
 
         [HttpGet("disponibles")]
@@ -73,5 +74,7 @@
             var stockResumen = await _automovilService.ObtenerResumenStock();
             return Ok(stockResumen);
         }
+
+        
     }
 }
