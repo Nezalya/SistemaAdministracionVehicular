@@ -12,3 +12,6 @@ global using SAV.Core.Entities.Seguridad;
 global using SAV.Core.Entities.Ventas;
 global using SAV.Api.Mappings;
 global using SAV.Core.Enums;
+global using Microsoft.AspNetCore.Mvc;
+global using Microsoft.AspNetCore.Mvc.Filters;
+
