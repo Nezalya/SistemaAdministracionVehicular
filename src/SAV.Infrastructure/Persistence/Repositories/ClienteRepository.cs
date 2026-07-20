@@ -28,5 +28,10 @@ namespace SAV.Infrastructure.Persistence.Repositories
         })
         .FirstOrDefaultAsync();
         }
+
+        public async Task<bool> TieneVentas(int clienteId)
+        {
+            return await _context.Ventas.AnyAsync(v => v.ClienteId == clienteId);
+        }
     }
 }

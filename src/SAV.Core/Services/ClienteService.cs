@@ -58,6 +58,10 @@ namespace SAV.Core.Services
             if (clienteExistente is null)
                 throw new InvalidOperationException("El cliente no existe.");
 
+            if (await _clienteRepository.TieneVentas(id))
+                throw new InvalidOperationException(
+                    "No se puede eliminar el cliente porque tiene ventas registradas.");
+
             await _clienteRepository.Delete(id);
             await _clienteRepository.SaveChanges();
         }

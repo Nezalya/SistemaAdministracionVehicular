@@ -63,6 +63,11 @@ namespace SAV.Core.Services
             var vendedorExistente = await _vendedorRepository.GetById(id);
             if (vendedorExistente is null)
                 throw new InvalidOperationException("El vendedor no existe.");
+
+            if (await _vendedorRepository.TieneVentas(id))
+                throw new InvalidOperationException(
+                    "No se puede eliminar el vendedor porque tiene ventas registradas.");
+
             await _vendedorRepository.Delete(id);
             await _vendedorRepository.SaveChanges();
         }

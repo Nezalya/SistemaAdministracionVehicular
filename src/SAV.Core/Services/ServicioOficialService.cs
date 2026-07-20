@@ -69,6 +69,10 @@
             if (soExitente is null)
                 throw new InvalidOperationException("El servicio oficial no existe.");
 
+            if (await _servicioOficialRepository.TieneVentas(id))
+                throw new InvalidOperationException(
+                    "No se puede eliminar el servicio oficial porque tiene ventas registradas.");
+
             await _servicioOficialRepository.Delete(id);
             await _servicioOficialRepository.SaveChanges();
         }

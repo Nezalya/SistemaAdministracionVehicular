@@ -6,5 +6,6 @@ namespace SAV.Core.Interfaces.Repositories
     {
         Task<Cliente?> ObtenerClientePorNif(string nif);
         Task<ResumenComprasClienteDto?> ObtenerResumenCompras(int clienteId);
+        Task<bool> TieneVentas(int clienteId);
     }
 }
