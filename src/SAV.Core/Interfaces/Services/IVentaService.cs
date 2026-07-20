@@ -1,4 +1,6 @@
-﻿namespace SAV.Core.Interfaces.Services
+﻿using SAV.Core.Dtos;
+
+namespace SAV.Core.Interfaces.Services
 {
     public interface IVentaService
     {

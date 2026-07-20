@@ -44,30 +44,34 @@
 
         public async Task<ServicioOficial> ActualizarServicioOficial(int id, ServicioOficial servicioOficial)
         {
-            var SoExitente = await _servicioOficialRepository.GetById(id);
-            if (SoExitente is null)
+            var soExitente = await _servicioOficialRepository.GetById(id);
+            if (soExitente is null)
                 throw new InvalidOperationException("El servicio oficial no existe.");
 
             var conMismoNif = await _servicioOficialRepository.ObtenerServicioOficialPorNif(servicioOficial.Nif);
             if (conMismoNif is not null && conMismoNif.Id != id)
                 throw new InvalidOperationException("Ya existe otro servicio oficial con ese NIF.");
 
-            SoExitente.Nombre = servicioOficial.Nombre;
-            SoExitente.Nif = servicioOficial.Nif;
-            SoExitente.Domicilio = servicioOficial.Domicilio;
-            SoExitente.Telefono = servicioOficial.Telefono;
+            soExitente.Nombre = servicioOficial.Nombre;
+            soExitente.Nif = servicioOficial.Nif;
+            soExitente.Domicilio = servicioOficial.Domicilio;
+            soExitente.Telefono = servicioOficial.Telefono;
 
 
-            await _servicioOficialRepository.Update(SoExitente);
+            await _servicioOficialRepository.Update(soExitente);
             await _servicioOficialRepository.SaveChanges();
-            return SoExitente;
+            return soExitente;
         }
 
         public async Task EliminarServicioOficial(int id)
         {
-            var SoExitente = await _servicioOficialRepository.GetById(id);
-            if (SoExitente is null)
+            var soExitente = await _servicioOficialRepository.GetById(id);
+            if (soExitente is null)
                 throw new InvalidOperationException("El servicio oficial no existe.");
+
+            if (await _servicioOficialRepository.TieneVentas(id))
+                throw new InvalidOperationException(
+                    "No se puede eliminar el servicio oficial porque tiene ventas registradas.");
 
             await _servicioOficialRepository.Delete(id);
             await _servicioOficialRepository.SaveChanges();

@@ -1,4 +1,6 @@
-﻿namespace SAV.Core.Services
+﻿using SAV.Core.Dtos;
+
+namespace SAV.Core.Services
 {
     public class AutomovilService : IAutomovilService
     {
@@ -9,11 +11,6 @@
         {
             _automovilRepository = automovilRepository;
             _concesionarioRepository = concesionarioRepository;
-        }
-
-        public async Task<IEnumerable<Automovil>> ObtenerTodosLosAutomoviles()
-        {
-            return await _automovilRepository.ObtenerTodosLosAutomoviles();
         }
 
         public async Task<Automovil?> ObtenerAutomovilPorId(int id)
@@ -109,6 +106,11 @@
         public async Task<ResumenStockDto> ObtenerResumenStock()
         {
             return await _automovilRepository.ObtenerResumenStock();
+        }
+
+        public async Task<IEnumerable<Automovil>> BuscarAutomoviles(FiltroAutomovilDto filtro)
+        {
+            return await _automovilRepository.BuscarAutomoviles(filtro);
         }
     }
 }

@@ -52,5 +52,12 @@
             await _clienteService.EliminarCliente(id);
             return NoContent();
         }
+
+        [HttpGet("{id}/resumen-compras")]
+        public async Task<IActionResult> ObtenerResumenCompras(int id)
+        {
+            var resumen = await _clienteService.ObtenerResumenCompras(id);
+            return Ok(resumen);
+        }
     }
 }

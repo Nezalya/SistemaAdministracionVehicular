@@ -1,4 +1,6 @@
-﻿namespace SAV.Core.Interfaces.Services
+﻿using SAV.Core.Dtos;
+
+namespace SAV.Core.Interfaces.Services
 {
     public interface IClienteService
     {
@@ -7,5 +9,6 @@
         Task<Cliente> CrearCliente(Cliente cliente);
         Task<Cliente> ActualizarCliente(int id, Cliente cliente);
         Task EliminarCliente(int id);
+        Task<ResumenComprasClienteDto> ObtenerResumenCompras(int clienteId);
     }
 }

@@ -25,6 +25,7 @@ namespace SAV.Infrastructure
             services.AddScoped<IVentaRepository, VentaRepository>();
             services.AddScoped<IUsuarioRepository, UsuarioRepository>();
             services.AddScoped<IConcesionarioRepository, ConcesionarioRepository>();
+            services.AddScoped<IReporteRepository, ReporteRepository>();
             return services;
         }
     }
