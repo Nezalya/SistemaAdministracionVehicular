@@ -24,12 +24,12 @@ namespace SAV.Core.Services
         {
             var nifExistente = await _vendedorRepository.ObtenerVendedorPorNif(vendedor.Nif);
             if (nifExistente is not null)
-                throw new InvalidOperationException("Ya existe un vendedor con ese NIF.");
+                throw new BusinessException("Ya existe un vendedor con ese NIF.");
 
             var concesionarios = await _concesionarioRepository.GetAll();
             var concesionario = concesionarios.FirstOrDefault();
             if (concesionario is null)
-                throw new InvalidOperationException("No hay un concesionario registrado en el sistema.");
+                throw new BusinessException("No hay un concesionario registrado en el sistema.");
 
             vendedor.ConcesionarioId = concesionario.Id;
 
@@ -42,11 +42,11 @@ namespace SAV.Core.Services
         {
             var vendedorExistente = await _vendedorRepository.GetById(id);
             if (vendedorExistente is null)
-                throw new InvalidOperationException("El vendedor no existe.");
+                throw new NotFoundException("El vendedor no existe.");
 
             var conMismoNif = await _vendedorRepository.ObtenerVendedorPorNif(vendedor.Nif);
             if (conMismoNif is not null && conMismoNif.Id != id)
-                throw new InvalidOperationException("Ya existe otro vendedor con ese NIF.");
+                throw new BusinessException("Ya existe otro vendedor con ese NIF.");
 
             vendedorExistente.Nombre = vendedor.Nombre;
             vendedorExistente.Nif = vendedor.Nif;
@@ -62,10 +62,10 @@ namespace SAV.Core.Services
         {
             var vendedorExistente = await _vendedorRepository.GetById(id);
             if (vendedorExistente is null)
-                throw new InvalidOperationException("El vendedor no existe.");
+                throw new NotFoundException("El vendedor no existe.");
 
             if (await _vendedorRepository.TieneVentas(id))
-                throw new InvalidOperationException(
+                throw new BusinessException(
                     "No se puede eliminar el vendedor porque tiene ventas registradas.");
 
             await _vendedorRepository.Delete(id);
@@ -76,7 +76,7 @@ namespace SAV.Core.Services
         {
             var resumen = await _vendedorRepository.ObtenerResumenVentas(vendedorId);
             if (resumen is null)
-                throw new InvalidOperationException("El vendedor no existe.");
+                throw new NotFoundException("El vendedor no existe.");
             return resumen;
         }
     }

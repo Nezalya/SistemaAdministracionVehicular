@@ -33,11 +33,11 @@ namespace SAV.Core.Services
             
             var existenteBastidor = await _automovilRepository.ObtenerAutomovilPorBastidor(automovil.NumBastidor);
             if (existenteBastidor is not null)
-                throw new InvalidOperationException("Ya existe un automóvil registrado con ese número de bastidor.");
+                throw new BusinessException("Ya existe un automóvil registrado con ese número de bastidor.");
 
             var concesionario = (await _concesionarioRepository.GetAll()).FirstOrDefault();
             if (concesionario is null)
-                throw new InvalidOperationException("No hay un concesionario registrado en el sistema.");
+                throw new BusinessException("No hay un concesionario registrado en el sistema.");
 
             automovil.ConcesionarioPropietarioId = concesionario.Id;
 
@@ -55,7 +55,7 @@ namespace SAV.Core.Services
         {
             var existente = await _automovilRepository.ObtenerAutomovil(id);
             if (existente is null)
-                throw new InvalidOperationException("El automóvil no existe.");
+                throw new NotFoundException("El automóvil no existe.");
 
             
             existente.Color = automovil.Color;
@@ -67,7 +67,7 @@ namespace SAV.Core.Services
            
             var concesionario = (await _concesionarioRepository.GetAll()).FirstOrDefault();
             if (concesionario is null)
-                throw new InvalidOperationException("No hay un concesionario registrado en el sistema.");
+                throw new NotFoundException("No hay un concesionario registrado en el sistema.");
             ValidarUbicacion(existente, concesionario.Id);
 
             await _automovilRepository.Update(existente);
@@ -79,11 +79,11 @@ namespace SAV.Core.Services
         {
             var automovilExistente = await _automovilRepository.ObtenerAutomovil(id);
             if (automovilExistente is null)
-                throw new InvalidOperationException("El automóvil no existe.");
+                throw new NotFoundException("El automóvil no existe.");
 
          
             if (automovilExistente.Estado == EstadoAutomovil.Vendido)
-                throw new InvalidOperationException("No se puede eliminar un automóvil que ya fue vendido.");
+                throw new BusinessException("No se puede eliminar un automóvil que ya fue vendido.");
 
             await _automovilRepository.Delete(id);
             await _automovilRepository.SaveChanges();
@@ -96,7 +96,7 @@ namespace SAV.Core.Services
             bool enServicioOficial = automovil.ServicioOficialUbicacionId.HasValue;
 
             if (enConcesionario && enServicioOficial)
-                throw new InvalidOperationException(
+                throw new BusinessException(
                     "El automóvil no puede estar ubicado en dos lugares a la vez (concesionario y servicio oficial).");
 
             if (!enConcesionario && !enServicioOficial)

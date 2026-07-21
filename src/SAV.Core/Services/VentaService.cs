@@ -28,22 +28,22 @@
             bool tieneServicioOficial = venta.ServicioOficialId.HasValue;
 
             if (tieneVendedor == tieneServicioOficial)
-                throw new InvalidOperationException(
+                throw new BusinessException(
                     "La venta debe tener exactamente un responsable: Un vendedor o un servicio oficial, no ambos ni ninguno.");
 
             if (venta.FechaEntrega is null)
-                throw new InvalidOperationException("La venta debe registrar una fecha de entrega.");
+                throw new BusinessException("La venta debe registrar una fecha de entrega.");
 
             if (string.IsNullOrWhiteSpace(venta.Matricula))
-                throw new InvalidOperationException("La venta debe registrar la matrícula del vehículo.");
+                throw new BusinessException("La venta debe registrar la matrícula del vehículo.");
 
             // Regla: el automóvil debe existir y estar en Stock
             var automovil = await _automovilRepository.ObtenerAutomovil(venta.AutomovilId);
             if (automovil is null)
-                throw new InvalidOperationException("El automóvil no existe.");
+                throw new NotFoundException("El automóvil no existe.");
 
             if (automovil.Estado != EstadoAutomovil.Stock)
-                throw new InvalidOperationException("El automóvil no está disponible para la venta.");
+                throw new BusinessException("El automóvil no está disponible para la venta.");
 
             // Regla: calcular el precio (base del modelo con descuento + extras), no confiar en el precio recibido
             decimal precioBase = automovil.Modelo.PrecioBase;
@@ -59,7 +59,7 @@
                     .FirstOrDefault(e => e.CaracteristicaId == caracteristicaId);
 
                 if (extraDisponible is null)
-                    throw new InvalidOperationException($"El extra {caracteristicaId} no está disponible para este modelo.");
+                    throw new BusinessException($"El extra {caracteristicaId} no está disponible para este modelo.");
 
                 venta.Extras.Add(new VentaExtra
                 {

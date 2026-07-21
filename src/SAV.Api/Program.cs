@@ -24,7 +24,10 @@ builder.Services.Configure<MvcOptions>(options =>
     options.Filters.Add<SAV.Api.Responses.EnvolturaRespuestaFilter>();
 });
 
+
+
 var app = builder.Build();
+app.UseMiddleware<SAV.Api.Middleware.ExceptionMiddleware>();
 
 if (app.Environment.IsDevelopment())
 {
