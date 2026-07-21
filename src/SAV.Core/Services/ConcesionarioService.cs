@@ -23,12 +23,12 @@
 
             var nifExistente = await _concesionarioRepository.ObtenerConcesionarioPorNif(concesionario.Nif);
             if (nifExistente is not null)
-                throw new InvalidOperationException("Ya existe un concesionario con ese NIF.");
+                throw new BusinessException("Ya existe un concesionario con ese NIF.");
 
             // Regla de negocio: el sistema administra UN solo concesionario
             var concesionariosExistentes = await _concesionarioRepository.GetAll();
             if (concesionariosExistentes.Any())
-                throw new InvalidOperationException("Ya existe un concesionario registrado. El sistema solo administra uno.");
+                throw new BusinessException("Ya existe un concesionario registrado. El sistema solo administra uno.");
 
             await _concesionarioRepository.Add(concesionario);
             await _concesionarioRepository.SaveChanges();
@@ -39,11 +39,11 @@
         {
             var concesionarioExistente = await _concesionarioRepository.GetById(id);
             if (concesionarioExistente is null)
-                throw new InvalidOperationException("El concesionario no existe.");
+                throw new NotFoundException("El concesionario no existe.");
 
             var conMismoNif = await _concesionarioRepository.ObtenerConcesionarioPorNif(concesionario.Nif);
             if (conMismoNif is not null && conMismoNif.Id != id)
-                throw new InvalidOperationException("Ya existe otro concesionario con ese NIF.");
+                throw new BusinessException("Ya existe otro concesionario con ese NIF.");
 
 
             concesionarioExistente.Nombre = concesionario.Nombre;

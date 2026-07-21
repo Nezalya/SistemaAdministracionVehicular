@@ -24,7 +24,7 @@ namespace SAV.Core.Services
         {
             var nifExistente = await _clienteRepository.ObtenerClientePorNif(cliente.Nif);
             if (nifExistente is not null)
-                throw new InvalidOperationException("Ya existe un cliente con ese NIF.");
+                throw new BusinessException("Ya existe un cliente con ese NIF.");
             
             await _clienteRepository.Add(cliente);
             await _clienteRepository.SaveChanges();
@@ -35,11 +35,11 @@ namespace SAV.Core.Services
         {
             var clienteExistente = await _clienteRepository.GetById(id);
             if (clienteExistente is null)
-                throw new InvalidOperationException("El cliente no existe.");
+                throw new NotFoundException("El cliente no existe.");
 
             var conMismoNif = await _clienteRepository.ObtenerClientePorNif(cliente.Nif);
             if (conMismoNif is not null && conMismoNif.Id != id)
-                throw new InvalidOperationException("Ya existe otro cliente con ese NIF.");
+                throw new BusinessException("Ya existe otro cliente con ese NIF.");
 
             clienteExistente.Nombre = cliente.Nombre;
             clienteExistente.Nif = cliente.Nif;
@@ -56,10 +56,10 @@ namespace SAV.Core.Services
         {
             var clienteExistente = await _clienteRepository.GetById(id);
             if (clienteExistente is null)
-                throw new InvalidOperationException("El cliente no existe.");
+                throw new NotFoundException("El cliente no existe.");
 
             if (await _clienteRepository.TieneVentas(id))
-                throw new InvalidOperationException(
+                throw new BusinessException(
                     "No se puede eliminar el cliente porque tiene ventas registradas.");
 
             await _clienteRepository.Delete(id);
@@ -71,10 +71,10 @@ namespace SAV.Core.Services
             var compraResumen = await _clienteRepository.ObtenerResumenCompras(clienteId);
            
             if (compraResumen is null)
-                throw new InvalidOperationException("El cliente no existe.");
+                throw new NotFoundException("El cliente no existe.");
             
             if (compraResumen.TotalCompras == 0)
-                throw new InvalidOperationException("El cliente no tiene compras registradas.");
+                throw new BusinessException("El cliente no tiene compras registradas.");
        
             return compraResumen;
         }

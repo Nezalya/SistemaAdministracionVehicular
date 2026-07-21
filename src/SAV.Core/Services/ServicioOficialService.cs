@@ -27,13 +27,13 @@
 
             var nifExistente = await _servicioOficialRepository.ObtenerServicioOficialPorNif(servicioOficial.Nif);
             if (nifExistente is not null)
-                throw new InvalidOperationException("Ya existe un servicio oficial con ese NIF.");
+                throw new BusinessException("Ya existe un servicio oficial con ese NIF.");
 
             // Regla: el servicio oficial pertenece al único concesionario del sistema
             var concesionarios = await _concesionarioRepository.GetAll();
             var concesionario = concesionarios.FirstOrDefault();
             if (concesionario is null)
-                throw new InvalidOperationException("No hay un concesionario registrado en el sistema.");
+                throw new BusinessException("No hay un concesionario registrado en el sistema.");
 
             servicioOficial.ConcesionarioId = concesionario.Id;
 
@@ -46,11 +46,11 @@
         {
             var soExitente = await _servicioOficialRepository.GetById(id);
             if (soExitente is null)
-                throw new InvalidOperationException("El servicio oficial no existe.");
+                throw new NotFoundException("El servicio oficial no existe.");
 
             var conMismoNif = await _servicioOficialRepository.ObtenerServicioOficialPorNif(servicioOficial.Nif);
             if (conMismoNif is not null && conMismoNif.Id != id)
-                throw new InvalidOperationException("Ya existe otro servicio oficial con ese NIF.");
+                throw new BusinessException("Ya existe otro servicio oficial con ese NIF.");
 
             soExitente.Nombre = servicioOficial.Nombre;
             soExitente.Nif = servicioOficial.Nif;
@@ -67,10 +67,10 @@
         {
             var soExitente = await _servicioOficialRepository.GetById(id);
             if (soExitente is null)
-                throw new InvalidOperationException("El servicio oficial no existe.");
+                throw new NotFoundException("El servicio oficial no existe.");
 
             if (await _servicioOficialRepository.TieneVentas(id))
-                throw new InvalidOperationException(
+                throw new BusinessException(
                     "No se puede eliminar el servicio oficial porque tiene ventas registradas.");
 
             await _servicioOficialRepository.Delete(id);

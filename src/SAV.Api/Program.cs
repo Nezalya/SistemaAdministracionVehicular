@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using SAV.Api;
 using SAV.Api.Mappings;
 using SAV.Infrastructure;
@@ -18,8 +19,15 @@ builder.Services.AddAutoMapper(cfg => cfg.AddMaps(typeof(MappingProfile).Assembl
 
 builder.Services.AddControllers()//Para el registro de los converts
     .AddJsonOptions(o => o.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter()));
+builder.Services.Configure<MvcOptions>(options =>
+{
+    options.Filters.Add<SAV.Api.Responses.EnvolturaRespuestaFilter>();
+});
+
+
 
 var app = builder.Build();
+app.UseMiddleware<SAV.Api.Middleware.ExceptionMiddleware>();
 
 if (app.Environment.IsDevelopment())
 {
