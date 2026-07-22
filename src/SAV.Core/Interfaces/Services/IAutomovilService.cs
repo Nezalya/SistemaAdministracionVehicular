@@ -12,5 +12,7 @@ namespace SAV.Core.Interfaces.Services
         Task EliminarAutomovil(int id);
         Task<ResumenStockDto> ObtenerResumenStock();
         Task<IEnumerable<Automovil>> BuscarAutomoviles(FiltroAutomovilDto filtro);
+        Task<int> RegistrarLoteDeAutomoviles(int modeloId, int cantidadPorColor, List<string> colores,
+                        int? anoFabricacion, int? concesionarioUbicacionId, int? servicioOficialUbicacionId);
     }
 }

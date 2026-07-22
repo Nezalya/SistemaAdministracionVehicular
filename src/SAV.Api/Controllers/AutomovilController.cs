@@ -75,6 +75,15 @@ namespace SAV.Api.Controllers
             return Ok(stockResumen);
         }
 
-        
+        [HttpPost("lote")]
+        public async Task<IActionResult> RegistrarLoteDeAutomoviles(GenerarAutomovilesLoteDto dto)
+        {
+            var total = await _automovilService.RegistrarLoteDeAutomoviles(
+                dto.ModeloId, dto.CantidadPorColor, dto.Colores,
+                dto.AnoFabricacion, dto.ConcesionarioUbicacionId, dto.ServicioOficialUbicacionId);
+
+            return Ok(new { total, mensaje = $"Se registraron {total} automóviles del modelo {dto.ModeloId}." });
+        }
+
     }
 }

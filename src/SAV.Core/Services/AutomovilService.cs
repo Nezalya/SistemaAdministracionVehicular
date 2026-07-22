@@ -1,4 +1,5 @@
 ﻿using SAV.Core.Dtos;
+using SAV.Core.Helpers;
 
 namespace SAV.Core.Services
 {
@@ -41,7 +42,7 @@ namespace SAV.Core.Services
 
             automovil.ConcesionarioPropietarioId = concesionario.Id;
 
-            ValidarUbicacion(automovil, concesionario.Id);
+            ValidarUbicacionHelper.ValidarUbicacion(automovil, concesionario.Id);
 
             automovil.Estado = EstadoAutomovil.Stock;
 
@@ -68,7 +69,7 @@ namespace SAV.Core.Services
             var concesionario = (await _concesionarioRepository.GetAll()).FirstOrDefault();
             if (concesionario is null)
                 throw new NotFoundException("No hay un concesionario registrado en el sistema.");
-            ValidarUbicacion(existente, concesionario.Id);
+            ValidarUbicacionHelper.ValidarUbicacion(existente, concesionario.Id);
 
             await _automovilRepository.Update(existente);
             await _automovilRepository.SaveChanges();
@@ -89,20 +90,6 @@ namespace SAV.Core.Services
             await _automovilRepository.SaveChanges();
         }
 
-        //Metodo que funciona como un helper para validar la ubicación del automóvil, asegurando que no esté en dos lugares a la vez y asignando el concesionario si no tiene ubicación.
-        private static void ValidarUbicacion(Automovil automovil, int concesionarioId)
-        {
-            bool enConcesionario = automovil.ConcesionarioUbicacionId.HasValue;
-            bool enServicioOficial = automovil.ServicioOficialUbicacionId.HasValue;
-
-            if (enConcesionario && enServicioOficial)
-                throw new BusinessException(
-                    "El automóvil no puede estar ubicado en dos lugares a la vez (concesionario y servicio oficial).");
-
-            if (!enConcesionario && !enServicioOficial)
-                automovil.ConcesionarioUbicacionId = concesionarioId;
-        }
-
         public async Task<ResumenStockDto> ObtenerResumenStock()
         {
             return await _automovilRepository.ObtenerResumenStock();
@@ -112,5 +99,49 @@ namespace SAV.Core.Services
         {
             return await _automovilRepository.BuscarAutomoviles(filtro);
         }
+
+        public async Task<int> RegistrarLoteDeAutomoviles(int modeloId, int cantidadPorColor, List<string> colores,
+    int? anoFabricacion, int? concesionarioUbicacionId, int? servicioOficialUbicacionId)
+        {
+            if (colores is null || colores.Count == 0)
+                throw new BusinessException("Debe especificar al menos un color.");
+            if (cantidadPorColor <= 0)
+                throw new BusinessException("La cantidad por color debe ser mayor a cero.");
+
+            var concesionario = (await _concesionarioRepository.GetAll()).FirstOrDefault();
+            if (concesionario is null)
+                throw new BusinessException("No hay un concesionario registrado en el sistema.");
+
+            var nuevos = new List<Automovil>();
+
+            foreach (var color in colores)
+            {
+                for (int i = 0; i < cantidadPorColor; i++)
+                {
+                    var auto = new Automovil
+                    {
+                        ModeloId = modeloId,
+                        NumBastidor = GenerarBastidorHelper.GenerarBastidor(),                 
+                        Color = color,
+                        AnoFabricacion = anoFabricacion,
+                        ConcesionarioPropietarioId = concesionario.Id,
+                        ConcesionarioUbicacionId = concesionarioUbicacionId,
+                        ServicioOficialUbicacionId = servicioOficialUbicacionId,
+                        Estado = EstadoAutomovil.Stock
+                    };
+
+                    ValidarUbicacionHelper.ValidarUbicacion(auto, concesionario.Id);            
+                    nuevos.Add(auto);
+                }
+            }
+
+            foreach (var auto in nuevos)
+                await _automovilRepository.Add(auto);
+
+            await _automovilRepository.SaveChanges();                    
+            return nuevos.Count;
+        }
+
+       
     }
 }
