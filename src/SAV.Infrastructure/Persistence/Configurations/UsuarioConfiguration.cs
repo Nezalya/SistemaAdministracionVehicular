@@ -34,5 +34,8 @@ public class UsuarioConfiguration : IEntityTypeConfiguration<Usuario>
             .WithOne(c => c.Usuario)
             .HasForeignKey<Usuario>(u => u.ClienteId)
             .OnDelete(DeleteBehavior.NoAction);
+
+        builder.Property(u => u.Email).IsRequired().HasMaxLength(100);
+        builder.HasIndex(u => u.Email).IsUnique();
     }
 }

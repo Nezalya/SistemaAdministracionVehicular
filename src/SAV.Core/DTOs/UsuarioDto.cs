@@ -9,14 +9,6 @@ public class UsuarioDto
     public int? VendedorId { get; set; }
     public int? ClienteId { get; set; }
     public int? ConcesionarioId { get; set; }
-}
-
-public class CrearUsuarioDto
-{
-    public string Username { get; set; } = null!;
-    public string Password { get; set; } = null!;
-    public RolUsuario Rol { get; set; }
-    public int? VendedorId { get; set; }
-    public int? ClienteId { get; set; }
-    public int? ConcesionarioId { get; set; }
+    public string Email { get; set; } = null!;
+    public DateTime FechaRegistro { get; set; }
 }

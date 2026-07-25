@@ -445,6 +445,14 @@ namespace SAV.Infrastructure.Migrations
                     b.Property<int?>("ConcesionarioId")
                         .HasColumnType("int");
 
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<DateTime>("FechaRegistro")
+                        .HasColumnType("datetime2");
+
                     b.Property<string>("PasswordHash")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -469,6 +477,9 @@ namespace SAV.Infrastructure.Migrations
                         .HasFilter("[ClienteId] IS NOT NULL");
 
                     b.HasIndex("ConcesionarioId");
+
+                    b.HasIndex("Email")
+                        .IsUnique();
 
                     b.HasIndex("Username")
                         .IsUnique();

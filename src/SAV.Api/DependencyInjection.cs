@@ -16,6 +16,8 @@ public static class DependencyInjection
         services.AddScoped<IConcesionarioService, ConcesionarioService>();
         services.AddScoped<IServicioOficialService, ServicioOficialService>();
         services.AddScoped<IReporteService, ReporteService>();
+        services.AddScoped<IAuthService, AuthService>();
+        services.AddScoped<Microsoft.AspNetCore.Identity.PasswordHasher<Usuario>>();
         return services;
     }
 

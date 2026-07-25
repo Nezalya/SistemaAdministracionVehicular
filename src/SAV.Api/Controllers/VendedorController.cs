@@ -31,13 +31,6 @@
             return Ok(vendedorDto);
         }
 
-        [HttpPost]
-        public async Task<IActionResult> CrearVendedor(GuardarVendedorDto vendedorDto)
-        {
-            var vendedor = _mapper.Map<Vendedor>(vendedorDto);
-            var vendedorCreado = await _vendedorService.CrearVendedor(vendedor);
-            return CreatedAtAction(nameof(ObtenerVendedorPorId), new { id = vendedorCreado.Id }, _mapper.Map<VendedorDto>(vendedorCreado));
-        }
 
         [HttpPut("{id}")]
         public async Task<IActionResult> ActualizarVendedor(int id, GuardarVendedorDto vendedorDto)

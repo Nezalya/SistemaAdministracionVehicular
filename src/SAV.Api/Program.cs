@@ -1,10 +1,12 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using SAV.Api;
+using SAV.Api.Authentication;
 using SAV.Api.Mappings;
 using SAV.Infrastructure;
 using SAV.Infrastructure.Persistence;
 using Scalar.AspNetCore;//Scalar Reference
+
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -24,9 +26,16 @@ builder.Services.Configure<MvcOptions>(options =>
     options.Filters.Add<SAV.Api.Responses.EnvolturaRespuestaFilter>();
 });
 
-
+builder.Services.AddJwtAuthentication(builder.Configuration);
 
 var app = builder.Build();
+
+using (var scope = app.Services.CreateScope())
+{
+    var context = scope.ServiceProvider.GetRequiredService<SavDbContext>();
+    SAV.Infrastructure.Data.DataSeeder.SembrarAdministrador(context, builder.Configuration);
+}
+
 app.UseMiddleware<SAV.Api.Middleware.ExceptionMiddleware>();
 
 if (app.Environment.IsDevelopment())
@@ -35,7 +44,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();

@@ -13,7 +13,6 @@
   <ItemGroup>
     <Folder Include="Identity\" />
     <Folder Include="Persistence\Converters\" />
-    <Folder Include="Options\" />
     <Folder Include="Persistence\Migrations\" />
     <Folder Include="Reporting\Export\" />
   </ItemGroup>
@@ -30,6 +29,7 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
+    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.14.0" />
   </ItemGroup>
 
   <ItemGroup>

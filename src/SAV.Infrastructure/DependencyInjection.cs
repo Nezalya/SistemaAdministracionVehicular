@@ -2,6 +2,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using SAV.Infrastructure.Data;
 using SAV.Infrastructure.Persistence.Repositories;
+using SAV.Infrastructure.Services;
 
 namespace SAV.Infrastructure
 {
@@ -26,6 +27,7 @@ namespace SAV.Infrastructure
             services.AddScoped<IUsuarioRepository, UsuarioRepository>();
             services.AddScoped<IConcesionarioRepository, ConcesionarioRepository>();
             services.AddScoped<IReporteRepository, ReporteRepository>();
+            services.AddScoped<ITokenService, TokenService>();
             return services;
         }
     }
