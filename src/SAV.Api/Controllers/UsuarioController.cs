@@ -1,5 +1,9 @@
-﻿namespace SAV.Api.Controllers
+﻿using Microsoft.AspNetCore.Authorization;
+using SAV.Api.Authorization;
+
+namespace SAV.Api.Controllers
 {
+    [Authorize(Roles = Roles.Administrador)]
     [ApiController]
     [Route("api/[controller]")]
     public class UsuarioController : ControllerBase
@@ -29,12 +33,5 @@
             return Ok(usuarioDto);
         }
 
-        [HttpPost]
-        public async Task<IActionResult> CrearUsuario(CrearUsuarioDto dto)
-        {
-            var usuario = _mapper.Map<Usuario>(dto);
-            var usuarioCreado = await _usuarioService.CrearUsuario(usuario, dto.Password);
-            return CreatedAtAction(nameof(ObtenerUsuariosPorId), new { id = usuarioCreado.Id }, _mapper.Map<UsuarioDto>(usuarioCreado));
-        }
     }
 }

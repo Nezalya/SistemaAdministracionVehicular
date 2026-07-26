@@ -20,23 +20,6 @@ namespace SAV.Core.Services
         {
             return await _vendedorRepository.GetById(id);
         }
-        public async Task<Vendedor> CrearVendedor(Vendedor vendedor)
-        {
-            var nifExistente = await _vendedorRepository.ObtenerVendedorPorNif(vendedor.Nif);
-            if (nifExistente is not null)
-                throw new BusinessException("Ya existe un vendedor con ese NIF.");
-
-            var concesionarios = await _concesionarioRepository.GetAll();
-            var concesionario = concesionarios.FirstOrDefault();
-            if (concesionario is null)
-                throw new BusinessException("No hay un concesionario registrado en el sistema.");
-
-            vendedor.ConcesionarioId = concesionario.Id;
-
-            await _vendedorRepository.Add(vendedor);
-            await _vendedorRepository.SaveChanges();
-            return vendedor;
-        }
 
         public async Task<Vendedor> ActualizarVendedor(int id, Vendedor vendedor)
         {

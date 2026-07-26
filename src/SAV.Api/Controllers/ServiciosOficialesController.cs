@@ -1,5 +1,10 @@
-﻿namespace SAV.Api.Controllers
+﻿using Microsoft.AspNetCore.Authorization;
+using SAV.Api.Authorization;
+
+namespace SAV.Api.Controllers
 {
+
+    [Authorize(Roles = Roles.Administrador)]
     [ApiController]
     [Route("api/[controller]")]
     public class ServiciosOficialesController : ControllerBase
@@ -12,6 +17,7 @@
             _mapper = mapper; 
         }
 
+        [Authorize(Roles = Roles.AdminOVendedor)]
         [HttpGet]
         public async Task<IActionResult> ObtenerServiciosOficiales()
         {
@@ -20,6 +26,7 @@
             return Ok(serviciosOficialesDto);
         }
 
+        [Authorize(Roles = Roles.AdminOVendedor)]
         [HttpGet("{id}")]
         public async Task<IActionResult> ObtenerServicioOficialPorId(int id)
         {

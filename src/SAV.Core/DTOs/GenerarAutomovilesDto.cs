@@ -9,4 +9,10 @@
         public int? ConcesionarioUbicacionId { get; set; }
         public int? ServicioOficialUbicacionId { get; set; }
     }
+
+    public class GenerarAutomovilesLoteResultDto
+    {
+        public int Total { get; set; }
+        public string Mensaje { get; set; } = null!;
+    }
 }

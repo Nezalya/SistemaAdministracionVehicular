@@ -1,6 +1,10 @@
 ﻿// VentasController.cs
+using Microsoft.AspNetCore.Authorization;
+using SAV.Api.Authorization;
+
 namespace SAV.Api.Controllers
 {
+    [Authorize(Roles = Roles.AdminOVendedor)]
     [ApiController]
     [Route("api/[controller]")]
     public class VentasController : ControllerBase

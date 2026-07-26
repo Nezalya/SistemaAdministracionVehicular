@@ -4,6 +4,5 @@
     {
         Task<IEnumerable<Usuario>> ObtenerTodosLosUsuarios();
         Task<Usuario?> ObtenerUsuarioPorId(int id);
-        Task<Usuario> CrearUsuario(Usuario usuario, string password);
     }
 }

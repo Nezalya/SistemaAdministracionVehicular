@@ -1,4 +1,6 @@
-﻿namespace SAV.Api.Mappings
+﻿using SAV.Core.DTOs;
+
+namespace SAV.Api.Mappings
 {
     public class MappingProfile : Profile
     {
@@ -43,8 +45,7 @@
 
             // ---- Usuario ----
             CreateMap<Usuario, UsuarioDto>();
-            CreateMap<CrearUsuarioDto, Usuario>()
-                .ForMember(d => d.PasswordHash, options => options.Ignore());
+
 
 
             CreateMap<ModeloExtra, ExtraDisponibleDto>()
@@ -73,6 +74,10 @@
             CreateMap<VentaExtra, VentaExtraDto>()
                 .ForMember(d => d.Nombre,
                            o => o.MapFrom(s => s.Caracteristica != null ? s.Caracteristica.Nombre : null));
+            CreateMap<RegistrarVendedorDto, Vendedor>();
+            CreateMap<RegistrarClienteDto, Cliente>();
+            CreateMap<Usuario, UsuarioRegistradoDto>()
+    .ForMember(d => d.Rol, o => o.MapFrom(s => s.Rol.ToString()));
         }
     }
 }
