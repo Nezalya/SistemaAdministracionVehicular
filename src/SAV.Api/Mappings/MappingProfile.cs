@@ -1,4 +1,6 @@
-﻿namespace SAV.Api.Mappings
+﻿using SAV.Core.DTOs;
+
+namespace SAV.Api.Mappings
 {
     public class MappingProfile : Profile
     {
@@ -74,6 +76,8 @@
                            o => o.MapFrom(s => s.Caracteristica != null ? s.Caracteristica.Nombre : null));
             CreateMap<RegistrarVendedorDto, Vendedor>();
             CreateMap<RegistrarClienteDto, Cliente>();
+            CreateMap<Usuario, UsuarioRegistradoDto>()
+    .ForMember(d => d.Rol, o => o.MapFrom(s => s.Rol.ToString()));
         }
     }
 }

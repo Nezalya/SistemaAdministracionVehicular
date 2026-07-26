@@ -1,5 +1,6 @@
-﻿using SAV.Api.Authorization;
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
+using SAV.Api.Authorization;
+using SAV.Core.DTOs;
 
 namespace SAV.Api.Controllers
 {
@@ -29,7 +30,8 @@ namespace SAV.Api.Controllers
         public async Task<IActionResult> RegistroAdministrador(RegistrarAdministradorDto dto)
         {
             var usuario = await _authService.RegistrarAdministrador(dto.Username, dto.Email, dto.Password);
-            return Ok(new { usuario.Id, usuario.Username, usuario.Email, usuario.FechaRegistro, rol = usuario.Rol.ToString() });
+            var respuesta = _mapper.Map<UsuarioRegistradoDto>(usuario);
+            return CreatedAtAction(actionName: "ObtenerUsuariosPorId",controllerName: "Usuario",routeValues: new { id = usuario.Id },value: respuesta);
         }
 
         [Authorize(Roles = Roles.Administrador)]
@@ -38,7 +40,9 @@ namespace SAV.Api.Controllers
         {
             var vendedor = _mapper.Map<Vendedor>(dto);
             var usuario = await _authService.RegistrarVendedor(dto.Username, dto.Email, dto.Password, vendedor);
-            return Ok(new { usuario.Id, usuario.Username, usuario.Email, usuario.FechaRegistro, rol = usuario.Rol.ToString() });
+            var respuesta = _mapper.Map<UsuarioRegistradoDto>(usuario);
+
+            return CreatedAtAction("ObtenerUsuariosPorId", "Usuario", new { id = usuario.Id }, respuesta);
         }
 
         [Authorize(Roles = Roles.AdminOVendedor)]
@@ -47,7 +51,9 @@ namespace SAV.Api.Controllers
         {
             var cliente = _mapper.Map<Cliente>(dto);
             var usuario = await _authService.RegistrarCliente(dto.Username, dto.Email, dto.Password, cliente);
-            return Ok(new { usuario.Id, usuario.Username, usuario.Email, usuario.FechaRegistro, rol = usuario.Rol.ToString() });
+            var respuesta = _mapper.Map<UsuarioRegistradoDto>(usuario);
+
+            return CreatedAtAction("ObtenerUsuariosPorId", "Usuario", new { id = usuario.Id }, respuesta);
         }
     }
 }

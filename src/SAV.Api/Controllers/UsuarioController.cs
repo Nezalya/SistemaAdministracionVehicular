@@ -1,5 +1,9 @@
-﻿namespace SAV.Api.Controllers
+﻿using Microsoft.AspNetCore.Authorization;
+using SAV.Api.Authorization;
+
+namespace SAV.Api.Controllers
 {
+    [Authorize(Roles = Roles.Administrador)]
     [ApiController]
     [Route("api/[controller]")]
     public class UsuarioController : ControllerBase

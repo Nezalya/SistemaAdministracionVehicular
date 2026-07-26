@@ -1,8 +1,12 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using SAV.Api.Authorization;
+using SAV.Core.DTOs;
 using SAV.Core.Interfaces.Services;
 
 namespace SAV.Api.Controllers
 {
+    [Authorize(Roles = Roles.Administrador)]
     [ApiController]
     [Route("api/[controller]")]
     public class FabricaController : ControllerBase
@@ -18,7 +22,7 @@ namespace SAV.Api.Controllers
         public async Task<IActionResult> Importar()
         {
             var resultado = await _importService.Importar();
-            return Ok(new { mensaje = resultado });
+            return Ok(new ImportacionFabricaDto { Mensaje = resultado });
         }
     }
 }

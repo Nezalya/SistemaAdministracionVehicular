@@ -1,7 +1,10 @@
-﻿using SAV.Core.Dtos;
+﻿using Microsoft.AspNetCore.Authorization;
+using SAV.Api.Authorization;
+using SAV.Core.Dtos;
 
 namespace SAV.Api.Controllers
 {
+    [Authorize(Roles = Roles.AdminOVendedor)]
     [ApiController]
     [Route("api/[controller]")]
     public class AutomovilController : ControllerBase
@@ -11,7 +14,9 @@ namespace SAV.Api.Controllers
         public AutomovilController(IAutomovilService automovilService, IMapper mapper)
         { 
             _automovilService = automovilService; 
-            _mapper = mapper; }
+            _mapper = mapper; 
+        }
+
 
         [HttpGet]
         public async Task<IActionResult> ObtenerAutomoviles([FromQuery] FiltroAutomovilDto filtro)
@@ -37,6 +42,7 @@ namespace SAV.Api.Controllers
 
         }
 
+        [Authorize(Roles = Roles.Administrador)]
         [HttpPost]
         public async Task<IActionResult> RegistrarAutomovil(RegistrarAutomovilDto automovilDto)
         {
@@ -53,6 +59,8 @@ namespace SAV.Api.Controllers
             return Ok(automovilesVendidosDto);
         }
 
+
+        [Authorize(Roles = Roles.Administrador)]
         [HttpPut("{id}")]
         public async Task<IActionResult> ActualizarAutomovil(int id, ActualizarAutomovilDto dto)
         {
@@ -61,6 +69,7 @@ namespace SAV.Api.Controllers
             return Ok(_mapper.Map<AutomovilDto>(automovilActualizado));
         }
 
+        [Authorize(Roles = Roles.Administrador)]
         [HttpDelete("{id}")]
         public async Task<IActionResult> EliminarAutomovil(int id)
         {
@@ -75,6 +84,7 @@ namespace SAV.Api.Controllers
             return Ok(stockResumen);
         }
 
+        [Authorize(Roles = Roles.Administrador)]
         [HttpPost("lote")]
         public async Task<IActionResult> RegistrarLoteDeAutomoviles(GenerarAutomovilesLoteDto dto)
         {
@@ -82,7 +92,11 @@ namespace SAV.Api.Controllers
                 dto.ModeloId, dto.CantidadPorColor, dto.Colores,
                 dto.AnoFabricacion, dto.ConcesionarioUbicacionId, dto.ServicioOficialUbicacionId);
 
-            return Ok(new { total, mensaje = $"Se registraron {total} automóviles del modelo {dto.ModeloId}." });
+            return Ok(new GenerarAutomovilesLoteResultDto
+            {
+                Total = total,
+                Mensaje = $"Se registraron {total} automóviles del modelo {dto.ModeloId}."
+            });
         }
 
     }
