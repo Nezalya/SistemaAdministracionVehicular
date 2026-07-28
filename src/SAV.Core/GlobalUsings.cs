@@ -11,3 +11,4 @@ global using SAV.Core.Enums;
 global using SAV.Core.Interfaces.Repositories;
 global using SAV.Core.Interfaces.Services;
 global using SAV.Core.Exceptions;
+global using SAV.Core.Dtos;
