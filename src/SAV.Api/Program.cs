@@ -1,3 +1,4 @@
+using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using SAV.Api;
@@ -5,7 +6,13 @@ using SAV.Api.Authentication;
 using SAV.Api.Mappings;
 using SAV.Infrastructure;
 using SAV.Infrastructure.Persistence;
+<<<<<<< HEAD
 
+=======
+using Scalar.AspNetCore;//Scalar Reference
+using SharpGrip.FluentValidation.AutoValidation.Mvc.Extensions;
+using SAV.Api.Extensions;
+>>>>>>> origin/master
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -27,6 +34,8 @@ builder.Services.Configure<MvcOptions>(options =>
 });
 
 builder.Services.AddJwtAuthentication(builder.Configuration);
+
+builder.Services.AddApiValidation();
 
 var app = builder.Build();
 
