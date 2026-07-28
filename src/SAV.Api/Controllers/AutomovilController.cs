@@ -34,7 +34,7 @@ namespace SAV.Api.Controllers
         }
 
         [HttpGet("{id}")]
-        public async Task<IActionResult> ObtenerAutomovil(int id)
+        public async Task<IActionResult> ObtenerAutomovilPorId(int id)
         {
             var automovil= await _automovilService.ObtenerAutomovilPorId(id);
             var automovilDto = _mapper.Map<AutomovilDto>(automovil);
@@ -48,7 +48,7 @@ namespace SAV.Api.Controllers
         {
             var automovil = _mapper.Map<Automovil>(automovilDto);
             var automovilCreado = await _automovilService.RegistrarAutomovil(automovil);
-            return CreatedAtAction(nameof(ObtenerAutomovil), new { id = automovilCreado.Id }, _mapper.Map<AutomovilDto>(automovilCreado));
+            return CreatedAtAction(nameof(ObtenerAutomovilPorId), new { id = automovilCreado.Id }, _mapper.Map<AutomovilDto>(automovilCreado));
         }
 
         [HttpGet("vendidos")]

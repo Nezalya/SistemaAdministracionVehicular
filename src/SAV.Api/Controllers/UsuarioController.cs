@@ -26,7 +26,7 @@ namespace SAV.Api.Controllers
             
 
         [HttpGet("{id}")]
-        public async Task<IActionResult> ObtenerUsuariosPorId(int id)
+        public async Task<IActionResult> ObtenerUsuarioPorId(int id)
         {
             var usuario = await _usuarioService.ObtenerUsuarioPorId(id);
             var usuarioDto = _mapper.Map<UsuarioDto>(usuario);

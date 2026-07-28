@@ -25,7 +25,7 @@ namespace SAV.Api.Controllers
         }
 
         [HttpGet("{id}")]
-        public async Task<IActionResult> GetById(int id)
+        public async Task<IActionResult> ObtenerCaracteristicaPorId(int id)
         {
             var caracteristica = await _caracteristicaService.ObtenerCaracteristicaPorId(id);
             var caracteristicaDto = _mapper.Map<CaracteristicaDto>(caracteristica);

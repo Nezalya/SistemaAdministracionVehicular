@@ -25,7 +25,7 @@ namespace SAV.Api.Controllers
         }
 
         [HttpGet("{id}")]
-        public async Task<IActionResult> ObtenerConsesionario(int id)
+        public async Task<IActionResult> ObtenerConsesionarioPorId(int id)
         {
             var concesionario = await _consesionarioService.ObtenerConcesionarioPorId(id);
             var concesionarioDto = _mapper.Map<ConcesionarioDto>(concesionario);
@@ -37,7 +37,7 @@ namespace SAV.Api.Controllers
         {
             var concesionario = _mapper.Map<Concesionario>(concesionarioDto);
             var concesionarioCreado = await _consesionarioService.CrearConcesionario(concesionario);
-            return CreatedAtAction(nameof(ObtenerConsesionario), new { id = concesionarioCreado.Id }, _mapper.Map<ConcesionarioDto>(concesionarioCreado));
+            return CreatedAtAction(nameof(ObtenerConsesionarioPorId), new { id = concesionarioCreado.Id }, _mapper.Map<ConcesionarioDto>(concesionarioCreado));
         }
 
         [HttpPut("{id}")]
