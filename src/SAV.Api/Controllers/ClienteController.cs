@@ -26,7 +26,7 @@ namespace SAV.Api.Controllers
             
 
         [HttpGet("{id}")]
-        public async Task<IActionResult> ObtenerCliente(int id)
+        public async Task<IActionResult> ObtenerClientePorId(int id)
         {
             var cliente = await _clienteService.ObtenerClientePorId(id);
             var clienteDto = _mapper.Map<ClienteDto>(cliente);
@@ -39,7 +39,7 @@ namespace SAV.Api.Controllers
             var cliente = _mapper.Map<Cliente>(clienteDto);
             cliente.FechaRegistro = DateTime.Now;
             var clienteCreado = await _clienteService.CrearCliente(cliente);
-            return CreatedAtAction(nameof(ObtenerCliente), new { id = clienteCreado.Id }, _mapper.Map<ClienteDto>(clienteCreado));
+            return CreatedAtAction(nameof(ObtenerClientePorId), new { id = clienteCreado.Id }, _mapper.Map<ClienteDto>(clienteCreado));
         }
 
         [HttpPut("{id}")]

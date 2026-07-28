@@ -26,7 +26,7 @@ namespace SAV.Api.Controllers
         }
 
         [HttpGet("{id}")]
-        public async Task<IActionResult> ObtenerModelosPorId(int id)
+        public async Task<IActionResult> ObtenerModeloPorId(int id)
         {
             var modelo = await _modeloService.ObtenerModeloPorId(id);
             var modeloDto = _mapper.Map<ModeloDto>(modelo);

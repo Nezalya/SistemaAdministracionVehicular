@@ -6,9 +6,13 @@ using SAV.Api.Authentication;
 using SAV.Api.Mappings;
 using SAV.Infrastructure;
 using SAV.Infrastructure.Persistence;
+<<<<<<< HEAD
+
+=======
 using Scalar.AspNetCore;//Scalar Reference
 using SharpGrip.FluentValidation.AutoValidation.Mvc.Extensions;
 using SAV.Api.Extensions;
+>>>>>>> origin/master
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -45,7 +49,7 @@ app.UseMiddleware<SAV.Api.Middleware.ExceptionMiddleware>();
 
 if (app.Environment.IsDevelopment())
 {
-    app.MapScalarApiReference();//Scalar Referenc
+    // Quité lo de Scalar Reference
 }
 
 app.UseHttpsRedirection();
