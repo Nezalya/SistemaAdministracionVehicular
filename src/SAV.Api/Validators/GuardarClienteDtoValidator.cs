@@ -26,9 +26,11 @@ namespace SAV.Core.Validators
                 .Length(10).WithMessage("El teléfono debe contener exactamente 10 dígitos.")
                 .Matches(@"^\d+$").WithMessage("El teléfono solo puede contener números.");
 
-            RuleFor(x => x.Domicilio).MaximumLength(200).WithMessage("El domicilio no puede exceder los 200 caracteres.")
-                .Matches(@"^[a-zA-ZáéíóúÁÉÍÓÚñÑ ]+$")
-                .WithMessage("El domicilio solo puede contener letras y espacios.");
+            RuleFor(x => x.Domicilio)
+    .MaximumLength(200).WithMessage("El domicilio no puede exceder los 200 caracteres.")
+    .Matches(@"^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ .,#\-]+$")
+        .WithMessage("El domicilio contiene caracteres no permitidos.")
+    .When(x => !string.IsNullOrWhiteSpace(x.Domicilio));
         }
     }
 }
