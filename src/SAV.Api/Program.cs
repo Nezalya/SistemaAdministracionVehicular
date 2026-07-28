@@ -1,18 +1,12 @@
-using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using SAV.Api;
 using SAV.Api.Authentication;
+using SAV.Api.Extensions;
 using SAV.Api.Mappings;
 using SAV.Infrastructure;
 using SAV.Infrastructure.Persistence;
-<<<<<<< HEAD
 
-=======
-using Scalar.AspNetCore;//Scalar Reference
-using SharpGrip.FluentValidation.AutoValidation.Mvc.Extensions;
-using SAV.Api.Extensions;
->>>>>>> origin/master
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -47,10 +41,6 @@ using (var scope = app.Services.CreateScope())
 
 app.UseMiddleware<SAV.Api.Middleware.ExceptionMiddleware>();
 
-if (app.Environment.IsDevelopment())
-{
-    // Quité lo de Scalar Reference
-}
 
 app.UseHttpsRedirection();
 app.UseAuthentication();
