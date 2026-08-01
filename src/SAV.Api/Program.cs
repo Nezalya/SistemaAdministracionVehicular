@@ -30,6 +30,7 @@ builder.Services.Configure<MvcOptions>(options =>
 builder.Services.AddJwtAuthentication(builder.Configuration);
 
 builder.Services.AddApiValidation();
+builder.Services.AddApiDocumentation();
 
 var app = builder.Build();
 
@@ -40,6 +41,12 @@ using (var scope = app.Services.CreateScope())
 }
 
 app.UseMiddleware<SAV.Api.Middleware.ExceptionMiddleware>();
+
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();
+}
 
 
 app.UseHttpsRedirection();
