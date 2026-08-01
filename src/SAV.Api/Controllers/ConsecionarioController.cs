@@ -3,7 +3,7 @@ using SAV.Api.Authorization;
 
 namespace SAV.Api.Controllers
 {
-    [Authorize(Roles = Roles.Administrador)]
+    [Authorize(Roles = Roles.AdminOVendedor)]
     [ApiController]
     [Route("api/[controller]")]
     public class ConcesionarioController : ControllerBase
@@ -24,6 +24,7 @@ namespace SAV.Api.Controllers
             return Ok(concesionariosDto);
         }
 
+
         [HttpGet("{id}")]
         public async Task<IActionResult> ObtenerConsesionarioPorId(int id)
         {
@@ -32,6 +33,7 @@ namespace SAV.Api.Controllers
             return Ok(concesionarioDto);
         }
 
+        [Authorize(Roles = Roles.Administrador)]
         [HttpPost]
         public async Task<IActionResult> CrearConcesionario(GuardarConcesionarioDto concesionarioDto)
         {
@@ -40,6 +42,7 @@ namespace SAV.Api.Controllers
             return CreatedAtAction(nameof(ObtenerConsesionarioPorId), new { id = concesionarioCreado.Id }, _mapper.Map<ConcesionarioDto>(concesionarioCreado));
         }
 
+        [Authorize(Roles = Roles.Administrador)]
         [HttpPut("{id}")]
         public async Task<IActionResult> ActualizarConcesionario(int id, GuardarConcesionarioDto concesionarioDto)
         {
