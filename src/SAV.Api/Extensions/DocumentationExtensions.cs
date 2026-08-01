@@ -5,13 +5,13 @@ namespace SAV.Api.Extensions
 {
     public static class DocumentationExtensions
     {
-        public static IServiceCollection AddApiDocumentation(this IServiceCollection services)
+        public static IServiceCollection AddApiDocumentation(this IServiceCollection services)//Metodo de extension para poner simplemente en el program builder.Services.AddApiDocumentation();
         {
-            services.AddEndpointsApiExplorer();
+            services.AddEndpointsApiExplorer();//Explora todos los endpoints de la API y genera documentación para ellos
 
             services.AddSwaggerGen(options =>
             {
-                options.SwaggerDoc("v1", new OpenApiInfo
+                options.SwaggerDoc("v1", new OpenApiInfo//Esta informacion aparecera arriba de Swagger UI.
                 {
                     Title = "SAV — Sistema de Administración Vehicular",
                     Version = "v1",
@@ -41,8 +41,9 @@ namespace SAV.Api.Extensions
                 // Aplica el esquema a los endpoints (para que el token SÍ se envíe)
                 options.AddSecurityRequirement(doc => new OpenApiSecurityRequirement
                 {
-                    { new OpenApiSecuritySchemeReference("Bearer"), new List<string>() }
+                    { new OpenApiSecuritySchemeReference("Bearer",doc), new List<string>() }
                 });
+                options.OperationFilter<RespuestasSeguridadOperationFilter>();
             });
             return services;
         }
