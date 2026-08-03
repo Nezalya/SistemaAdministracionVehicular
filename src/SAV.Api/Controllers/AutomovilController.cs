@@ -1,6 +1,4 @@
 ﻿using Microsoft.AspNetCore.Authorization;
-using SAV.Api.Authorization;
-using SAV.Core.Dtos;
 
 namespace SAV.Api.Controllers
 {

@@ -8,6 +8,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\SAV.Core\SAV.Core.csproj" />
+    <ProjectReference Include="..\SAV.Application\SAV.Application.csproj" />
   </ItemGroup>
 
   <ItemGroup>

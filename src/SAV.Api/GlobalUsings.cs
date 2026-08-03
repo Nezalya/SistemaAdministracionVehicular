@@ -1,20 +1,24 @@
 ﻿global using Microsoft.AspNetCore.Mvc;
-global using SAV.Core.Interfaces.Services;
-global using SAV.Core.Interfaces.Repositories;
-global using SAV.Core.Services;
-global using SAV.Infrastructure.Persistence.Repositories;
+global using Microsoft.AspNetCore.Mvc.Filters;
+global using System.Net;
+global using System.Text.Json;
 global using AutoMapper;
-global using SAV.Api.DTOs;
+
 global using SAV.Core.Entities.Catalogo;
 global using SAV.Core.Entities.Inventario;
 global using SAV.Core.Entities.RedDeDistribuciónYPersonal;
 global using SAV.Core.Entities.Seguridad;
 global using SAV.Core.Entities.Ventas;
-global using SAV.Api.Mappings;
 global using SAV.Core.Enums;
-global using Microsoft.AspNetCore.Mvc;
-global using Microsoft.AspNetCore.Mvc.Filters;
-global using System.Net;
-global using System.Text.Json;
-global using SAV.Api.Responses;
 global using SAV.Core.Exceptions;
+
+global using SAV.Application.Interfaces.Repositories;
+global using SAV.Application.Interfaces.Services;
+global using SAV.Application.Services;
+global using SAV.Application.DTOs;
+global using SAV.Infrastructure.Persistence.Repositories;
+global using SAV.Api.Mappings;
+global using SAV.Api.Responses;
+global using SAV.Api.Authentication;
+global using SAV.Api.Authorization;
+global using SAV.Core.Helpers;

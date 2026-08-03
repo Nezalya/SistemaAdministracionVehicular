@@ -1,5 +1,4 @@
-﻿using SAV.Core.DTOs;
-
+﻿
 namespace SAV.Api.Mappings
 {
     public class MappingProfile : Profile
