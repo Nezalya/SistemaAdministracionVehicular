@@ -4,7 +4,7 @@ using SAV.Api.Authorization;
 namespace SAV.Api.Controllers
 {
 
-    [Authorize(Roles = Roles.Administrador)]
+    [Authorize(Roles = Roles.AdminOVendedor)]
     [ApiController]
     [Route("api/[controller]")]
     public class ServiciosOficialesController : ControllerBase
@@ -35,6 +35,7 @@ namespace SAV.Api.Controllers
             return Ok(servicioOficialDto);
         }
 
+        [Authorize(Roles = Roles.Administrador)]
         [HttpPost]
         public async Task<IActionResult> CrearServicioOficial(GuardarServicioOficialDto servicioOficialDto)
         {
@@ -43,6 +44,7 @@ namespace SAV.Api.Controllers
             return CreatedAtAction(nameof(ObtenerServicioOficialPorId), new { id = servicioOficialCreado.Id }, _mapper.Map<ServicioOficialDto>(servicioOficialCreado));
         }
 
+        [Authorize(Roles = Roles.Administrador)]
         [HttpPut("{id}")]
         public async Task<IActionResult> ActualizarServicioOficial(int id, GuardarServicioOficialDto servicioOficialDto)
         {
@@ -51,6 +53,7 @@ namespace SAV.Api.Controllers
             return Ok(_mapper.Map<ServicioOficialDto>(servicioOficialActualizado));
         }
 
+        [Authorize(Roles = Roles.Administrador)]
         [HttpDelete("{id}")]
         public async Task<IActionResult> EliminarServicioOficial(int id)
         {

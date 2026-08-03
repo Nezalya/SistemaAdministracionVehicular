@@ -11,9 +11,6 @@ namespace SAV.Api.Extensions
         {
             
             services.AddValidatorsFromAssemblyContaining<LoginDtoValidator>();
-            services.AddValidatorsFromAssemblyContaining<RegistrarVendedorDtoValidator>();
-
-
             services.AddFluentValidationAutoValidation();
 
             return services;

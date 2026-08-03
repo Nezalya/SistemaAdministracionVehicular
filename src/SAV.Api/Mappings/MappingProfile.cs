@@ -33,9 +33,27 @@ namespace SAV.Api.Mappings
 
             // ---- Automovil ----
             CreateMap<Automovil, AutomovilDto>()
-                .ForMember(d => d.ModeloNombre,
-                           options => options.MapFrom(s => s.Modelo != null ? s.Modelo.Nombre : null));
-            CreateMap<RegistrarAutomovilDto, Automovil>();
+    .ForMember(d => d.ModeloNombre,
+        o => o.MapFrom(s => s.Modelo != null
+            ? s.Modelo.Nombre
+            : null))
+
+    .ForMember(d => d.MarcaNombre,
+        o => o.MapFrom(s => s.Modelo != null && s.Modelo.Marca != null
+            ? s.Modelo.Marca.Nombre
+            : null))
+
+    .ForMember(d => d.Ubicacion,
+        o => o.MapFrom(s => s.ServicioOficialUbicacion != null
+            ? s.ServicioOficialUbicacion.Nombre
+            : s.ConcesionarioUbicacion != null
+                ? s.ConcesionarioUbicacion.Nombre
+                : null))
+
+        .ForMember(d => d.UbicacionTipo,
+        o => o.MapFrom(s => s.ServicioOficialUbicacionId.HasValue
+            ? TipoUbicacion.ServicioOficial
+            : TipoUbicacion.Concesionario));
 
             // ---- Venta ----
             CreateMap<Venta, VentaDto>();
