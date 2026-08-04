@@ -1,4 +1,6 @@
-﻿namespace SAV.Api.Middleware
+﻿using SAV.Application.Exceptions;
+
+namespace SAV.Api.Middleware
 {
     public class ExceptionMiddleware
     {

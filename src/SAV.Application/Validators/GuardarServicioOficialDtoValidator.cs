@@ -1,6 +1,6 @@
 ﻿using FluentValidation;
 
-namespace SAV.Api.Validators
+namespace SAV.Application.Validators
 {
     public class GuardarServicioOficialDtoValidator : AbstractValidator<GuardarServicioOficialDto>
     {

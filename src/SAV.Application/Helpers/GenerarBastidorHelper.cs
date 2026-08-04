@@ -1,4 +1,5 @@
-﻿public static class GenerarBastidorHelper
+﻿namespace SAV.Application.Helpers;
+public static class GenerarBastidorHelper
 {
     public static string GenerarBastidor()
     {

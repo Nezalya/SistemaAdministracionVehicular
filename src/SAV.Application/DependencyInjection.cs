@@ -1,11 +1,14 @@
-﻿namespace SAV.Api;
+﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.DependencyInjection;
+using SAV.Application.Services;
+
+namespace SAV.Application;
 
 public static class DependencyInjection
 {
-    public static IServiceCollection AddServices(this IServiceCollection services)
+    public static IServiceCollection AddApplication(this IServiceCollection services)
     {
-        services.AddTransient(typeof(IRepository<>), typeof(BaseRepository<>));
-        services.AddTransient<IMarcaService, MarcaService>();
+        services.AddScoped<IMarcaService, MarcaService>();
         services.AddScoped<IAutomovilService, AutomovilService>();
         services.AddScoped<IVentaService, VentaService>();
         services.AddScoped<IUsuarioService, UsuarioService>();
@@ -17,10 +20,9 @@ public static class DependencyInjection
         services.AddScoped<IServicioOficialService, ServicioOficialService>();
         services.AddScoped<IReporteService, ReporteService>();
         services.AddScoped<IAuthService, AuthService>();
-        services.AddScoped<Microsoft.AspNetCore.Identity.PasswordHasher<Usuario>>();
+
+        services.AddScoped<PasswordHasher<Usuario>>();
+
         return services;
     }
-
 }
-
-

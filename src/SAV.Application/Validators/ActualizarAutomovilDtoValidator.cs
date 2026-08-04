@@ -1,6 +1,6 @@
 ﻿using FluentValidation;
 
-namespace SAV.Core.Validators
+namespace SAV.Application.Validators
 {
     public class ActualizarAutomovilDtoValidator : AbstractValidator<ActualizarAutomovilDto>
     {

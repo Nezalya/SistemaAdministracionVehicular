@@ -1,6 +1,6 @@
 ﻿using System.Text.Json.Serialization;
 
-namespace SAV.Api.Responses
+namespace SAV.Application.Common
 {
      public class RespuestaApi<T>
     {

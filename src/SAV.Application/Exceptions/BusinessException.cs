@@ -1,4 +1,4 @@
-﻿namespace SAV.Core.Exceptions
+﻿namespace SAV.Application.Exceptions
 {
     public class BusinessException : Exception
     {

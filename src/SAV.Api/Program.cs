@@ -1,20 +1,17 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
-using SAV.Api;
-using SAV.Api.Authentication;
+using SAV.Application;
 using SAV.Api.Extensions;
-using SAV.Api.Mappings;
+using SAV.Application.Mappings;
 using SAV.Infrastructure;
 using SAV.Infrastructure.Persistence;
+using SAV.Application.Common;
 
 
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddDbContext<SavDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
-
-builder.Services.AddServices();//Injeccion de dependencias
+builder.Services.AddApplication();//Injeccion de dependencias
 
 builder.Services.AddInfrastructure(builder.Configuration);//Injeccion de dependencias de infraestructura
 
@@ -24,7 +21,7 @@ builder.Services.AddControllers()//Para el registro de los converts
     .AddJsonOptions(o => o.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter()));
 builder.Services.Configure<MvcOptions>(options =>
 {
-    options.Filters.Add<SAV.Api.Responses.EnvolturaRespuestaFilter>();
+    options.Filters.Add<EnvolturaRespuestaFilter>();
 });
 
 builder.Services.AddJwtAuthentication(builder.Configuration);

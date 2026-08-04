@@ -1,5 +1,5 @@
-﻿
-namespace SAV.Api.Mappings
+﻿using AutoMapper;
+namespace SAV.Application.Mappings
 {
     public class MappingProfile : Profile
     {

@@ -1,6 +1,5 @@
 ﻿using FluentValidation;
-using SAV.Api.Validators;
-using SAV.Core.Validators;
+using SAV.Application.Validators;
 using SharpGrip.FluentValidation.AutoValidation.Mvc.Extensions;
 
 namespace SAV.Api.Extensions

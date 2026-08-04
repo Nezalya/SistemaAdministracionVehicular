@@ -10,15 +10,13 @@ global using SAV.Core.Entities.RedDeDistribuciónYPersonal;
 global using SAV.Core.Entities.Seguridad;
 global using SAV.Core.Entities.Ventas;
 global using SAV.Core.Enums;
-global using SAV.Core.Exceptions;
 
 global using SAV.Application.Interfaces.Repositories;
 global using SAV.Application.Interfaces.Services;
 global using SAV.Application.Services;
 global using SAV.Application.DTOs;
 global using SAV.Infrastructure.Persistence.Repositories;
-global using SAV.Api.Mappings;
 global using SAV.Api.Responses;
 global using SAV.Api.Authentication;
 global using SAV.Api.Authorization;
-global using SAV.Core.Helpers;
+global using SAV.Application.Common;
