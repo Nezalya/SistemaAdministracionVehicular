@@ -92,7 +92,7 @@
             return await _automovilRepository.ObtenerResumenStock();
         }
 
-        public async Task<IEnumerable<Automovil>> BuscarAutomoviles(FiltroAutomovilDto filtro)
+        public async Task<PagedResult<Automovil>> BuscarAutomoviles(FiltroAutomovilDto filtro)
         {
             return await _automovilRepository.BuscarAutomoviles(filtro);
         }

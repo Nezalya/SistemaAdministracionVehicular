@@ -1,4 +1,6 @@
-﻿namespace SAV.Infrastructure.Persistence.Repositories;
+﻿using SAV.Application.Common;
+
+namespace SAV.Infrastructure.Persistence.Repositories;
 
 public class AutomovilRepository : BaseRepository<Automovil>, IAutomovilRepository
 {
@@ -80,15 +82,15 @@ public class AutomovilRepository : BaseRepository<Automovil>, IAutomovilReposito
         };
     }
 
-    public async Task<IEnumerable<Automovil>> BuscarAutomoviles(FiltroAutomovilDto filtro)
+    public async Task<PagedResult<Automovil>> BuscarAutomoviles(FiltroAutomovilDto filtro)
     {
         var query = _entities
-    .AsNoTracking()                              
-    .Include(a => a.Modelo)
-        .ThenInclude(m => m.Marca)
-    .Include(a => a.ConcesionarioUbicacion)      
-    .Include(a => a.ServicioOficialUbicacion)    
-    .AsQueryable();
+        .AsNoTracking()
+        .Include(a => a.Modelo)
+            .ThenInclude(m => m.Marca)
+        .Include(a => a.ConcesionarioUbicacion)
+        .Include(a => a.ServicioOficialUbicacion)
+        .AsQueryable();
 
         if (!string.IsNullOrWhiteSpace(filtro.Marca))
             query = query.Where(a => a.Modelo.Marca.Nombre == filtro.Marca);
@@ -108,7 +110,35 @@ public class AutomovilRepository : BaseRepository<Automovil>, IAutomovilReposito
         if (filtro.SoloEnConcesionario == true)
             query = query.Where(a => a.ServicioOficialUbicacionId == null);
 
-        return await query.ToListAsync();
+        var total = await query.CountAsync();
+
+        query = (filtro.SortBy?.ToLowerInvariant(), filtro.SortDescending) switch
+        {
+            ("marca", false) => query.OrderBy(a => a.Modelo.Marca.Nombre),
+            ("marca", true) => query.OrderByDescending(a => a.Modelo.Marca.Nombre),
+            ("modelo", false) => query.OrderBy(a => a.Modelo.Nombre),
+            ("modelo", true) => query.OrderByDescending(a => a.Modelo.Nombre),
+            ("numbastidor", false) => query.OrderBy(a => a.NumBastidor),
+            ("numbastidor", true) => query.OrderByDescending(a => a.NumBastidor),
+            ("color", false) => query.OrderBy(a => a.Color),
+            ("color", true) => query.OrderByDescending(a => a.Color),
+            ("estado", false) => query.OrderBy(a => a.Estado),
+            ("estado", true) => query.OrderByDescending(a => a.Estado),
+            _ => query.OrderBy(a => a.Id)
+        };
+
+        var items = await query
+            .Skip((filtro.Page - 1) * filtro.PageSize)
+            .Take(filtro.PageSize)
+            .ToListAsync();
+
+        return new PagedResult<Automovil>
+        {
+            Items = items,
+            TotalCount = total,
+            Page = filtro.Page,
+            PageSize = filtro.PageSize
+        };
     }
 }
 

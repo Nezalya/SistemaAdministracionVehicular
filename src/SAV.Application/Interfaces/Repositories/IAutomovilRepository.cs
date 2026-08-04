@@ -8,6 +8,6 @@ namespace SAV.Application.Interfaces.Repositories
         Task<Automovil?> ObtenerAutomovilPorBastidor(string numBastidor);
         Task<IEnumerable<Automovil>> ObtenerAutomovilesVendidos();
         Task<ResumenStockDto> ObtenerResumenStock();
-        Task<IEnumerable<Automovil>> BuscarAutomoviles(FiltroAutomovilDto filtro);
+        Task<PagedResult<Automovil>> BuscarAutomoviles(FiltroAutomovilDto filtro);
     }
 }

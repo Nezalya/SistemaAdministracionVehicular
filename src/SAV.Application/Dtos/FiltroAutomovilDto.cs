@@ -1,8 +1,8 @@
 ﻿namespace SAV.Application.DTOs;
 
 
-    public class FiltroAutomovilDto
-    {
+    public class FiltroAutomovilDto : PagedRequest
+{
         public string? Marca { get; set; }
         public string? Modelo { get; set; }
         public EstadoAutomovil? Estado { get; set; }

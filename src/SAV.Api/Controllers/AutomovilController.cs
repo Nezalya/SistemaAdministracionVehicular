@@ -20,7 +20,7 @@ namespace SAV.Api.Controllers
         public async Task<IActionResult> ObtenerAutomoviles([FromQuery] FiltroAutomovilDto filtro)
         {
             var automoviles = await _automovilService.BuscarAutomoviles(filtro);
-            return Ok(_mapper.Map<IEnumerable<AutomovilDto>>(automoviles));
+            return Ok(automoviles.Map<Automovil, AutomovilDto>(_mapper));
         }
 
         [HttpGet("disponibles")]
