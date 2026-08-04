@@ -1,0 +1,16 @@
+﻿namespace SAV.Application.Interfaces.Services
+{
+    public interface IAutomovilService
+    {
+        Task<Automovil?> ObtenerAutomovilPorId(int id);
+        Task<IEnumerable<Automovil>> ObtenerAutomovilesDisponibles();
+        Task<Automovil> RegistrarAutomovil(Automovil automovil);
+        Task<IEnumerable<Automovil>> ObtenerAutomovilesVendidos();   
+        Task<Automovil> ActualizarAutomovil(int id, Automovil automovil);   
+        Task EliminarAutomovil(int id);
+        Task<ResumenStockDto> ObtenerResumenStock();
+        Task<PagedResult<Automovil>> BuscarAutomoviles(FiltroAutomovilDto filtro);
+        Task<int> RegistrarLoteDeAutomoviles(int modeloId, int cantidadPorColor, List<string> colores,
+                        int? anoFabricacion, int? concesionarioUbicacionId, int? servicioOficialUbicacionId);
+    }
+}

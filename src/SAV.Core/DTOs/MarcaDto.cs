@@ -1,8 +1,0 @@
-﻿namespace SAV.Api.DTOs;
-
-public class MarcaDto
-{
-    public int Id { get; set; }
-    public string Nombre { get; set; } = null!;
-    public string? PaisOrigen { get; set; }
-}

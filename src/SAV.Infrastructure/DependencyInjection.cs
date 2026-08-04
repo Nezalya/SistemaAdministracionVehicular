@@ -28,6 +28,7 @@ namespace SAV.Infrastructure
             services.AddScoped<IConcesionarioRepository, ConcesionarioRepository>();
             services.AddScoped<IReporteRepository, ReporteRepository>();
             services.AddScoped<ITokenService, TokenService>();
+            services.AddTransient(typeof(IRepository<>), typeof(BaseRepository<>));
             return services;
         }
     }
