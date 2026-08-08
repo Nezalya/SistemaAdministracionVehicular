@@ -19,7 +19,7 @@
 <AuthorizeView Roles="@Roles.Administrador">
     <Authorized>
         <EstadoDatos TDato="DashboardDto" Datos="dashboard" Cargando="cargandoDashboard"
-                     Error="errorDashboard" AlReintentar="CargarDashboardAsync"
+                     Error="@errorDashboard" AlReintentar="CargarDashboardAsync"
                      TituloVacio="Sin datos que resumir"
                      TextoVacio="Cuando registres automóviles y ventas verás aquí su resumen.">
             <section class="sav-metricas">
@@ -63,7 +63,7 @@
                 <section class="sav-panel">
                     <h2 class="sav-panel__titulo">Stock por marca</h2>
                     <EstadoDatos TDato="List<StockPorMarcaDto>" Datos="stockPorMarca"
-                                 Cargando="cargandoStock" Error="errorStock"
+                                 Cargando="cargandoStock" Error="@errorStock"
                                  AlReintentar="CargarStockAsync"
                                  IconoVacio="inventory_2"
                                  TituloVacio="Sin unidades en stock"
