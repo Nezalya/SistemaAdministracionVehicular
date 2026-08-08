@@ -1,0 +1,118 @@
+@page "/modelos/{Id:int}"
+@attribute [Authorize(Roles = Roles.AdminOVendedor)]
+
+@inject IModeloApi ModeloApi
+
+<PageTitle>@(configuracion?.Nombre ?? "Modelo") — SAV</PageTitle>
+
+<CabeceraPagina Titulo="@(configuracion?.Nombre ?? "Modelo")" Volver="/modelos"
+                Descripcion="Equipamiento de serie y extras disponibles." />
+
+<EstadoDatos TDato="ConfiguracionModeloDto" Datos="configuracion" Cargando="cargando"
+             Error="@error" AlReintentar="CargarAsync"
+             IconoVacio="search_off"
+             TituloVacio="Modelo no encontrado"
+             TextoVacio="El modelo que buscas no existe en el catálogo.">
+    <ChildContent>
+        <section class="sav-metricas">
+            <Metrica Etiqueta="Precio base" Icono="sell"
+                     Valor="@Formato.Moneda(configuracion!.PrecioBase)" />
+            <Metrica Etiqueta="Descuento" Icono="percent"
+                     Valor="@Formato.Porcentaje(configuracion.Descuento)"
+                     Pie="@(configuracion.Descuento is > 0 ? "Aplicado sobre el precio base" : "Sin descuento vigente")" />
+            <Metrica Etiqueta="Precio final" Icono="payments"
+                     Valor="@Formato.Moneda(PrecioFinal)"
+                     Pie="Sin extras" />
+            <Metrica Etiqueta="Extras disponibles" Icono="tune"
+                     Valor="@Formato.Numero(configuracion.ExtrasDisponibles.Count)"
+                     Pie="Se cobran aparte" />
+        </section>
+
+        <div class="sav-rejilla-2">
+            <section class="sav-panel">
+                <h2 class="sav-panel__titulo">Equipamiento de serie</h2>
+                @if (configuracion.EquipamientoDeSerie.Count == 0)
+                {
+                    <p class="sav-ayuda">Este modelo no tiene equipamiento de serie registrado.</p>
+                }
+                else
+                {
+                    <p class="sav-ayuda">Incluido en el precio, sin coste adicional.</p>
+                    <div class="sav-tabla-scroll sav-separado-corto">
+                        <RadzenDataGrid TItem="EquipamientoSerieDto" Data="@configuracion.EquipamientoDeSerie"
+                                        AllowPaging="false" AllowSorting="true"
+                                        GridLines="DataGridGridLines.Horizontal" EmptyText="Sin elementos.">
+                            <Columns>
+                                <RadzenDataGridColumn TItem="EquipamientoSerieDto" Property="Nombre"
+                                                      Title="Característica" Sortable="true" />
+                                <RadzenDataGridColumn TItem="EquipamientoSerieDto" Property="Categoria"
+                                                      Title="Categoría" Sortable="true" Width="150px">
+                                    <Template Context="e">@Formato.OGuion(e.Categoria)</Template>
+                                </RadzenDataGridColumn>
+                            </Columns>
+                        </RadzenDataGrid>
+                    </div>
+                }
+            </section>
+
+            <section class="sav-panel">
+                <h2 class="sav-panel__titulo">Extras disponibles</h2>
+                @if (configuracion.ExtrasDisponibles.Count == 0)
+                {
+                    <p class="sav-ayuda">Este modelo no admite extras.</p>
+                }
+                else
+                {
+                    <p class="sav-ayuda">Opcionales, se suman al precio en el momento de la venta.</p>
+                    <div class="sav-tabla-scroll sav-separado-corto">
+                        <RadzenDataGrid TItem="ExtraDisponibleDto" Data="@configuracion.ExtrasDisponibles"
+                                        AllowPaging="false" AllowSorting="true"
+                                        GridLines="DataGridGridLines.Horizontal" EmptyText="Sin extras.">
+                            <Columns>
+                                <RadzenDataGridColumn TItem="ExtraDisponibleDto" Property="Nombre"
+                                                      Title="Extra" Sortable="true" />
+                                <RadzenDataGridColumn TItem="ExtraDisponibleDto" Property="PrecioExtra"
+                                                      Title="Precio" Sortable="true" Width="130px"
+                                                      TextAlign="TextAlign.End">
+                                    <Template Context="e">
+                                        <span class="sav-numero">@Formato.Moneda(e.PrecioExtra)</span>
+                                    </Template>
+                                </RadzenDataGridColumn>
+                            </Columns>
+                        </RadzenDataGrid>
+                    </div>
+                }
+            </section>
+        </div>
+    </ChildContent>
+</EstadoDatos>
+
+@code {
+    [Parameter] public int Id { get; set; }
+
+    private ConfiguracionModeloDto? configuracion;
+    private bool cargando = true;
+    private string? error;
+
+    private decimal PrecioFinal => configuracion is null
+        ? 0
+        : configuracion.Descuento is > 0
+            ? configuracion.PrecioBase - (configuracion.PrecioBase * (configuracion.Descuento.Value / 100m))
+            : configuracion.PrecioBase;
+
+    protected override async Task OnParametersSetAsync() => await CargarAsync();
+
+    private async Task CargarAsync()
+    {
+        cargando = true;
+        error = null;
+
+        var resultado = await ModeloApi.ObtenerEquipamientoAsync(Id);
+
+        if (resultado.Exito) configuracion = resultado.Datos;
+        else if (resultado.NoEncontrado) configuracion = null;
+        else error = resultado.Mensaje;
+
+        cargando = false;
+    }
+}

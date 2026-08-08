@@ -1,0 +1,76 @@
+@page "/marcas"
+@attribute [Authorize(Roles = Roles.AdminOVendedor)]
+
+@inject IMarcaApi MarcaApi
+@inject NavigationManager Nav
+
+<PageTitle>Marcas — SAV</PageTitle>
+
+<CabeceraPagina Titulo="Marcas"
+                Descripcion="Marcas que distribuye el concesionario.">
+    <Acciones>
+        <RadzenButton Text="Actualizar" Icon="refresh" Variant="Variant.Outlined"
+                      ButtonStyle="ButtonStyle.Base" Click="CargarAsync" />
+    </Acciones>
+</CabeceraPagina>
+
+<EstadoDatos TDato="IReadOnlyList<MarcaDto>" Datos="marcas" Cargando="cargando" Error="@error"
+             AlReintentar="CargarAsync"
+             IconoVacio="sell"
+             TituloVacio="No hay marcas registradas"
+             TextoVacio="El catálogo se rellena importando los datos de fábrica.">
+    <AccionVacio>
+        <AuthorizeView Roles="@Roles.Administrador">
+            <RadzenButton Text="Importar de fábrica" Icon="cloud_download"
+                          Click="@(() => Nav.NavigateTo("/fabrica"))" />
+        </AuthorizeView>
+    </AccionVacio>
+
+    <ChildContent>
+        <div class="sav-tabla-scroll">
+            <RadzenDataGrid TItem="MarcaDto" Data="@marcas" AllowPaging="true" PageSize="15"
+                            AllowSorting="true" AllowFiltering="false"
+                            GridLines="DataGridGridLines.Horizontal"
+                            ShowPagingSummary="true"
+                            PagingSummaryFormat="{0} de {1} páginas · {2} marcas"
+                            EmptyText="Sin marcas.">
+                <Columns>
+                    <RadzenDataGridColumn TItem="MarcaDto" Property="Nombre" Title="Marca" Sortable="true" />
+                    <RadzenDataGridColumn TItem="MarcaDto" Property="PaisOrigen" Title="País de origen"
+                                          Sortable="true">
+                        <Template Context="marca">@Formato.OGuion(marca.PaisOrigen)</Template>
+                    </RadzenDataGridColumn>
+                    <RadzenDataGridColumn TItem="MarcaDto" Title="" Sortable="false" Width="140px"
+                                          TextAlign="TextAlign.End">
+                        <Template Context="marca">
+                            <RadzenButton Text="Ver modelos" Variant="Variant.Text"
+                                          ButtonStyle="ButtonStyle.Primary" Size="ButtonSize.Small"
+                                          Click="@(() => Nav.NavigateTo($"/modelos?marca={Uri.EscapeDataString(marca.Nombre)}"))" />
+                        </Template>
+                    </RadzenDataGridColumn>
+                </Columns>
+            </RadzenDataGrid>
+        </div>
+    </ChildContent>
+</EstadoDatos>
+
+@code {
+    private IReadOnlyList<MarcaDto>? marcas;
+    private bool cargando = true;
+    private string? error;
+
+    protected override async Task OnInitializedAsync() => await CargarAsync();
+
+    private async Task CargarAsync()
+    {
+        cargando = true;
+        error = null;
+
+        var resultado = await MarcaApi.ObtenerTodasAsync();
+
+        if (resultado.Exito) marcas = resultado.Datos ?? [];
+        else error = resultado.Mensaje;
+
+        cargando = false;
+    }
+}

@@ -1,0 +1,221 @@
+@page "/concesionario"
+@attribute [Authorize(Roles = Roles.AdminOVendedor)]
+
+@using System.ComponentModel.DataAnnotations
+
+@inject IConcesionarioApi ConcesionarioApi
+@inject AvisosUi Avisos
+
+<PageTitle>Concesionario — SAV</PageTitle>
+
+<CabeceraPagina Titulo="Concesionario"
+                Descripcion="Datos fiscales y de contacto del concesionario.">
+    <Acciones>
+        <AuthorizeView Roles="@Roles.Administrador">
+            @if (concesionario is not null && !editando)
+            {
+                <RadzenButton Text="Editar" Icon="edit" Click="@(() => editando = true)" />
+            }
+        </AuthorizeView>
+    </Acciones>
+</CabeceraPagina>
+
+<EstadoDatos TDato="ConcesionarioDto" Datos="concesionario" Cargando="cargando" Error="@error"
+             AlReintentar="CargarAsync"
+             IconoVacio="store"
+             TituloVacio="Todavía no hay un concesionario registrado"
+             TextoVacio="El sistema administra un único concesionario. Créalo para empezar a operar.">
+    <AccionVacio>
+        <AuthorizeView Roles="@Roles.Administrador">
+            <RadzenButton Text="Crear concesionario" Icon="add"
+                          Click="@(() => { creando = true; editando = true; })" />
+        </AuthorizeView>
+    </AccionVacio>
+
+    <ChildContent>
+        @if (!editando)
+        {
+            <section class="sav-panel" style="max-width:760px">
+                <dl class="sav-datos">
+                    <div>
+                        <p class="sav-dato__etiqueta">Nombre</p>
+                        <p class="sav-dato__valor">@concesionario!.Nombre</p>
+                    </div>
+                    <div>
+                        <p class="sav-dato__etiqueta">NIF</p>
+                        <p class="sav-dato__valor">@concesionario.Nif</p>
+                    </div>
+                    <div>
+                        <p class="sav-dato__etiqueta">Teléfono</p>
+                        <p class="sav-dato__valor">@Formato.OGuion(concesionario.Telefono)</p>
+                    </div>
+                    <div>
+                        <p class="sav-dato__etiqueta">Correo</p>
+                        <p class="sav-dato__valor">@Formato.OGuion(concesionario.Email)</p>
+                    </div>
+                    <div>
+                        <p class="sav-dato__etiqueta">Domicilio</p>
+                        <p class="sav-dato__valor">@Formato.OGuion(concesionario.Domicilio)</p>
+                    </div>
+                </dl>
+            </section>
+        }
+    </ChildContent>
+</EstadoDatos>
+
+@if (editando)
+{
+    <section class="sav-panel" style="max-width:760px">
+        <h2 class="sav-panel__titulo">@(creando ? "Crear concesionario" : "Editar concesionario")</h2>
+
+        <EditForm Model="entrada" OnValidSubmit="GuardarAsync">
+            <DataAnnotationsValidator />
+
+            <div class="sav-form sav-form--2col">
+                <div class="sav-campo sav-campo--ancho">
+                    <label class="sav-label" for="nombre">Nombre</label>
+                    <RadzenTextBox @bind-Value="entrada.Nombre" Name="nombre" class="sav-input" MaxLength="150" />
+                    <ValidationMessage For="() => entrada.Nombre" class="sav-error" />
+                </div>
+
+                <div class="sav-campo">
+                    <label class="sav-label" for="nif">NIF</label>
+                    <RadzenTextBox @bind-Value="entrada.Nif" Name="nif" class="sav-input" MaxLength="11" />
+                    <ValidationMessage For="() => entrada.Nif" class="sav-error" />
+                </div>
+
+                <div class="sav-campo">
+                    <label class="sav-label" for="telefono">Teléfono</label>
+                    <RadzenTextBox @bind-Value="entrada.Telefono" Name="telefono" class="sav-input" MaxLength="10" />
+                    <ValidationMessage For="() => entrada.Telefono" class="sav-error" />
+                </div>
+
+                <div class="sav-campo sav-campo--ancho">
+                    <label class="sav-label" for="email">Correo electrónico</label>
+                    <RadzenTextBox @bind-Value="entrada.Email" Name="email" class="sav-input" MaxLength="100" />
+                    <ValidationMessage For="() => entrada.Email" class="sav-error" />
+                </div>
+
+                <div class="sav-campo sav-campo--ancho">
+                    <label class="sav-label" for="domicilio">
+                        Domicilio <span class="sav-label__opcional">(opcional)</span>
+                    </label>
+                    <RadzenTextBox @bind-Value="entrada.Domicilio" Name="domicilio" class="sav-input" MaxLength="200" />
+                    <ValidationMessage For="() => entrada.Domicilio" class="sav-error" />
+                </div>
+            </div>
+
+            <div class="sav-form__acciones">
+                <RadzenButton Text="Cancelar" Variant="Variant.Text" ButtonStyle="ButtonStyle.Base"
+                              Click="Cancelar" Disabled="guardando" />
+                <RadzenButton ButtonType="ButtonType.Submit" Text="@(creando ? "Crear" : "Guardar cambios")"
+                              Icon="save" IsBusy="guardando" BusyText="Guardando…" />
+            </div>
+        </EditForm>
+    </section>
+}
+
+@code {
+    private ConcesionarioDto? concesionario;
+    private bool cargando = true;
+    private bool editando;
+    private bool creando;
+    private bool guardando;
+    private string? error;
+
+    private readonly EntradaConcesionario entrada = new();
+
+    protected override async Task OnInitializedAsync() => await CargarAsync();
+
+    private async Task CargarAsync()
+    {
+        cargando = true;
+        error = null;
+        editando = false;
+        creando = false;
+
+        var resultado = await ConcesionarioApi.ObtenerTodosAsync();
+
+        if (resultado.Exito)
+        {
+            // El sistema administra un único concesionario.
+            concesionario = resultado.Datos?.FirstOrDefault();
+
+            if (concesionario is not null)
+            {
+                entrada.Nombre = concesionario.Nombre;
+                entrada.Nif = concesionario.Nif;
+                entrada.Telefono = concesionario.Telefono ?? string.Empty;
+                entrada.Email = concesionario.Email ?? string.Empty;
+                entrada.Domicilio = concesionario.Domicilio;
+            }
+        }
+        else
+        {
+            error = resultado.Mensaje;
+        }
+
+        cargando = false;
+    }
+
+    private void Cancelar()
+    {
+        editando = false;
+        creando = false;
+    }
+
+    private async Task GuardarAsync()
+    {
+        guardando = true;
+
+        var dto = new GuardarConcesionarioDto
+        {
+            Nombre = entrada.Nombre.Trim(),
+            Nif = entrada.Nif.Trim(),
+            Telefono = entrada.Telefono.Trim(),
+            Email = entrada.Email.Trim(),
+            Domicilio = string.IsNullOrWhiteSpace(entrada.Domicilio) ? null : entrada.Domicilio.Trim()
+        };
+
+        var resultado = concesionario is null
+            ? await ConcesionarioApi.CrearAsync(dto)
+            : await ConcesionarioApi.ActualizarAsync(concesionario.Id, dto);
+
+        if (resultado.Exito)
+        {
+            Avisos.Exito(concesionario is null ? "Concesionario creado." : "Datos actualizados.");
+            await CargarAsync();
+        }
+        else
+        {
+            Avisos.ErrorDeApi(resultado, "guardar los datos del concesionario");
+        }
+
+        guardando = false;
+    }
+
+    private sealed class EntradaConcesionario
+    {
+        [Required(ErrorMessage = "El nombre es obligatorio.")]
+        [MaxLength(150, ErrorMessage = "El nombre no puede exceder los 150 caracteres.")]
+        [RegularExpression(@"^[a-zA-ZáéíóúÁÉÍÓÚñÑ ]+$",
+            ErrorMessage = "El nombre solo puede contener letras y espacios.")]
+        public string Nombre { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "El NIF es obligatorio.")]
+        [RegularExpression(@"^\d{11}$", ErrorMessage = "El NIF debe contener exactamente 11 dígitos.")]
+        public string Nif { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "El teléfono es obligatorio.")]
+        [RegularExpression(@"^\d{10}$", ErrorMessage = "El teléfono debe contener exactamente 10 dígitos.")]
+        public string Telefono { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "El correo es obligatorio.")]
+        [EmailAddress(ErrorMessage = "El correo no tiene un formato válido.")]
+        [MaxLength(100, ErrorMessage = "El correo no puede exceder los 100 caracteres.")]
+        public string Email { get; set; } = string.Empty;
+
+        [MaxLength(200, ErrorMessage = "El domicilio no puede exceder los 200 caracteres.")]
+        public string? Domicilio { get; set; }
+    }
+}

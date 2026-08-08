@@ -1,0 +1,183 @@
+@page "/ventas/{Id:int}"
+@attribute [Authorize(Roles = Roles.AdminOVendedor)]
+
+@inject IVentaApi VentaApi
+@inject IAutomovilApi AutomovilApi
+@inject IClienteApi ClienteApi
+
+<PageTitle>Venta @Id — SAV</PageTitle>
+
+<CabeceraPagina Titulo="@($"Venta nº {Id}")" Volver="/ventas"
+                Descripcion="@(venta is not null ? $"Registrada el {Formato.Fecha(venta.FechaVenta)}" : null)" />
+
+<EstadoDatos TDato="VentaDto" Datos="venta" Cargando="cargando" Error="@error"
+             AlReintentar="CargarAsync"
+             IconoVacio="search_off"
+             TituloVacio="Venta no encontrada"
+             TextoVacio="La venta que buscas no existe.">
+    <ChildContent>
+        <section class="sav-metricas">
+            <Metrica Etiqueta="Precio base" Icono="sell" Valor="@Formato.Moneda(venta!.PrecioBase)"
+                     Pie="Modelo con descuento aplicado" />
+            <Metrica Etiqueta="Extras" Icono="tune" Valor="@Formato.Moneda(venta.TotalExtras)"
+                     Pie="@($"{venta.Extras.Count} elementos")" />
+            <Metrica Etiqueta="Total cobrado" Icono="payments" Valor="@Formato.Moneda(venta.PrecioTotal)"
+                     Pie="Importe final de la operación" />
+        </section>
+
+        <div class="sav-rejilla-2">
+            <section class="sav-panel">
+                <h2 class="sav-panel__titulo">Datos de la operación</h2>
+                <dl class="sav-datos">
+                    <div>
+                        <p class="sav-dato__etiqueta">Forma de pago</p>
+                        <p class="sav-dato__valor"><EtiquetaEstado FormaPago="venta.FormaPago" /></p>
+                    </div>
+                    @if (venta.FormaPago == FormaPago.Financiera)
+                    {
+                        <div>
+                            <p class="sav-dato__etiqueta">Financiera</p>
+                            <p class="sav-dato__valor">@Formato.OGuion(venta.Financiera)</p>
+                        </div>
+                    }
+                    <div>
+                        <p class="sav-dato__etiqueta">Origen</p>
+                        <p class="sav-dato__valor"><EtiquetaEstado Origen="venta.Origen" /></p>
+                    </div>
+                    <div>
+                        <p class="sav-dato__etiqueta">Matrícula</p>
+                        <p class="sav-dato__valor">@Formato.OGuion(venta.Matricula)</p>
+                    </div>
+                    <div>
+                        <p class="sav-dato__etiqueta">Fecha de venta</p>
+                        <p class="sav-dato__valor">@Formato.Fecha(venta.FechaVenta)</p>
+                    </div>
+                    <div>
+                        <p class="sav-dato__etiqueta">Fecha de entrega</p>
+                        <p class="sav-dato__valor">@Formato.Fecha(venta.FechaEntrega)</p>
+                    </div>
+                    <div>
+                        <p class="sav-dato__etiqueta">Responsable</p>
+                        <p class="sav-dato__valor">
+                            @if (venta.VendedorId.HasValue)
+                            {
+                                <span>Vendedor #@venta.VendedorId</span>
+                            }
+                            else if (venta.ServicioOficialId.HasValue)
+                            {
+                                <span>Servicio oficial #@venta.ServicioOficialId</span>
+                            }
+                            else
+                            {
+                                <span>—</span>
+                            }
+                        </p>
+                    </div>
+                </dl>
+            </section>
+
+            <section class="sav-panel">
+                <h2 class="sav-panel__titulo">Vehículo y cliente</h2>
+                <dl class="sav-datos">
+                    <div>
+                        <p class="sav-dato__etiqueta">Automóvil</p>
+                        <p class="sav-dato__valor">
+                            @if (automovil is not null)
+                            {
+                                <a href="@($"/automoviles/{automovil.Id}")">
+                                    @automovil.MarcaNombre @automovil.ModeloNombre
+                                </a>
+                                <br />
+                                <span class="sav-ayuda">@automovil.NumBastidor</span>
+                            }
+                            else
+                            {
+                                <span>#@venta.AutomovilId</span>
+                            }
+                        </p>
+                    </div>
+                    <div>
+                        <p class="sav-dato__etiqueta">Cliente</p>
+                        <p class="sav-dato__valor">
+                            @if (cliente is not null)
+                            {
+                                @cliente.Nombre
+                                <br />
+                                <span class="sav-ayuda">@cliente.Nif</span>
+                            }
+                            else
+                            {
+                                <span>#@venta.ClienteId</span>
+                            }
+                        </p>
+                    </div>
+                </dl>
+            </section>
+        </div>
+
+        <section class="sav-panel sav-separado">
+            <h2 class="sav-panel__titulo">Extras instalados</h2>
+            @if (venta.Extras.Count == 0)
+            {
+                <p class="sav-ayuda">Esta venta no incluyó extras.</p>
+            }
+            else
+            {
+                <div class="sav-tabla-scroll">
+                    <RadzenDataGrid TItem="VentaExtraDto" Data="@venta.Extras" AllowPaging="false"
+                                    GridLines="DataGridGridLines.Horizontal" EmptyText="Sin extras.">
+                        <Columns>
+                            <RadzenDataGridColumn TItem="VentaExtraDto" Property="Nombre" Title="Extra">
+                                <Template Context="e">@Formato.OGuion(e.Nombre)</Template>
+                            </RadzenDataGridColumn>
+                            <RadzenDataGridColumn TItem="VentaExtraDto" Property="PrecioCobrado" Title="Precio"
+                                                  Width="150px" TextAlign="TextAlign.End">
+                                <Template Context="e">
+                                    <span class="sav-numero">@Formato.Moneda(e.PrecioCobrado)</span>
+                                </Template>
+                            </RadzenDataGridColumn>
+                        </Columns>
+                    </RadzenDataGrid>
+                </div>
+            }
+        </section>
+    </ChildContent>
+</EstadoDatos>
+
+@code {
+    [Parameter] public int Id { get; set; }
+
+    private VentaDto? venta;
+    private AutomovilDto? automovil;
+    private ClienteDto? cliente;
+    private bool cargando = true;
+    private string? error;
+
+    protected override async Task OnParametersSetAsync() => await CargarAsync();
+
+    private async Task CargarAsync()
+    {
+        cargando = true;
+        error = null;
+        automovil = null;
+        cliente = null;
+
+        var resultado = await VentaApi.ObtenerPorIdAsync(Id);
+
+        if (resultado.Exito) venta = resultado.Datos;
+        else error = resultado.Mensaje;
+
+        // El DTO de venta solo trae identificadores: se resuelven los nombres
+        // para que la ficha sea legible sin obligar a navegar a otra pantalla.
+        if (venta is not null)
+        {
+            var auto = await AutomovilApi.ObtenerPorIdAsync(venta.AutomovilId);
+            if (auto.Exito) automovil = auto.Datos;
+
+            var cli = await ClienteApi.ObtenerPorIdAsync(venta.ClienteId);
+            if (cli.Exito) cliente = cli.Datos;
+        }
+
+        cargando = false;
+    }
+}

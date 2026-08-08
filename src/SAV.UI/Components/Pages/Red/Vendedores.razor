@@ -1,0 +1,139 @@
+@page "/vendedores"
+@attribute [Authorize(Roles = Roles.Administrador)]
+
+@using System.ComponentModel.DataAnnotations
+
+@inject IVendedorApi VendedorApi
+@inject DialogService Dialogos
+@inject AvisosUi Avisos
+@inject NavigationManager Nav
+
+<PageTitle>Vendedores — SAV</PageTitle>
+
+<CabeceraPagina Titulo="Vendedores"
+                Descripcion="Personal de ventas del concesionario.">
+    <Acciones>
+        <RadzenButton Text="Registrar vendedor" Icon="person_add" Variant="Variant.Outlined"
+                      ButtonStyle="ButtonStyle.Base"
+                      Click="@(() => Nav.NavigateTo("/usuarios/nuevo"))" />
+    </Acciones>
+</CabeceraPagina>
+
+<EstadoDatos TDato="IReadOnlyList<VendedorDto>" Datos="vendedores" Cargando="cargando" Error="@error"
+             AlReintentar="CargarAsync"
+             IconoVacio="badge"
+             TituloVacio="No hay vendedores registrados"
+             TextoVacio="Los vendedores se dan de alta creando su cuenta de usuario.">
+    <AccionVacio>
+        <RadzenButton Text="Registrar vendedor" Icon="person_add"
+                      Click="@(() => Nav.NavigateTo("/usuarios/nuevo"))" />
+    </AccionVacio>
+
+    <ChildContent>
+        <div class="sav-tabla-scroll">
+            <RadzenDataGrid TItem="VendedorDto" Data="@vendedores" AllowPaging="true" PageSize="15"
+                            AllowSorting="true" GridLines="DataGridGridLines.Horizontal"
+                            ShowPagingSummary="true"
+                            PagingSummaryFormat="{0} de {1} páginas · {2} vendedores"
+                            EmptyText="Sin vendedores.">
+                <Columns>
+                    <RadzenDataGridColumn TItem="VendedorDto" Property="Nombre" Title="Nombre" Sortable="true" />
+                    <RadzenDataGridColumn TItem="VendedorDto" Property="Nif" Title="NIF" Sortable="true"
+                                          Width="140px" />
+                    <RadzenDataGridColumn TItem="VendedorDto" Property="Telefono" Title="Teléfono"
+                                          Sortable="false" Width="130px">
+                        <Template Context="v">@Formato.OGuion(v.Telefono)</Template>
+                    </RadzenDataGridColumn>
+                    <RadzenDataGridColumn TItem="VendedorDto" Property="Email" Title="Correo" Sortable="false">
+                        <Template Context="v">@Formato.OGuion(v.Email)</Template>
+                    </RadzenDataGridColumn>
+                    <RadzenDataGridColumn TItem="VendedorDto" Title="" Sortable="false" Width="150px"
+                                          TextAlign="TextAlign.End">
+                        <Template Context="v">
+                            <div class="sav-fila sav-fila--fin">
+                                <RadzenButton Icon="insights" Variant="Variant.Text" ButtonStyle="ButtonStyle.Base"
+                                              Size="ButtonSize.Small" title="Resumen de ventas"
+                                              aria-label="Resumen de ventas"
+                                              Click="@(() => VerResumenAsync(v))" />
+                                <RadzenButton Icon="edit" Variant="Variant.Text" ButtonStyle="ButtonStyle.Base"
+                                              Size="ButtonSize.Small" title="Editar" aria-label="Editar"
+                                              Click="@(() => AbrirFormulario(v))" />
+                                <RadzenButton Icon="delete" Variant="Variant.Text" ButtonStyle="ButtonStyle.Danger"
+                                              Size="ButtonSize.Small" title="Eliminar" aria-label="Eliminar"
+                                              Click="@(() => EliminarAsync(v))" />
+                            </div>
+                        </Template>
+                    </RadzenDataGridColumn>
+                </Columns>
+            </RadzenDataGrid>
+        </div>
+    </ChildContent>
+</EstadoDatos>
+
+@code {
+    private IReadOnlyList<VendedorDto>? vendedores;
+    private bool cargando = true;
+    private string? error;
+
+    protected override async Task OnInitializedAsync() => await CargarAsync();
+
+    private async Task CargarAsync()
+    {
+        cargando = true;
+        error = null;
+
+        var resultado = await VendedorApi.ObtenerTodosAsync();
+
+        if (resultado.Exito) vendedores = resultado.Datos ?? [];
+        else error = resultado.Mensaje;
+
+        cargando = false;
+    }
+
+    private async Task AbrirFormulario(VendedorDto vendedor)
+    {
+        var parametros = new Dictionary<string, object?>
+        {
+            [nameof(VendedorFormulario.Vendedor)] = vendedor
+        };
+
+        var guardado = await Dialogos.OpenAsync<VendedorFormulario>(
+            "Editar vendedor", parametros!,
+            new DialogOptions { Width = "560px", CloseDialogOnOverlayClick = false, ShowClose = true });
+
+        if (guardado is true) await CargarAsync();
+    }
+
+    private async Task EliminarAsync(VendedorDto vendedor)
+    {
+        var confirmado = await Confirmacion.EliminarAsync(
+            Dialogos, $"al vendedor {vendedor.Nombre}",
+            "No será posible si tiene ventas registradas o una cuenta de usuario asociada.");
+
+        if (!confirmado) return;
+
+        var resultado = await VendedorApi.EliminarAsync(vendedor.Id);
+
+        if (resultado.Exito)
+        {
+            Avisos.Exito("Vendedor eliminado.");
+            await CargarAsync();
+        }
+        else
+        {
+            Avisos.ErrorDeApi(resultado, "eliminar el vendedor");
+        }
+    }
+
+    private async Task VerResumenAsync(VendedorDto vendedor)
+    {
+        var resultado = await VendedorApi.ObtenerResumenVentasAsync(vendedor.Id);
+
+        var mensaje = resultado.Exito && resultado.Datos is not null
+            ? $"{Formato.Numero(resultado.Datos.TotalVentas)} ventas por un total de {Formato.Moneda(resultado.Datos.MontoTotal)}."
+            : resultado.Mensaje ?? "No se pudo obtener el resumen.";
+
+        await Dialogos.Alert(mensaje, $"Ventas de {vendedor.Nombre}",
+            new AlertOptions { OkButtonText = "Cerrar", Width = "420px" });
+    }
+}

@@ -1,0 +1,125 @@
+@page "/servicios-oficiales"
+@attribute [Authorize(Roles = Roles.AdminOVendedor)]
+
+@inject IServicioOficialApi ServicioOficialApi
+@inject DialogService Dialogos
+@inject AvisosUi Avisos
+
+<PageTitle>Servicios oficiales — SAV</PageTitle>
+
+<CabeceraPagina Titulo="Servicios oficiales"
+                Descripcion="Talleres asociados al concesionario. Pueden albergar automóviles y realizar ventas.">
+    <Acciones>
+        <AuthorizeView Roles="@Roles.Administrador">
+            <RadzenButton Text="Nuevo servicio" Icon="add" Click="@(() => AbrirFormulario(null))" />
+        </AuthorizeView>
+    </Acciones>
+</CabeceraPagina>
+
+<EstadoDatos TDato="IReadOnlyList<ServicioOficialDto>" Datos="servicios" Cargando="cargando"
+             Error="@error" AlReintentar="CargarAsync"
+             IconoVacio="build"
+             TituloVacio="No hay servicios oficiales"
+             TextoVacio="Registra un servicio oficial para poder ubicar automóviles fuera del concesionario.">
+    <AccionVacio>
+        <AuthorizeView Roles="@Roles.Administrador">
+            <RadzenButton Text="Nuevo servicio" Icon="add" Click="@(() => AbrirFormulario(null))" />
+        </AuthorizeView>
+    </AccionVacio>
+
+    <ChildContent>
+        <div class="sav-tabla-scroll">
+            <RadzenDataGrid TItem="ServicioOficialDto" Data="@servicios" AllowPaging="true" PageSize="15"
+                            AllowSorting="true" GridLines="DataGridGridLines.Horizontal"
+                            ShowPagingSummary="true"
+                            PagingSummaryFormat="{0} de {1} páginas · {2} servicios"
+                            EmptyText="Sin servicios oficiales.">
+                <Columns>
+                    <RadzenDataGridColumn TItem="ServicioOficialDto" Property="Nombre" Title="Nombre" Sortable="true" />
+                    <RadzenDataGridColumn TItem="ServicioOficialDto" Property="Nif" Title="NIF"
+                                          Sortable="true" Width="140px" />
+                    <RadzenDataGridColumn TItem="ServicioOficialDto" Property="Telefono" Title="Teléfono"
+                                          Sortable="false" Width="130px">
+                        <Template Context="s">@Formato.OGuion(s.Telefono)</Template>
+                    </RadzenDataGridColumn>
+                    <RadzenDataGridColumn TItem="ServicioOficialDto" Property="Domicilio" Title="Domicilio"
+                                          Sortable="false">
+                        <Template Context="s">@Formato.OGuion(s.Domicilio)</Template>
+                    </RadzenDataGridColumn>
+                    <RadzenDataGridColumn TItem="ServicioOficialDto" Title="" Sortable="false" Width="120px"
+                                          TextAlign="TextAlign.End">
+                        <Template Context="s">
+                            <AuthorizeView Roles="@Roles.Administrador" Context="admin">
+                                <div class="sav-fila sav-fila--fin">
+                                    <RadzenButton Icon="edit" Variant="Variant.Text" ButtonStyle="ButtonStyle.Base"
+                                                  Size="ButtonSize.Small" title="Editar" aria-label="Editar"
+                                                  Click="@(() => AbrirFormulario(s))" />
+                                    <RadzenButton Icon="delete" Variant="Variant.Text" ButtonStyle="ButtonStyle.Danger"
+                                                  Size="ButtonSize.Small" title="Eliminar" aria-label="Eliminar"
+                                                  Click="@(() => EliminarAsync(s))" />
+                                </div>
+                            </AuthorizeView>
+                        </Template>
+                    </RadzenDataGridColumn>
+                </Columns>
+            </RadzenDataGrid>
+        </div>
+    </ChildContent>
+</EstadoDatos>
+
+@code {
+    private IReadOnlyList<ServicioOficialDto>? servicios;
+    private bool cargando = true;
+    private string? error;
+
+    protected override async Task OnInitializedAsync() => await CargarAsync();
+
+    private async Task CargarAsync()
+    {
+        cargando = true;
+        error = null;
+
+        var resultado = await ServicioOficialApi.ObtenerTodosAsync();
+
+        if (resultado.Exito) servicios = resultado.Datos ?? [];
+        else error = resultado.Mensaje;
+
+        cargando = false;
+    }
+
+    private async Task AbrirFormulario(ServicioOficialDto? servicio)
+    {
+        var parametros = new Dictionary<string, object?>
+        {
+            [nameof(ServicioOficialFormulario.Servicio)] = servicio
+        };
+
+        var guardado = await Dialogos.OpenAsync<ServicioOficialFormulario>(
+            servicio is null ? "Nuevo servicio oficial" : "Editar servicio oficial",
+            parametros!,
+            new DialogOptions { Width = "560px", CloseDialogOnOverlayClick = false, ShowClose = true });
+
+        if (guardado is true) await CargarAsync();
+    }
+
+    private async Task EliminarAsync(ServicioOficialDto servicio)
+    {
+        var confirmado = await Confirmacion.EliminarAsync(
+            Dialogos, $"el servicio oficial {servicio.Nombre}",
+            "No será posible si tiene ventas registradas.");
+
+        if (!confirmado) return;
+
+        var resultado = await ServicioOficialApi.EliminarAsync(servicio.Id);
+
+        if (resultado.Exito)
+        {
+            Avisos.Exito("Servicio oficial eliminado.");
+            await CargarAsync();
+        }
+        else
+        {
+            Avisos.ErrorDeApi(resultado, "eliminar el servicio oficial");
+        }
+    }
+}

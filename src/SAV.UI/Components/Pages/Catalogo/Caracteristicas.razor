@@ -1,0 +1,140 @@
+@page "/caracteristicas"
+@attribute [Authorize(Roles = Roles.AdminOVendedor)]
+
+@inject ICaracteristicaApi CaracteristicaApi
+
+<PageTitle>Características — SAV</PageTitle>
+
+<CabeceraPagina Titulo="Características"
+                Descripcion="Elementos de equipamiento. Una misma característica puede ser de serie en un modelo y extra de pago en otro.">
+    <Acciones>
+        <RadzenButton Text="Actualizar" Icon="refresh" Variant="Variant.Outlined"
+                      ButtonStyle="ButtonStyle.Base" Click="CargarAsync" />
+    </Acciones>
+</CabeceraPagina>
+
+<section class="sav-filtros" aria-label="Filtros de características">
+    <div class="sav-filtro" style="flex:1 1 280px">
+        <label class="sav-filtro__etiqueta" for="busqueda">Buscar</label>
+        <RadzenTextBox Value="@busqueda" Name="busqueda" class="sav-input" Placeholder="Nombre o descripción…"
+                       ValueChanged="@((string v) => busqueda = v)" />
+    </div>
+
+    <div class="sav-filtro">
+        <label class="sav-filtro__etiqueta" for="categoria">Categoría</label>
+        <RadzenDropDown @bind-Value="categoria" Data="@categorias" Name="categoria"
+                        AllowClear="true" Placeholder="Todas" class="sav-input" />
+    </div>
+
+    <div class="sav-filtros__acciones">
+        <RadzenButton Text="Limpiar" Icon="clear" Variant="Variant.Text" ButtonStyle="ButtonStyle.Base"
+                      Click="Limpiar" Disabled="@(!HayFiltros)" />
+    </div>
+</section>
+
+<EstadoDatos TDato="IReadOnlyList<CaracteristicaDto>" Datos="Filtradas" Cargando="cargando"
+             Error="@error" AlReintentar="CargarAsync"
+             IconoVacio="tune"
+             TituloVacio="@(HayFiltros ? "Sin resultados" : "No hay características registradas")"
+             TextoVacio="@(HayFiltros ? "Prueba con otros criterios de búsqueda." : "El catálogo se rellena importando los datos de fábrica.")">
+    <ChildContent>
+        <div class="sav-tabla-scroll">
+            <RadzenDataGrid TItem="CaracteristicaDto" Data="@Filtradas" AllowPaging="true" PageSize="20"
+                            AllowSorting="true" GridLines="DataGridGridLines.Horizontal"
+                            ShowPagingSummary="true"
+                            PagingSummaryFormat="{0} de {1} páginas · {2} características"
+                            EmptyText="Sin características.">
+                <Columns>
+                    <RadzenDataGridColumn TItem="CaracteristicaDto" Property="Nombre" Title="Nombre"
+                                          Sortable="true" Width="240px" />
+                    <RadzenDataGridColumn TItem="CaracteristicaDto" Property="Categoria" Title="Categoría"
+                                          Sortable="true" Width="160px">
+                        <Template Context="c">
+                            @if (string.IsNullOrWhiteSpace(c.Categoria))
+                            {
+                                <span>—</span>
+                            }
+                            else
+                            {
+                                <RadzenBadge BadgeStyle="BadgeStyle.Light" Variant="Variant.Flat"
+                                             Text="@c.Categoria" />
+                            }
+                        </Template>
+                    </RadzenDataGridColumn>
+                    <RadzenDataGridColumn TItem="CaracteristicaDto" Property="Descripcion" Title="Descripción"
+                                          Sortable="false">
+                        <Template Context="c">@Formato.OGuion(c.Descripcion)</Template>
+                    </RadzenDataGridColumn>
+                </Columns>
+            </RadzenDataGrid>
+        </div>
+    </ChildContent>
+</EstadoDatos>
+
+@code {
+    private IReadOnlyList<CaracteristicaDto>? caracteristicas;
+    private IReadOnlyList<string> categorias = [];
+    private bool cargando = true;
+    private string? error;
+    private string? busqueda;
+    private string? categoria;
+
+    private bool HayFiltros => !string.IsNullOrWhiteSpace(busqueda) || !string.IsNullOrWhiteSpace(categoria);
+
+    private IReadOnlyList<CaracteristicaDto>? Filtradas
+    {
+        get
+        {
+            if (caracteristicas is null) return null;
+
+            IEnumerable<CaracteristicaDto> consulta = caracteristicas;
+
+            if (!string.IsNullOrWhiteSpace(busqueda))
+            {
+                var termino = busqueda.Trim();
+                consulta = consulta.Where(c =>
+                    c.Nombre.Contains(termino, StringComparison.OrdinalIgnoreCase)
+                    || (c.Descripcion?.Contains(termino, StringComparison.OrdinalIgnoreCase) ?? false));
+            }
+
+            if (!string.IsNullOrWhiteSpace(categoria))
+                consulta = consulta.Where(c => c.Categoria == categoria);
+
+            return consulta.ToList();
+        }
+    }
+
+    protected override async Task OnInitializedAsync() => await CargarAsync();
+
+    private void Limpiar()
+    {
+        busqueda = null;
+        categoria = null;
+    }
+
+    private async Task CargarAsync()
+    {
+        cargando = true;
+        error = null;
+
+        var resultado = await CaracteristicaApi.ObtenerTodasAsync();
+
+        if (resultado.Exito)
+        {
+            caracteristicas = resultado.Datos ?? [];
+            categorias = caracteristicas
+                .Select(c => c.Categoria)
+                .Where(c => !string.IsNullOrWhiteSpace(c))
+                .Select(c => c!)
+                .Distinct()
+                .OrderBy(c => c)
+                .ToList();
+        }
+        else
+        {
+            error = resultado.Mensaje;
+        }
+
+        cargando = false;
+    }
+}

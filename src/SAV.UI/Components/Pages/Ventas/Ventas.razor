@@ -1,0 +1,126 @@
+@page "/ventas"
+@attribute [Authorize(Roles = Roles.AdminOVendedor)]
+
+@inject IVentaApi VentaApi
+@inject NavigationManager Nav
+
+<PageTitle>Ventas — SAV</PageTitle>
+
+<CabeceraPagina Titulo="Ventas"
+                Descripcion="Operaciones registradas en el concesionario.">
+    <Acciones>
+        <RadzenButton Text="Nueva venta" Icon="add_shopping_cart"
+                      Click="@(() => Nav.NavigateTo("/ventas/nueva"))" />
+    </Acciones>
+</CabeceraPagina>
+
+<EstadoDatos TDato="IReadOnlyList<VentaDto>" Datos="ventas" Cargando="cargando" Error="@error"
+             AlReintentar="CargarAsync"
+             IconoVacio="receipt_long"
+             TituloVacio="Aún no hay ventas registradas"
+             TextoVacio="Cuando registres la primera venta aparecerá aquí con su detalle.">
+    <AccionVacio>
+        <RadzenButton Text="Registrar la primera venta" Icon="add_shopping_cart"
+                      Click="@(() => Nav.NavigateTo("/ventas/nueva"))" />
+    </AccionVacio>
+
+    <ChildContent>
+        <section class="sav-metricas">
+            <Metrica Etiqueta="Ventas" Icono="receipt_long" Valor="@Formato.Numero(ventas!.Count)"
+                     Pie="Operaciones registradas" />
+            <Metrica Etiqueta="Facturado" Icono="payments"
+                     Valor="@Formato.Moneda(ventas.Sum(v => v.PrecioCobrado))"
+                     Pie="Suma de todas las ventas" />
+            <Metrica Etiqueta="Importe medio" Icono="trending_up"
+                     Valor="@Formato.Moneda(ventas.Count == 0 ? 0 : ventas.Average(v => v.PrecioCobrado))"
+                     Pie="Por operación" />
+        </section>
+
+        <div class="sav-tabla-scroll">
+            <RadzenDataGrid TItem="VentaDto" Data="@ventas" AllowPaging="true" PageSize="15"
+                            AllowSorting="true" GridLines="DataGridGridLines.Horizontal"
+                            ShowPagingSummary="true"
+                            PagingSummaryFormat="{0} de {1} páginas · {2} ventas"
+                            EmptyText="Sin ventas.">
+                <Columns>
+                    <RadzenDataGridColumn TItem="VentaDto" Property="Id" Title="Nº" Sortable="true"
+                                          Width="80px" TextAlign="TextAlign.Center" />
+
+                    <RadzenDataGridColumn TItem="VentaDto" Property="FechaVenta" Title="Fecha"
+                                          Sortable="true" Width="120px">
+                        <Template Context="v">@Formato.Fecha(v.FechaVenta)</Template>
+                    </RadzenDataGridColumn>
+
+                    <RadzenDataGridColumn TItem="VentaDto" Property="Matricula" Title="Matrícula"
+                                          Sortable="true" Width="130px">
+                        <Template Context="v">@Formato.OGuion(v.Matricula)</Template>
+                    </RadzenDataGridColumn>
+
+                    <RadzenDataGridColumn TItem="VentaDto" Title="Responsable" Sortable="false" Width="150px">
+                        <Template Context="v">
+                            @if (v.VendedorId.HasValue)
+                            {
+                                <span>Vendedor #@v.VendedorId</span>
+                            }
+                            else if (v.ServicioOficialId.HasValue)
+                            {
+                                <span>Servicio #@v.ServicioOficialId</span>
+                            }
+                            else
+                            {
+                                <span>—</span>
+                            }
+                        </Template>
+                    </RadzenDataGridColumn>
+
+                    <RadzenDataGridColumn TItem="VentaDto" Property="FormaPago" Title="Pago"
+                                          Sortable="true" Width="130px">
+                        <Template Context="v"><EtiquetaEstado FormaPago="v.FormaPago" /></Template>
+                    </RadzenDataGridColumn>
+
+                    <RadzenDataGridColumn TItem="VentaDto" Property="Origen" Title="Origen"
+                                          Sortable="true" Width="150px">
+                        <Template Context="v"><EtiquetaEstado Origen="v.Origen" /></Template>
+                    </RadzenDataGridColumn>
+
+                    <RadzenDataGridColumn TItem="VentaDto" Property="PrecioCobrado" Title="Importe"
+                                          Sortable="true" Width="140px" TextAlign="TextAlign.End">
+                        <Template Context="v">
+                            <strong class="sav-numero">@Formato.Moneda(v.PrecioCobrado)</strong>
+                        </Template>
+                    </RadzenDataGridColumn>
+
+                    <RadzenDataGridColumn TItem="VentaDto" Title="" Sortable="false" Width="80px"
+                                          TextAlign="TextAlign.End">
+                        <Template Context="v">
+                            <RadzenButton Icon="visibility" Variant="Variant.Text" ButtonStyle="ButtonStyle.Base"
+                                          Size="ButtonSize.Small" title="Ver detalle" aria-label="Ver detalle"
+                                          Click="@(() => Nav.NavigateTo($"/ventas/{v.Id}"))" />
+                        </Template>
+                    </RadzenDataGridColumn>
+                </Columns>
+            </RadzenDataGrid>
+        </div>
+    </ChildContent>
+</EstadoDatos>
+
+@code {
+    private IReadOnlyList<VentaDto>? ventas;
+    private bool cargando = true;
+    private string? error;
+
+    protected override async Task OnInitializedAsync() => await CargarAsync();
+
+    private async Task CargarAsync()
+    {
+        cargando = true;
+        error = null;
+
+        var resultado = await VentaApi.ObtenerTodasAsync();
+
+        if (resultado.Exito) ventas = resultado.Datos ?? [];
+        else error = resultado.Mensaje;
+
+        cargando = false;
+    }
+}

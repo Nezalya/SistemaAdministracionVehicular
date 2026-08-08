@@ -580,3 +580,40 @@ h1, h2, h3, h4 {
 .sav-separado-corto {
     margin-top: .75rem;
 }
+
+/* --------------------------------------------------------- Listas de equipamiento */
+
+.sav-lista {
+    list-style: none;
+    margin: .75rem 0 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: .5rem;
+}
+
+.sav-lista li {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    font-size: .9375rem;
+}
+
+.sav-lista__icono {
+    color: var(--rz-success, #1b5e20);
+    font-size: 1.125rem;
+}
+
+.sav-extra {
+    padding: .35rem 0;
+    border-bottom: 1px solid var(--rz-base-200, #eeeeee);
+}
+
+.sav-extra:last-child {
+    border-bottom: 0;
+}
+
+.sav-extra__nombre {
+    flex: 1;
+    cursor: pointer;
+}
