@@ -1,0 +1,24 @@
+@inject NavigationManager Nav
+
+@*
+    Tarjeta de acceso directo a una sección. Se usa en el inicio del vendedor,
+    que no tiene permiso sobre los informes del panel de administración.
+*@
+
+<button type="button" class="sav-panel sav-acceso" @onclick="Ir">
+    <RadzenIcon Icon="@Icono" class="sav-acceso__icono" />
+    <span class="sav-acceso__texto">
+        <span class="sav-acceso__titulo">@Titulo</span>
+        <span class="sav-acceso__descripcion">@Descripcion</span>
+    </span>
+    <RadzenIcon Icon="chevron_right" class="sav-acceso__flecha" />
+</button>
+
+@code {
+    [Parameter, EditorRequired] public string Titulo { get; set; } = string.Empty;
+    [Parameter, EditorRequired] public string Ruta { get; set; } = "/";
+    [Parameter] public string? Descripcion { get; set; }
+    [Parameter] public string Icono { get; set; } = "arrow_forward";
+
+    private void Ir() => Nav.NavigateTo(Ruta);
+}

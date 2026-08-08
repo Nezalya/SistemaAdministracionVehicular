@@ -1,0 +1,26 @@
+@*
+    Tarjeta de indicador. Etiqueta arriba, número grande, contexto abajo.
+    Se usa en rejillas de 2 a 4 columnas.
+*@
+
+<article class="sav-metrica">
+    <p class="sav-metrica__etiqueta">
+        @if (!string.IsNullOrWhiteSpace(Icono))
+        {
+            <RadzenIcon Icon="@Icono" />
+        }
+        @Etiqueta
+    </p>
+    <p class="sav-metrica__valor sav-numero">@Valor</p>
+    @if (!string.IsNullOrWhiteSpace(Pie))
+    {
+        <p class="sav-metrica__pie">@Pie</p>
+    }
+</article>
+
+@code {
+    [Parameter, EditorRequired] public string Etiqueta { get; set; } = string.Empty;
+    [Parameter, EditorRequired] public string Valor { get; set; } = string.Empty;
+    [Parameter] public string? Pie { get; set; }
+    [Parameter] public string? Icono { get; set; }
+}

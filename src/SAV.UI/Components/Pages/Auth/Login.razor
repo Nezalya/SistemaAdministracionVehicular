@@ -34,11 +34,33 @@
             <ValidationMessage For="() => Entrada.Email" class="sav-error" />
         </div>
 
-        <div class="rz-mb-5">
+        <div class="rz-mb-4">
             <label for="password" class="rz-text-body2 sav-label">Contraseña</label>
             <InputText id="password" type="password" @bind-Value="Entrada.Password"
                        class="rz-textbox sav-input" autocomplete="current-password" />
             <ValidationMessage For="() => Entrada.Password" class="sav-error" />
+        </div>
+
+        <div class="rz-mb-5">
+            <span class="rz-text-body2 sav-label">Iniciar sesión como</span>
+
+            <div class="sav-roles">
+                <input type="radio" id="rol-vendedor" name="Entrada.Rol" value="Vendedor"
+                       checked="@(Entrada.Rol == "Vendedor")" class="sav-role__input" />
+                <label for="rol-vendedor" class="sav-role">
+                    <i class="rzi sav-role__icon">badge</i>
+                    Vendedor
+                </label>
+
+                <input type="radio" id="rol-administrador" name="Entrada.Rol" value="Administrador"
+                       checked="@(Entrada.Rol == "Administrador")" class="sav-role__input" />
+                <label for="rol-administrador" class="sav-role">
+                    <i class="rzi sav-role__icon">admin_panel_settings</i>
+                    Administrador
+                </label>
+            </div>
+
+            <ValidationMessage For="() => Entrada.Rol" class="sav-error" />
         </div>
 
         <RadzenButton ButtonType="ButtonType.Submit" Text="Entrar"
@@ -48,13 +70,15 @@
 
 @code {
     [CascadingParameter] private HttpContext HttpContext { get; set; } = default!;
-    [SupplyParameterFromForm] private EntradaLogin Entrada { get; set; } = new();
+    [SupplyParameterFromForm] private EntradaLogin Entrada { get; set; } = default!;
     [SupplyParameterFromQuery] private string? ReturnUrl { get; set; }
 
     private string? error;
 
     protected override void OnInitialized()
     {
+        Entrada ??= new();
+
         if (HttpContext.User.Identity?.IsAuthenticated == true)
             Nav.NavigateTo(DestinoSeguro(), forceLoad: true);
     }
@@ -74,6 +98,14 @@
 
         var datos = resultado.Datos;
 
+        // El rol real lo decide la API a partir de la cuenta. El botón elegido solo
+        // declara con qué rol dice entrar el usuario: si no coincide, no se inicia sesión.
+        if (!string.Equals(datos.Rol, Entrada.Rol, StringComparison.OrdinalIgnoreCase))
+        {
+            error = $"Esta cuenta es de tipo «{datos.Rol}». Selecciona ese rol para continuar.";
+            return;
+        }
+
         var claims = new List<Claim>
         {
             new(ClaimTypes.NameIdentifier, datos.UsuarioId.ToString()),
@@ -90,7 +122,6 @@
 
         var identidad = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
 
-        // El JWT viene con expiración en UTC; tras el viaje por JSON pierde el Kind.
         var expira = new DateTimeOffset(DateTime.SpecifyKind(datos.Expira, DateTimeKind.Utc));
 
         await HttpContext.SignInAsync(
@@ -117,5 +148,8 @@
 
         [Required(ErrorMessage = "La contraseña es obligatoria.")]
         public string Password { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "Selecciona con qué rol quieres entrar.")]
+        public string? Rol { get; set; }
     }
 }

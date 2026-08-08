@@ -1,0 +1,77 @@
+@typeparam TDato
+
+@*
+    Resuelve de una vez los cuatro estados de cualquier pantalla que carga datos:
+    cargando, error, vacío y con contenido. Evita que cada página los reinvente
+    y garantiza que ninguna se quede en blanco cuando algo falla.
+*@
+
+@if (Cargando)
+{
+    @if (PlantillaCargando is not null)
+    {
+        @PlantillaCargando
+    }
+    else
+    {
+        <div class="sav-estado" role="status" aria-live="polite">
+            <RadzenProgressBarCircular ShowValue="false" Mode="ProgressBarMode.Indeterminate"
+                                       Size="ProgressBarCircularSize.Medium" />
+            <span class="sav-estado__texto">@TextoCargando</span>
+        </div>
+    }
+}
+else if (Error is not null)
+{
+    <div class="sav-estado" role="alert">
+        <RadzenIcon Icon="cloud_off" class="sav-estado__icono sav-estado__icono--error" />
+        <p class="sav-estado__titulo">@TituloError</p>
+        <p class="sav-estado__texto">@Error</p>
+        @if (AlReintentar.HasDelegate)
+        {
+            <RadzenButton Text="Reintentar" Icon="refresh" Variant="Variant.Outlined"
+                          ButtonStyle="ButtonStyle.Base" Click="AlReintentar" />
+        }
+    </div>
+}
+else if (EstaVacio)
+{
+    <div class="sav-estado">
+        <RadzenIcon Icon="@IconoVacio" class="sav-estado__icono" />
+        <p class="sav-estado__titulo">@TituloVacio</p>
+        @if (!string.IsNullOrWhiteSpace(TextoVacio))
+        {
+            <p class="sav-estado__texto">@TextoVacio</p>
+        }
+        @AccionVacio
+    </div>
+}
+else
+{
+    @ChildContent
+}
+
+@code {
+    /// <summary>Datos cargados. Si es null o una colección sin elementos, se muestra el estado vacío.</summary>
+    [Parameter] public TDato? Datos { get; set; }
+
+    [Parameter] public bool Cargando { get; set; }
+
+    /// <summary>Mensaje de error ya legible para el usuario. Nunca una excepción técnica.</summary>
+    [Parameter] public string? Error { get; set; }
+
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+    [Parameter] public RenderFragment? PlantillaCargando { get; set; }
+    [Parameter] public RenderFragment? AccionVacio { get; set; }
+
+    [Parameter] public string TextoCargando { get; set; } = "Cargando…";
+    [Parameter] public string TituloError { get; set; } = "No se pudieron cargar los datos";
+    [Parameter] public string TituloVacio { get; set; } = "Todavía no hay nada aquí";
+    [Parameter] public string? TextoVacio { get; set; }
+    [Parameter] public string IconoVacio { get; set; } = "inbox";
+
+    [Parameter] public EventCallback AlReintentar { get; set; }
+
+    private bool EstaVacio => Datos is null
+        || (Datos is System.Collections.ICollection coleccion && coleccion.Count == 0);
+}

@@ -1,69 +1,164 @@
-﻿@page "/"
+@page "/"
 @inject IReportesApi ReportesApi
+@inject IAutomovilApi AutomovilApi
+@inject SesionUsuario Sesion
+@inject NavigationManager Nav
 
 <PageTitle>Inicio — SAV</PageTitle>
 
-<AuthorizeView Context="sesion">
-    <h1 class="rz-text-h4 rz-mt-0 rz-mb-1">Hola, @sesion.User.Identity!.Name</h1>
-    <RadzenText TextStyle="TextStyle.Body1" class="rz-mb-6">
-        Has entrado como <strong>@Rol(sesion)</strong>.
-    </RadzenText>
+<CabeceraPagina Titulo="@($"Hola, {nombre}")"
+                Descripcion="@descripcion">
+    <Acciones>
+        <AuthorizeView Roles="@Roles.AdminOVendedor">
+            <RadzenButton Text="Nueva venta" Icon="add_shopping_cart"
+                          Click="@(() => Nav.NavigateTo("/ventas/nueva"))" />
+        </AuthorizeView>
+    </Acciones>
+</CabeceraPagina>
+
+<AuthorizeView Roles="@Roles.Administrador">
+    <Authorized>
+        <EstadoDatos TDato="DashboardDto" Datos="dashboard" Cargando="cargandoDashboard"
+                     Error="errorDashboard" AlReintentar="CargarDashboardAsync"
+                     TituloVacio="Sin datos que resumir"
+                     TextoVacio="Cuando registres automóviles y ventas verás aquí su resumen.">
+            <section class="sav-metricas">
+                <Metrica Etiqueta="Automóviles" Icono="directions_car"
+                         Valor="@Formato.Numero(dashboard!.Inventario.TotalAutos)"
+                         Pie="@($"{Formato.Numero(dashboard.Inventario.Disponibles)} en stock · {Formato.Numero(dashboard.Inventario.Vendidos)} vendidos")" />
+
+                <Metrica Etiqueta="Ventas" Icono="receipt_long"
+                         Valor="@Formato.Numero(dashboard.Ventas.TotalVentas)"
+                         Pie="Operaciones registradas" />
+
+                <Metrica Etiqueta="Ingresos" Icono="payments"
+                         Valor="@Formato.Moneda(dashboard.Ventas.IngresosTotales)"
+                         Pie="Total facturado" />
+
+                <Metrica Etiqueta="Clientes" Icono="groups"
+                         Valor="@Formato.Numero(dashboard.Entidades.TotalClientes)"
+                         Pie="@($"{Formato.Numero(dashboard.Entidades.TotalVendedores)} vendedores · {Formato.Numero(dashboard.Entidades.TotalServiciosOficiales)} servicios")" />
+            </section>
+
+            <div class="sav-rejilla-2">
+                <section class="sav-panel">
+                    <h2 class="sav-panel__titulo">Situación del inventario</h2>
+                    @if (dashboard.Inventario.TotalAutos == 0)
+                    {
+                        <p class="sav-ayuda">Aún no hay automóviles registrados.</p>
+                    }
+                    else
+                    {
+                        <RadzenChart>
+                            <RadzenDonutSeries Data="@DatosInventario" CategoryProperty="Etiqueta"
+                                               ValueProperty="Cantidad" Title="Automóviles">
+                                <TitleTemplate>
+                                    <span class="sav-ayuda">Inventario</span>
+                                </TitleTemplate>
+                            </RadzenDonutSeries>
+                        </RadzenChart>
+                    }
+                </section>
+
+                <section class="sav-panel">
+                    <h2 class="sav-panel__titulo">Stock por marca</h2>
+                    <EstadoDatos TDato="List<StockPorMarcaDto>" Datos="stockPorMarca"
+                                 Cargando="cargandoStock" Error="errorStock"
+                                 AlReintentar="CargarStockAsync"
+                                 IconoVacio="inventory_2"
+                                 TituloVacio="Sin unidades en stock"
+                                 TextoVacio="Todos los automóviles registrados están vendidos.">
+                        <RadzenChart>
+                            <RadzenColumnSeries Data="@stockPorMarca" CategoryProperty="Marca"
+                                                ValueProperty="Cantidad" Title="Unidades" />
+                            <RadzenValueAxis>
+                                <RadzenGridLines Visible="true" />
+                            </RadzenValueAxis>
+                        </RadzenChart>
+                    </EstadoDatos>
+                </section>
+            </div>
+        </EstadoDatos>
+    </Authorized>
+
+    <NotAuthorized>
+        @* Un vendedor no tiene permiso sobre /api/reportes/dashboard, así que
+           en su lugar recibe accesos directos a lo que sí puede hacer. *@
+        <section class="sav-rejilla-2">
+            <AccesoRapido Titulo="Automóviles" Icono="directions_car" Ruta="/automoviles"
+                          Descripcion="Consulta el inventario, filtra por marca, modelo o bastidor." />
+            <AccesoRapido Titulo="Nueva venta" Icono="add_shopping_cart" Ruta="/ventas/nueva"
+                          Descripcion="Registra una venta paso a paso con sus extras." />
+            <AccesoRapido Titulo="Clientes" Icono="groups" Ruta="/clientes"
+                          Descripcion="Consulta y da de alta clientes." />
+            <AccesoRapido Titulo="Catálogo" Icono="menu_book" Ruta="/modelos"
+                          Descripcion="Modelos, equipamiento de serie y extras disponibles." />
+        </section>
+    </NotAuthorized>
 </AuthorizeView>
 
-<RadzenCard Variant="Variant.Outlined" Style="max-width:640px">
-    <RadzenText TextStyle="TextStyle.H6" class="rz-mt-0 rz-mb-3">Conexión con la API</RadzenText>
-
-    @if (comprobando)
-    {
-        <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.75rem">
-            <RadzenProgressBarCircular ShowValue="false" Size="ProgressBarCircularSize.ExtraSmall"
-                                       Mode="ProgressBarMode.Indeterminate" />
-            <RadzenText class="rz-my-0">Comprobando…</RadzenText>
-        </RadzenStack>
-    }
-    else if (resultado?.Exito == true && resultado.Datos is not null)
-    {
-        <RadzenAlert AlertStyle="AlertStyle.Success" Variant="Variant.Flat"
-                     Shade="Shade.Lighter" AllowClose="false">
-            Comunicación correcta. La API responde y el token es válido.
-        </RadzenAlert>
-        <RadzenText TextStyle="TextStyle.Body2" class="rz-mt-3 rz-mb-0">
-            @resultado.Datos.Inventario.TotalAutos automóviles registrados ·
-            @resultado.Datos.Ventas.TotalVentas ventas ·
-            @resultado.Datos.Entidades.TotalClientes clientes.
-        </RadzenText>
-    }
-    else if (resultado?.SinPermiso == true)
-    {
-        <RadzenAlert AlertStyle="AlertStyle.Info" Variant="Variant.Flat"
-                     Shade="Shade.Lighter" AllowClose="false">
-            Conexión correcta. Este resumen está reservado al rol Administrador.
-        </RadzenAlert>
-    }
-    else
-    {
-        <RadzenAlert AlertStyle="AlertStyle.Warning" Variant="Variant.Flat"
-                     Shade="Shade.Lighter" AllowClose="false">
-            @(resultado?.Mensaje ?? "No se pudo contactar con la API.")
-        </RadzenAlert>
-        <RadzenButton Text="Reintentar" Icon="refresh" Variant="Variant.Text"
-                      Click="ComprobarAsync" class="rz-mt-3" />
-    }
-</RadzenCard>
-
 @code {
-    private ResultadoApi<DashboardDto>? resultado;
-    private bool comprobando = true;
+    private DashboardDto? dashboard;
+    private List<StockPorMarcaDto>? stockPorMarca;
 
-    protected override Task OnInitializedAsync() => ComprobarAsync();
+    private bool cargandoDashboard = true;
+    private bool cargandoStock = true;
+    private string? errorDashboard;
+    private string? errorStock;
 
-    private async Task ComprobarAsync()
+    private string nombre = string.Empty;
+    private string descripcion = string.Empty;
+
+    private record SegmentoInventario(string Etiqueta, int Cantidad);
+
+    private List<SegmentoInventario> DatosInventario =>
+    [
+        new("En stock", dashboard?.Inventario.Disponibles ?? 0),
+        new("Vendidos", dashboard?.Inventario.Vendidos ?? 0)
+    ];
+
+    protected override async Task OnInitializedAsync()
     {
-        comprobando = true;
-        resultado = await ReportesApi.ObtenerDashboardAsync();
-        comprobando = false;
+        nombre = await Sesion.ObtenerNombreAsync() ?? "de nuevo";
+        var rol = await Sesion.ObtenerRolAsync();
+
+        descripcion = rol switch
+        {
+            Roles.Administrador => "Resumen general del concesionario.",
+            Roles.Vendedor => "Accesos directos a tu trabajo diario.",
+            _ => string.Empty
+        };
+
+        if (await Sesion.EsAdministradorAsync())
+        {
+            await CargarDashboardAsync();
+            await CargarStockAsync();
+        }
     }
 
-    private static string Rol(AuthenticationState estado) =>
-        estado.User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value ?? "sin rol";
+    private async Task CargarDashboardAsync()
+    {
+        cargandoDashboard = true;
+        errorDashboard = null;
+
+        var resultado = await ReportesApi.ObtenerDashboardAsync();
+
+        if (resultado.Exito) dashboard = resultado.Datos;
+        else errorDashboard = resultado.Mensaje;
+
+        cargandoDashboard = false;
+    }
+
+    private async Task CargarStockAsync()
+    {
+        cargandoStock = true;
+        errorStock = null;
+
+        var resultado = await AutomovilApi.ObtenerResumenStockAsync();
+
+        if (resultado.Exito) stockPorMarca = resultado.Datos?.PorMarca ?? [];
+        else errorStock = resultado.Mensaje;
+
+        cargandoStock = false;
+    }
 }

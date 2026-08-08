@@ -11,14 +11,20 @@
 <PageTitle>Cerrar sesión — SAV</PageTitle>
 
 <RadzenCard Variant="Variant.Outlined" class="rz-p-6">
-    <h1 class="rz-text-h6 rz-mt-0 rz-mb-4">¿Cerrar la sesión?</h1>
+    <RadzenStack AlignItems="AlignItems.Center" Gap="0.75rem" class="rz-mb-5">
+        <RadzenIcon Icon="logout" Style="font-size:2.5rem" />
+        <h1 class="rz-text-h6 rz-my-0">¿Cerrar la sesión?</h1>
+        <RadzenText TextStyle="TextStyle.Body2" class="rz-my-0 rz-text-align-center">
+            Tendrás que volver a introducir tus credenciales para entrar de nuevo.
+        </RadzenText>
+    </RadzenStack>
 
     <EditForm Model="this" FormName="logout" OnValidSubmit="CerrarSesionAsync" method="post">
-        <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem">
+        <RadzenStack Gap="0.5rem">
             <RadzenButton ButtonType="ButtonType.Submit" Text="Cerrar sesión"
-                          Icon="logout" ButtonStyle="ButtonStyle.Danger" />
-            <RadzenButton Text="Cancelar" Variant="Variant.Text"
-                          ButtonStyle="ButtonStyle.Base" Click="@(() => Nav.NavigateTo("/"))" />
+                          Icon="logout" ButtonStyle="ButtonStyle.Danger" Style="width:100%" />
+            <RadzenButton Text="Cancelar" Variant="Variant.Text" ButtonStyle="ButtonStyle.Base"
+                          Style="width:100%" Click="@(() => Nav.NavigateTo("/"))" />
         </RadzenStack>
     </EditForm>
 </RadzenCard>

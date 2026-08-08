@@ -5,6 +5,7 @@ using Radzen;
 using SAV.UI.Components;
 using SAV.UI.Services.Api;
 using SAV.UI.Services.Auth;
+using SAV.UI.Services.Ui;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -12,6 +13,8 @@ builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
 // ---------- Radzen ----------
+// Servicios de diálogos, notificaciones, tooltips y menús contextuales.
+// El JavaScript de Radzen se carga en App.razor: sin él estos servicios no operan.
 builder.Services.AddRadzenComponents();
 builder.Services.AddRadzenCookieThemeService(options =>
 {
@@ -42,8 +45,10 @@ builder.Services
     });
 builder.Services.AddAuthorization();
 
-// ---------- Acceso a la API ----------
+// ---------- Servicios de la UI ----------
 builder.Services.AddScoped<ITokenAccessor, TokenAccessor>();
+builder.Services.AddScoped<SesionUsuario>();
+builder.Services.AddScoped<AvisosUi>();
 builder.Services.AddApiClients(builder.Configuration, builder.Environment);
 
 var app = builder.Build();

@@ -1,34 +1,33 @@
-﻿@inherits LayoutComponentBase
+@inherits LayoutComponentBase
 
-@* Aloja los diálogos, notificaciones y tooltips de Radzen. Debe estar una sola vez. *@
+@* Aloja diálogos, notificaciones y tooltips de Radzen. Debe existir una sola vez. *@
 <RadzenComponents />
 
-<RadzenLayout>
-    <RadzenHeader>
-        <RadzenStack Orientation="Orientation.Horizontal"
-                     AlignItems="AlignItems.Center"
-                     Gap="0.5rem" class="rz-px-3 rz-py-2">
-            <RadzenSidebarToggle Click="@(() => barraLateralAbierta = !barraLateralAbierta)" />
-            <RadzenIcon Icon="directions_car" />
-            <RadzenText TextStyle="TextStyle.H6" class="rz-my-0">SAV</RadzenText>
+<RadzenLayout class="sav-layout">
+    <RadzenHeader class="sav-header">
+        <div class="sav-header__contenido">
+            <RadzenSidebarToggle Click="@AlternarBarraLateral" />
 
-            <RadzenStack Orientation="Orientation.Horizontal"
-                         AlignItems="AlignItems.Center"
-                         Gap="0.25rem" class="rz-ml-auto">
+            <a href="/" class="sav-marca" aria-label="SAV — inicio">
+                <RadzenIcon Icon="directions_car" class="sav-marca__icono" />
+                <span class="sav-marca__texto">SAV</span>
+            </a>
+
+            <div class="sav-header__acciones">
                 <RadzenAppearanceToggle />
                 <UserMenu />
-            </RadzenStack>
-        </RadzenStack>
+            </div>
+        </div>
     </RadzenHeader>
 
-    <RadzenSidebar @bind-Expanded="barraLateralAbierta" Responsive="true">
+    <RadzenSidebar @bind-Expanded="barraLateralAbierta" Responsive="true" class="sav-sidebar">
         <NavMenu />
     </RadzenSidebar>
 
     <RadzenBody>
-        <div class="rz-p-4">
+        <main class="sav-contenido">
             @Body
-        </div>
+        </main>
     </RadzenBody>
 </RadzenLayout>
 
@@ -40,4 +39,6 @@
 
 @code {
     private bool barraLateralAbierta = true;
+
+    private void AlternarBarraLateral() => barraLateralAbierta = !barraLateralAbierta;
 }

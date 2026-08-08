@@ -1,24 +1,46 @@
-﻿<AuthorizeView>
+@inject DialogService Dialogos
+
+<AuthorizeView>
     <Authorized>
-        <RadzenProfileMenu>
-            <Template>
-                <RadzenStack Orientation="Orientation.Horizontal"
-                             AlignItems="AlignItems.Center" Gap="0.5rem">
-                    <RadzenIcon Icon="account_circle" />
-                    <RadzenText TextStyle="TextStyle.Body2" class="rz-my-0 rz-display-none rz-display-sm-inline-flex">
-                        @context.User.Identity!.Name
-                    </RadzenText>
-                </RadzenStack>
-            </Template>
-            <ChildContent>
-                <RadzenProfileMenuItem Text="@Rol(context)" Icon="badge" Disabled="true" />
-                <RadzenProfileMenuItem Text="Cerrar sesión" Icon="logout" Path="/logout" />
-            </ChildContent>
-        </RadzenProfileMenu>
+        <div class="sav-usuario">
+            <RadzenProfileMenu Click="AlPulsarMenu">
+                <Template>
+                    <span class="sav-usuario__disparador">
+                        <RadzenIcon Icon="account_circle" />
+                        <span class="sav-usuario__nombre">@context.User.Identity!.Name</span>
+                    </span>
+                </Template>
+                <ChildContent>
+                    <RadzenProfileMenuItem Text="@Rol(context)" Icon="badge" Value="rol" />
+                    <RadzenProfileMenuItem Text="Cerrar sesión" Icon="logout" Value="logout" />
+                </ChildContent>
+            </RadzenProfileMenu>
+
+            @* Salida siempre visible: no obliga a descubrir el menú desplegable. *@
+            <RadzenButton Icon="logout" Variant="Variant.Text" ButtonStyle="ButtonStyle.Base"
+                          title="Cerrar sesión" aria-label="Cerrar sesión"
+                          Click="AbrirDialogoCierre" />
+        </div>
     </Authorized>
 </AuthorizeView>
 
 @code {
-    private static string Rol(AuthenticationState estado) =>
-        estado.User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value ?? "Sin rol";
+    private static string Rol(AuthenticationState estado)
+        => estado.User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value ?? "Sin rol";
+
+    private async Task AlPulsarMenu(RadzenProfileMenuItem item)
+    {
+        if (item.Value?.ToString() == "logout")
+            await AbrirDialogoCierre();
+    }
+
+    private Task AbrirDialogoCierre()
+        => Dialogos.OpenAsync<CerrarSesionDialogo>(
+            "Cerrar sesión",
+            options: new DialogOptions
+            {
+                Width = "420px",
+                CloseDialogOnOverlayClick = true,
+                ShowClose = true
+            });
 }

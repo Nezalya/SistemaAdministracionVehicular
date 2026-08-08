@@ -1,0 +1,23 @@
+﻿@inject DialogService DialogService
+
+<RadzenStack Gap="1.25rem">
+    <RadzenText TextStyle="TextStyle.Body1" class="rz-my-0">
+        Vas a cerrar tu sesión en SAV. Tendrás que volver a introducir tus
+        credenciales para entrar de nuevo.
+    </RadzenText>
+
+    @* Formulario real: cerrar sesión requiere HttpContext, que solo existe
+       en una petición completa, no dentro del circuito interactivo. *@
+    <form method="post" action="/logout">
+        <AntiforgeryToken />
+        <input type="hidden" name="_handler" value="logout" />
+
+        <RadzenStack Orientation="Orientation.Horizontal"
+                     JustifyContent="JustifyContent.End" Gap="0.5rem">
+            <RadzenButton Text="Cancelar" Variant="Variant.Text" ButtonStyle="ButtonStyle.Base"
+                          Click="@(() => DialogService.Close(false))" />
+            <RadzenButton ButtonType="ButtonType.Submit" Text="Cerrar sesión"
+                          Icon="logout" ButtonStyle="ButtonStyle.Danger" />
+        </RadzenStack>
+    </form>
+</RadzenStack>

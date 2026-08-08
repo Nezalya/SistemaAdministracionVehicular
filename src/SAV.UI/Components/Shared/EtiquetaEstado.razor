@@ -1,0 +1,45 @@
+@using SAV.Core.Enums
+
+@*
+    Traduce un enum del dominio a una etiqueta con color coherente.
+    Los mismos estados se ven igual en todas las pantallas.
+*@
+
+<RadzenBadge BadgeStyle="@Estilo" Variant="Variant.Flat" Shade="Shade.Lighter" Text="@Texto" />
+
+@code {
+    [Parameter] public EstadoAutomovil? EstadoAutomovil { get; set; }
+    [Parameter] public FormaPago? FormaPago { get; set; }
+    [Parameter] public OrigenVenta? Origen { get; set; }
+    [Parameter] public TipoUbicacion? Ubicacion { get; set; }
+    [Parameter] public string? Rol { get; set; }
+    [Parameter] public bool? Activo { get; set; }
+
+    private string Texto => this switch
+    {
+        { EstadoAutomovil: { } e } => Formato.Texto(e),
+        { FormaPago: { } f } => Formato.Texto(f),
+        { Origen: { } o } => Formato.Texto(o),
+        { Ubicacion: { } u } => Formato.Texto(u),
+        { Rol: { } r } => r,
+        { Activo: { } a } => a ? "Activo" : "Inactivo",
+        _ => "—"
+    };
+
+    private BadgeStyle Estilo => this switch
+    {
+        { EstadoAutomovil: SAV.Core.Enums.EstadoAutomovil.Stock } => BadgeStyle.Success,
+        { EstadoAutomovil: SAV.Core.Enums.EstadoAutomovil.Vendido } => BadgeStyle.Info,
+        { FormaPago: SAV.Core.Enums.FormaPago.Contado } => BadgeStyle.Success,
+        { FormaPago: SAV.Core.Enums.FormaPago.Financiera } => BadgeStyle.Warning,
+        { Origen: SAV.Core.Enums.OrigenVenta.Stock } => BadgeStyle.Info,
+        { Origen: SAV.Core.Enums.OrigenVenta.EncargoFabrica } => BadgeStyle.Warning,
+        { Ubicacion: SAV.Core.Enums.TipoUbicacion.Concesionario } => BadgeStyle.Info,
+        { Ubicacion: SAV.Core.Enums.TipoUbicacion.ServicioOficial } => BadgeStyle.Warning,
+        { Rol: "Administrador" } => BadgeStyle.Primary,
+        { Rol: "Vendedor" } => BadgeStyle.Info,
+        { Activo: true } => BadgeStyle.Success,
+        { Activo: false } => BadgeStyle.Danger,
+        _ => BadgeStyle.Light
+    };
+}

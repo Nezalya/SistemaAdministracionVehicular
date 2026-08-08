@@ -1,43 +1,53 @@
-﻿<RadzenPanelMenu>
-    <RadzenPanelMenuItem Text="Inicio" Icon="home" Path="/" Match="NavLinkMatch.All" />
+@*
+    Navegación por rol. Cada entrada se muestra solo a quien la API permite usarla,
+    de modo que nadie llegue a una pantalla para recibir un 403.
+*@
 
-    @* Las secciones deshabilitadas se van activando conforme avanzan las fases:
-       basta con quitar Disabled y poner el Path definitivo. *@
+<nav class="sav-nav" aria-label="Navegación principal">
+    <RadzenPanelMenu>
 
-    <AuthorizeView Roles="Administrador,Vendedor">
-        <RadzenPanelMenuItem Text="Inventario" Icon="directions_car" Expanded="true">
-            <RadzenPanelMenuItem Text="Automóviles" Icon="list" Disabled="true" />
-            <RadzenPanelMenuItem Text="Resumen de stock" Icon="inventory_2" Disabled="true" />
-            <AuthorizeView Roles="Administrador" Context="admin">
-                <RadzenPanelMenuItem Text="Alta por lote" Icon="library_add" Disabled="true" />
-            </AuthorizeView>
-        </RadzenPanelMenuItem>
+        <RadzenPanelMenuItem Text="Inicio" Icon="dashboard" Path="/" Match="NavLinkMatch.All" />
 
-        <RadzenPanelMenuItem Text="Catálogo" Icon="menu_book">
-            <RadzenPanelMenuItem Text="Marcas" Icon="sell" Disabled="true" />
-            <RadzenPanelMenuItem Text="Modelos" Icon="category" Disabled="true" />
-            <RadzenPanelMenuItem Text="Características" Icon="tune" Disabled="true" />
-        </RadzenPanelMenuItem>
+        <AuthorizeView Roles="@Roles.AdminOVendedor">
+            <RadzenPanelMenuItem Text="Inventario" Icon="directions_car" Expanded="true">
+                <RadzenPanelMenuItem Text="Automóviles" Icon="list" Path="/automoviles" />
+                <RadzenPanelMenuItem Text="Resumen de stock" Icon="inventory_2" Path="/stock" />
+                <AuthorizeView Roles="@Roles.Administrador" Context="soloAdmin">
+                    <RadzenPanelMenuItem Text="Alta por lote" Icon="library_add" Path="/automoviles/lote" />
+                </AuthorizeView>
+            </RadzenPanelMenuItem>
 
-        <RadzenPanelMenuItem Text="Ventas" Icon="receipt_long">
-            <RadzenPanelMenuItem Text="Listado" Icon="list_alt" Disabled="true" />
-            <RadzenPanelMenuItem Text="Nueva venta" Icon="add_shopping_cart" Disabled="true" />
-        </RadzenPanelMenuItem>
+            <RadzenPanelMenuItem Text="Catálogo" Icon="menu_book">
+                <RadzenPanelMenuItem Text="Marcas" Icon="sell" Path="/marcas" />
+                <RadzenPanelMenuItem Text="Modelos" Icon="category" Path="/modelos" />
+                <RadzenPanelMenuItem Text="Características" Icon="tune" Path="/caracteristicas" />
+                <AuthorizeView Roles="@Roles.Administrador" Context="soloAdmin">
+                    <RadzenPanelMenuItem Text="Importar de fábrica" Icon="cloud_download" Path="/fabrica" />
+                </AuthorizeView>
+            </RadzenPanelMenuItem>
 
-        <RadzenPanelMenuItem Text="Clientes" Icon="groups" Disabled="true" />
+            <RadzenPanelMenuItem Text="Ventas" Icon="receipt_long">
+                <RadzenPanelMenuItem Text="Listado" Icon="list_alt" Path="/ventas" />
+                <RadzenPanelMenuItem Text="Nueva venta" Icon="add_shopping_cart" Path="/ventas/nueva" />
+            </RadzenPanelMenuItem>
 
-        <RadzenPanelMenuItem Text="Red de distribución" Icon="hub">
-            <RadzenPanelMenuItem Text="Concesionario" Icon="store" Disabled="true" />
-            <RadzenPanelMenuItem Text="Servicios oficiales" Icon="build" Disabled="true" />
-            <AuthorizeView Roles="Administrador" Context="admin">
-                <RadzenPanelMenuItem Text="Vendedores" Icon="badge" Disabled="true" />
-            </AuthorizeView>
-        </RadzenPanelMenuItem>
-    </AuthorizeView>
+            <RadzenPanelMenuItem Text="Clientes" Icon="groups" Path="/clientes" />
 
-    <AuthorizeView Roles="Administrador">
-        <RadzenPanelMenuItem Text="Seguridad" Icon="admin_panel_settings">
-            <RadzenPanelMenuItem Text="Usuarios" Icon="manage_accounts" Disabled="true" />
-        </RadzenPanelMenuItem>
-    </AuthorizeView>
-</RadzenPanelMenu>
+            <RadzenPanelMenuItem Text="Red comercial" Icon="hub">
+                <RadzenPanelMenuItem Text="Concesionario" Icon="store" Path="/concesionario" />
+                <RadzenPanelMenuItem Text="Servicios oficiales" Icon="build" Path="/servicios-oficiales" />
+                <AuthorizeView Roles="@Roles.Administrador" Context="soloAdmin">
+                    <RadzenPanelMenuItem Text="Vendedores" Icon="badge" Path="/vendedores" />
+                </AuthorizeView>
+            </RadzenPanelMenuItem>
+        </AuthorizeView>
+
+        <AuthorizeView Roles="@Roles.Administrador">
+            <RadzenPanelMenuItem Text="Seguridad" Icon="admin_panel_settings">
+                <RadzenPanelMenuItem Text="Usuarios" Icon="manage_accounts" Path="/usuarios" />
+                <RadzenPanelMenuItem Text="Registrar usuario" Icon="person_add" Path="/usuarios/nuevo" />
+            </RadzenPanelMenuItem>
+        </AuthorizeView>
+
+    </RadzenPanelMenu>
+</nav>
