@@ -2,8 +2,6 @@
 @attribute [Authorize(Roles = Roles.AdminOVendedor)]
 
 @inject IVentaApi VentaApi
-@inject IAutomovilApi AutomovilApi
-@inject IClienteApi ClienteApi
 
 <PageTitle>Venta @Id — SAV</PageTitle>
 
@@ -59,13 +57,15 @@
                     <div>
                         <p class="sav-dato__etiqueta">Responsable</p>
                         <p class="sav-dato__valor">
-                            @if (venta.VendedorId.HasValue)
+                            @if (venta.VendedorNombre is not null)
                             {
-                                <span>Vendedor #@venta.VendedorId</span>
+                                <span>@venta.VendedorNombre</span>
+                                <br /><span class="sav-ayuda">Vendedor</span>
                             }
-                            else if (venta.ServicioOficialId.HasValue)
+                            else if (venta.ServicioOficialNombre is not null)
                             {
-                                <span>Servicio oficial #@venta.ServicioOficialId</span>
+                                <span>@venta.ServicioOficialNombre</span>
+                                <br /><span class="sav-ayuda">Servicio oficial</span>
                             }
                             else
                             {
@@ -82,34 +82,16 @@
                     <div>
                         <p class="sav-dato__etiqueta">Automóvil</p>
                         <p class="sav-dato__valor">
-                            @if (automovil is not null)
-                            {
-                                <a href="@($"/automoviles/{automovil.Id}")">
-                                    @automovil.MarcaNombre @automovil.ModeloNombre
-                                </a>
-                                <br />
-                                <span class="sav-ayuda">@automovil.NumBastidor</span>
-                            }
-                            else
-                            {
-                                <span>#@venta.AutomovilId</span>
-                            }
+                            <a href="@($"/automoviles/{venta.AutomovilId}")">
+                                @Formato.OGuion($"{venta.AutomovilMarca} {venta.AutomovilModelo}".Trim())
+                            </a>
+                            <br />
+                            <span class="sav-ayuda">@Formato.OGuion(venta.AutomovilBastidor)</span>
                         </p>
                     </div>
                     <div>
                         <p class="sav-dato__etiqueta">Cliente</p>
-                        <p class="sav-dato__valor">
-                            @if (cliente is not null)
-                            {
-                                @cliente.Nombre
-                                <br />
-                                <span class="sav-ayuda">@cliente.Nif</span>
-                            }
-                            else
-                            {
-                                <span>#@venta.ClienteId</span>
-                            }
-                        </p>
+                        <p class="sav-dato__valor">@Formato.OGuion(venta.ClienteNombre)</p>
                     </div>
                 </dl>
             </section>
@@ -148,8 +130,6 @@
     [Parameter] public int Id { get; set; }
 
     private VentaDto? venta;
-    private AutomovilDto? automovil;
-    private ClienteDto? cliente;
     private bool cargando = true;
     private string? error;
 
@@ -159,24 +139,14 @@
     {
         cargando = true;
         error = null;
-        automovil = null;
-        cliente = null;
 
+        // La venta ya llega descrita: el DTO incluye los nombres de cliente,
+        // vehículo y responsable, así que basta con una sola llamada.
         var resultado = await VentaApi.ObtenerPorIdAsync(Id);
 
         if (resultado.Exito) venta = resultado.Datos;
+        else if (resultado.NoEncontrado) venta = null;
         else error = resultado.Mensaje;
-
-        // El DTO de venta solo trae identificadores: se resuelven los nombres
-        // para que la ficha sea legible sin obligar a navegar a otra pantalla.
-        if (venta is not null)
-        {
-            var auto = await AutomovilApi.ObtenerPorIdAsync(venta.AutomovilId);
-            if (auto.Exito) automovil = auto.Datos;
-
-            var cli = await ClienteApi.ObtenerPorIdAsync(venta.ClienteId);
-            if (cli.Exito) cliente = cli.Datos;
-        }
 
         cargando = false;
     }

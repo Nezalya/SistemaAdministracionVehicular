@@ -1,8 +1,6 @@
 @page "/clientes"
 @attribute [Authorize(Roles = Roles.AdminOVendedor)]
 
-@using System.ComponentModel.DataAnnotations
-
 @inject IClienteApi ClienteApi
 @inject DialogService Dialogos
 @inject AvisosUi Avisos
@@ -19,111 +17,173 @@
 <section class="sav-filtros" aria-label="Búsqueda de clientes">
     <div class="sav-filtro" style="flex:1 1 320px">
         <label class="sav-filtro__etiqueta" for="busqueda">Buscar</label>
-        <RadzenTextBox Value="@busqueda" Name="busqueda" class="sav-input"
-                       Placeholder="Nombre, NIF, correo o teléfono…"
-                       ValueChanged="@((string v) => busqueda = v)" />
+        <RadzenTextBox @bind-Value="busqueda" Name="busqueda" class="sav-input"
+                       Placeholder="Nombre, NIF, correo o teléfono…" />
     </div>
     <div class="sav-filtros__acciones">
+        <RadzenButton Text="Buscar" Icon="search" Click="AplicarFiltrosAsync" />
         <RadzenButton Text="Limpiar" Icon="clear" Variant="Variant.Text" ButtonStyle="ButtonStyle.Base"
-                      Click="@(() => busqueda = null)" Disabled="@string.IsNullOrWhiteSpace(busqueda)" />
+                      Click="LimpiarAsync" Disabled="@string.IsNullOrWhiteSpace(busqueda)" />
     </div>
 </section>
 
-<EstadoDatos TDato="IReadOnlyList<ClienteDto>" Datos="Filtrados" Cargando="cargando" Error="@error"
-             AlReintentar="CargarAsync"
-             IconoVacio="groups"
-             TituloVacio="@(string.IsNullOrWhiteSpace(busqueda) ? "Aún no hay clientes" : "Sin resultados")"
-             TextoVacio="@(string.IsNullOrWhiteSpace(busqueda) ? "Da de alta el primer cliente para poder registrar ventas." : "Prueba con otro término de búsqueda.")">
-    <AccionVacio>
-        @if (string.IsNullOrWhiteSpace(busqueda))
-        {
-            <RadzenButton Text="Nuevo cliente" Icon="person_add" Click="@(() => AbrirFormulario(null))" />
-        }
-    </AccionVacio>
-
-    <ChildContent>
-        <div class="sav-tabla-scroll">
-            <RadzenDataGrid TItem="ClienteDto" Data="@Filtrados" AllowPaging="true" PageSize="15"
-                            AllowSorting="true" GridLines="DataGridGridLines.Horizontal"
-                            ShowPagingSummary="true"
-                            PagingSummaryFormat="{0} de {1} páginas · {2} clientes"
-                            EmptyText="Sin clientes.">
-                <Columns>
-                    <RadzenDataGridColumn TItem="ClienteDto" Property="Nombre" Title="Nombre" Sortable="true" />
-                    <RadzenDataGridColumn TItem="ClienteDto" Property="Nif" Title="NIF" Sortable="true"
-                                          Width="140px" />
-                    <RadzenDataGridColumn TItem="ClienteDto" Property="Telefono" Title="Teléfono"
-                                          Sortable="false" Width="130px">
-                        <Template Context="c">@Formato.OGuion(c.Telefono)</Template>
-                    </RadzenDataGridColumn>
-                    <RadzenDataGridColumn TItem="ClienteDto" Property="Email" Title="Correo" Sortable="false">
-                        <Template Context="c">@Formato.OGuion(c.Email)</Template>
-                    </RadzenDataGridColumn>
-                    <RadzenDataGridColumn TItem="ClienteDto" Property="FechaRegistro" Title="Alta"
-                                          Sortable="true" Width="110px">
-                        <Template Context="c">@Formato.Fecha(c.FechaRegistro)</Template>
-                    </RadzenDataGridColumn>
-                    <RadzenDataGridColumn TItem="ClienteDto" Title="" Sortable="false" Width="150px"
-                                          TextAlign="TextAlign.End">
-                        <Template Context="c">
-                            <div class="sav-fila sav-fila--fin">
-                                <RadzenButton Icon="receipt_long" Variant="Variant.Text"
-                                              ButtonStyle="ButtonStyle.Base" Size="ButtonSize.Small"
-                                              title="Resumen de compras" aria-label="Resumen de compras"
-                                              Click="@(() => VerResumenAsync(c))" />
-                                <RadzenButton Icon="edit" Variant="Variant.Text"
-                                              ButtonStyle="ButtonStyle.Base" Size="ButtonSize.Small"
-                                              title="Editar" aria-label="Editar"
-                                              Click="@(() => AbrirFormulario(c))" />
-                                <RadzenButton Icon="delete" Variant="Variant.Text"
-                                              ButtonStyle="ButtonStyle.Danger" Size="ButtonSize.Small"
-                                              title="Eliminar" aria-label="Eliminar"
-                                              Click="@(() => EliminarAsync(c))" />
-                            </div>
-                        </Template>
-                    </RadzenDataGridColumn>
-                </Columns>
-            </RadzenDataGrid>
-        </div>
-    </ChildContent>
-</EstadoDatos>
+@if (error is not null)
+{
+    <EstadoDatos TDato="object" Cargando="false" Error="@error" AlReintentar="ConsultarAsync" />
+}
+else
+{
+    <div class="sav-tabla-scroll">
+        <RadzenDataGrid @ref="rejilla" TItem="ClienteDto"
+                        Data="@clientes" Count="@total" LoadData="CargarDatosAsync"
+                        IsLoading="@cargando"
+                        AllowPaging="true" PageSize="15"
+                        PageSizeOptions="@(new[] { 10, 15, 50 })"
+                        ShowPagingSummary="true"
+                        PagingSummaryFormat="{0} de {1} páginas · {2} clientes"
+                        AllowSorting="true"
+                        GridLines="DataGridGridLines.Horizontal"
+                        EmptyText="No hay clientes que coincidan con la búsqueda.">
+            <Columns>
+                <RadzenDataGridColumn TItem="ClienteDto" Property="Nombre" Title="Nombre" Sortable="true" />
+                <RadzenDataGridColumn TItem="ClienteDto" Property="Nif" Title="NIF" Sortable="true"
+                                      Width="140px" />
+                <RadzenDataGridColumn TItem="ClienteDto" Property="Telefono" Title="Teléfono"
+                                      Sortable="false" Width="130px">
+                    <Template Context="c">@Formato.OGuion(c.Telefono)</Template>
+                </RadzenDataGridColumn>
+                <RadzenDataGridColumn TItem="ClienteDto" Property="Email" Title="Correo" Sortable="false">
+                    <Template Context="c">@Formato.OGuion(c.Email)</Template>
+                </RadzenDataGridColumn>
+                <RadzenDataGridColumn TItem="ClienteDto" Property="FechaRegistro" Title="Alta"
+                                      Sortable="true" Width="110px">
+                    <Template Context="c">@Formato.Fecha(c.FechaRegistro)</Template>
+                </RadzenDataGridColumn>
+                <RadzenDataGridColumn TItem="ClienteDto" Title="" Sortable="false" Width="150px"
+                                      TextAlign="TextAlign.End">
+                    <Template Context="c">
+                        <div class="sav-fila sav-fila--fin">
+                            <RadzenButton Icon="receipt_long" Variant="Variant.Text"
+                                          ButtonStyle="ButtonStyle.Base" Size="ButtonSize.Small"
+                                          title="Resumen de compras" aria-label="Resumen de compras"
+                                          Click="@(() => VerResumenAsync(c))" />
+                            <RadzenButton Icon="edit" Variant="Variant.Text"
+                                          ButtonStyle="ButtonStyle.Base" Size="ButtonSize.Small"
+                                          title="Editar" aria-label="Editar"
+                                          Click="@(() => AbrirFormulario(c))" />
+                            <RadzenButton Icon="delete" Variant="Variant.Text"
+                                          ButtonStyle="ButtonStyle.Danger" Size="ButtonSize.Small"
+                                          title="Eliminar" aria-label="Eliminar"
+                                          Click="@(() => EliminarAsync(c))" />
+                        </div>
+                    </Template>
+                </RadzenDataGridColumn>
+            </Columns>
+        </RadzenDataGrid>
+    </div>
+}
 
 @code {
-    private IReadOnlyList<ClienteDto>? clientes;
-    private bool cargando = true;
+    private RadzenDataGrid<ClienteDto>? rejilla;
+
+    private IReadOnlyList<ClienteDto> clientes = [];
+    private int total;
+    private bool cargando;
+    private bool cargaInicialHecha;
     private string? error;
     private string? busqueda;
 
-    private IReadOnlyList<ClienteDto>? Filtrados
-    {
-        get
-        {
-            if (clientes is null) return null;
-            if (string.IsNullOrWhiteSpace(busqueda)) return clientes;
+    private int paginaActual = 1;
+    private int tamanoPagina = 15;
+    private string? ordenarPor;
+    private bool ordenDescendente;
 
-            var t = busqueda.Trim();
-            return clientes.Where(c =>
-                    c.Nombre.Contains(t, StringComparison.OrdinalIgnoreCase)
-                    || c.Nif.Contains(t, StringComparison.OrdinalIgnoreCase)
-                    || (c.Email?.Contains(t, StringComparison.OrdinalIgnoreCase) ?? false)
-                    || (c.Telefono?.Contains(t, StringComparison.OrdinalIgnoreCase) ?? false))
-                .ToList();
-        }
+    private async Task CargarDatosAsync(LoadDataArgs args)
+    {
+        tamanoPagina = args.Top ?? tamanoPagina;
+        paginaActual = ((args.Skip ?? 0) / Math.Max(tamanoPagina, 1)) + 1;
+
+        LeerOrden(args.OrderBy);
+        cargaInicialHecha = true;
+        await ConsultarAsync();
     }
 
-    protected override async Task OnInitializedAsync() => await CargarAsync();
+    /// <summary>
+    /// Red de seguridad: si la rejilla no llega a pedir la primera página por sí
+    /// misma, la pedimos aquí. Sin esto la pantalla se quedaría vacía para siempre.
+    /// </summary>
+    protected override async Task OnAfterRenderAsync(bool primerRenderizado)
+    {
+        if (!primerRenderizado || cargaInicialHecha) return;
 
-    private async Task CargarAsync()
+        cargaInicialHecha = true;
+        await ConsultarAsync();
+        StateHasChanged();
+    }
+
+    private void LeerOrden(string? orderBy)
+    {
+        if (string.IsNullOrWhiteSpace(orderBy))
+        {
+            ordenarPor = null;
+            ordenDescendente = false;
+            return;
+        }
+
+        var partes = orderBy.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        ordenDescendente = partes.Length > 1 && partes[1].Equals("desc", StringComparison.OrdinalIgnoreCase);
+
+        ordenarPor = partes[0].ToLowerInvariant() switch
+        {
+            "nombre" => "nombre",
+            "nif" => "nif",
+            "fecharegistro" => "fecharegistro",
+            _ => null
+        };
+    }
+
+    private async Task ConsultarAsync()
     {
         cargando = true;
         error = null;
 
-        var resultado = await ClienteApi.ObtenerTodosAsync();
+        var filtro = new FiltroClienteDto
+        {
+            Page = paginaActual,
+            PageSize = tamanoPagina,
+            SortBy = ordenarPor,
+            SortDescending = ordenDescendente,
+            Busqueda = string.IsNullOrWhiteSpace(busqueda) ? null : busqueda.Trim()
+        };
 
-        if (resultado.Exito) clientes = resultado.Datos ?? [];
-        else error = resultado.Mensaje;
+        var resultado = await ClienteApi.BuscarAsync(filtro);
+
+        if (resultado.Exito && resultado.Datos is not null)
+        {
+            clientes = resultado.Datos.Items;
+            total = resultado.Datos.TotalCount;
+        }
+        else
+        {
+            clientes = [];
+            total = 0;
+            error = resultado.Mensaje;
+        }
 
         cargando = false;
+    }
+
+    private async Task AplicarFiltrosAsync()
+    {
+        paginaActual = 1;
+        if (rejilla is not null) await rejilla.FirstPage();
+        else await ConsultarAsync();
+    }
+
+    private async Task LimpiarAsync()
+    {
+        busqueda = null;
+        await AplicarFiltrosAsync();
     }
 
     private async Task AbrirFormulario(ClienteDto? cliente)
@@ -138,7 +198,7 @@
             parametros!,
             new DialogOptions { Width = "560px", CloseDialogOnOverlayClick = false, ShowClose = true });
 
-        if (guardado is true) await CargarAsync();
+        if (guardado is true) await ConsultarAsync();
     }
 
     private async Task EliminarAsync(ClienteDto cliente)
@@ -154,7 +214,7 @@
         if (resultado.Exito)
         {
             Avisos.Exito("Cliente eliminado.");
-            await CargarAsync();
+            await ConsultarAsync();
         }
         else
         {
@@ -166,21 +226,12 @@
     {
         var resultado = await ClienteApi.ObtenerResumenComprasAsync(cliente.Id);
 
-        if (resultado.Exito && resultado.Datos is not null)
-        {
-            var r = resultado.Datos;
-            await Dialogos.Alert(
-                $"{Formato.Numero(r.TotalCompras)} compras por un total de {Formato.Moneda(r.MontoTotal)}.",
-                $"Compras de {r.ClienteNombre}",
-                new AlertOptions { OkButtonText = "Cerrar", Width = "420px" });
-        }
-        else
-        {
+        var mensaje = resultado.Exito && resultado.Datos is not null
+            ? $"{Formato.Numero(resultado.Datos.TotalCompras)} compras por un total de {Formato.Moneda(resultado.Datos.MontoTotal)}."
             // La API responde 400 cuando el cliente aún no tiene compras.
-            await Dialogos.Alert(
-                resultado.Mensaje ?? "Este cliente todavía no tiene compras registradas.",
-                $"Compras de {cliente.Nombre}",
-                new AlertOptions { OkButtonText = "Cerrar", Width = "420px" });
-        }
+            : resultado.Mensaje ?? "Este cliente todavía no tiene compras registradas.";
+
+        await Dialogos.Alert(mensaje, $"Compras de {cliente.Nombre}",
+            new AlertOptions { OkButtonText = "Cerrar", Width = "420px" });
     }
 }

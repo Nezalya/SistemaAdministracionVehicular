@@ -55,10 +55,40 @@ namespace SAV.Application.Mappings
             : TipoUbicacion.Concesionario));
 
             // ---- Venta ----
-            CreateMap<Venta, VentaDto>();
-            CreateMap<VentaExtra, VentaExtraDto>();
+            // El precio base se deduce restando los extras al total cobrado: la venta
+            // guarda el importe final, no el desglose.
+            CreateMap<Venta, VentaDto>()
+                .ForMember(d => d.PrecioTotal, o => o.MapFrom(s => s.PrecioCobrado))
+                .ForMember(d => d.TotalExtras, o => o.MapFrom(s => s.Extras.Sum(e => e.PrecioCobrado)))
+                .ForMember(d => d.PrecioBase,
+                           o => o.MapFrom(s => s.PrecioCobrado - s.Extras.Sum(e => e.PrecioCobrado)))
+                .ForMember(d => d.ClienteNombre,
+                           o => o.MapFrom(s => s.Cliente != null ? s.Cliente.Nombre : null))
+                .ForMember(d => d.VendedorNombre,
+                           o => o.MapFrom(s => s.Vendedor != null ? s.Vendedor.Nombre : null))
+                .ForMember(d => d.ServicioOficialNombre,
+                           o => o.MapFrom(s => s.ServicioOficial != null ? s.ServicioOficial.Nombre : null))
+                .ForMember(d => d.AutomovilBastidor,
+                           o => o.MapFrom(s => s.Automovil != null ? s.Automovil.NumBastidor : null))
+                .ForMember(d => d.AutomovilModelo,
+                           o => o.MapFrom(s => s.Automovil != null && s.Automovil.Modelo != null
+                               ? s.Automovil.Modelo.Nombre
+                               : null))
+                .ForMember(d => d.AutomovilMarca,
+                           o => o.MapFrom(s => s.Automovil != null && s.Automovil.Modelo != null
+                                               && s.Automovil.Modelo.Marca != null
+                               ? s.Automovil.Modelo.Marca.Nombre
+                               : null));
+
+            CreateMap<VentaExtra, VentaExtraDto>()
+                .ForMember(d => d.Nombre,
+                           o => o.MapFrom(s => s.Caracteristica != null ? s.Caracteristica.Nombre : null));
+
             CreateMap<CrearVentaDto, Venta>()
-                .ForMember(d => d.Extras, options => options.Ignore()); 
+                .ForMember(d => d.Extras, options => options.Ignore());
+
+            // ---- Automóvil (alta) ----
+            CreateMap<RegistrarAutomovilDto, Automovil>();
 
             // ---- Usuario ----
             CreateMap<Usuario, UsuarioDto>();
@@ -82,15 +112,6 @@ namespace SAV.Application.Mappings
             CreateMap<Modelo, ConfiguracionModeloDto>()
                 .ForMember(d => d.ModeloId, o => o.MapFrom(s => s.Id));
 
-            CreateMap<Venta, VentaDto>()
-    .ForMember(d => d.PrecioTotal, o => o.MapFrom(s => s.PrecioCobrado))
-    .ForMember(d => d.TotalExtras, o => o.MapFrom(s => s.Extras.Sum(e => e.PrecioCobrado)))
-    .ForMember(d => d.PrecioBase, o => o.MapFrom(s => s.PrecioCobrado - s.Extras.Sum(e => e.PrecioCobrado)));
-
-            
-            CreateMap<VentaExtra, VentaExtraDto>()
-                .ForMember(d => d.Nombre,
-                           o => o.MapFrom(s => s.Caracteristica != null ? s.Caracteristica.Nombre : null));
             CreateMap<RegistrarVendedorDto, Vendedor>();
             CreateMap<RegistrarClienteDto, Cliente>();
             CreateMap<Usuario, UsuarioRegistradoDto>()

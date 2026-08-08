@@ -5,5 +5,6 @@
         Task<Cliente?> ObtenerClientePorNif(string nif);
         Task<ResumenComprasClienteDto?> ObtenerResumenCompras(int clienteId);
         Task<bool> TieneVentas(int clienteId);
+        Task<PagedResult<Cliente>> BuscarClientes(FiltroClienteDto filtro);
     }
 }

@@ -98,6 +98,15 @@
 
         var datos = resultado.Datos;
 
+        // Las cuentas de cliente existen en el dominio, pero hoy la API no expone
+        // ninguna operación para ese rol: entrar dejaría al usuario sin nada que ver.
+        if (string.Equals(datos.Rol, Roles.Cliente, StringComparison.OrdinalIgnoreCase))
+        {
+            error = "Las cuentas de cliente todavía no tienen acceso a la aplicación. "
+                  + "Contacta con el concesionario para cualquier gestión.";
+            return;
+        }
+
         // El rol real lo decide la API a partir de la cuenta. El botón elegido solo
         // declara con qué rol dice entrar el usuario: si no coincide, no se inicia sesión.
         if (!string.Equals(datos.Rol, Entrada.Rol, StringComparison.OrdinalIgnoreCase))

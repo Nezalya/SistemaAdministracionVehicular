@@ -16,8 +16,13 @@
             return await _ventaRepository.ObtenerVentasConDetalle();
         }
 
-        public async Task<Venta?> ObtenerVentaPorId(int id) 
-        { 
+        public async Task<PagedResult<Venta>> BuscarVentas(FiltroVentaDto filtro)
+        {
+            return await _ventaRepository.BuscarVentas(filtro);
+        }
+
+        public async Task<Venta?> ObtenerVentaPorId(int id)
+        {
             return await _ventaRepository.ObtenerVentaConDetalle(id);
         }
 

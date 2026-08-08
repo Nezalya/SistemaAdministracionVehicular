@@ -97,11 +97,13 @@
 
                     <div class="sav-campo sav-separado-corto">
                         <label class="sav-label" for="cliente">Cliente</label>
+                        @* La búsqueda se resuelve en el servidor: no se descarga
+                           la lista completa de clientes al abrir la pantalla. *@
                         <RadzenDropDown @bind-Value="clienteId" Data="@clientes" Name="cliente"
                                         TextProperty="Nombre" ValueProperty="Id"
-                                        AllowFiltering="true"
+                                        AllowFiltering="true" LoadData="BuscarClientesAsync"
                                         FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive"
-                                        Placeholder="Busca por nombre…" class="sav-input" />
+                                        Placeholder="Busca por nombre o NIF…" class="sav-input" />
                     </div>
 
                     @if (ClienteSeleccionado is not null)
@@ -396,14 +398,28 @@
         cargandoAutos = false;
     }
 
-    private async Task CargarClientesAsync()
+    private async Task CargarClientesAsync() => await BuscarClientesAsync(null);
+
+    /// <summary>
+    /// Alimenta el desplegable de clientes. Se dispara al abrirlo y al teclear,
+    /// de modo que la búsqueda la resuelve el servidor y no el navegador.
+    /// </summary>
+    private async Task BuscarClientesAsync(LoadDataArgs? args)
     {
         cargandoClientes = true;
         errorClientes = null;
 
-        var resultado = await ClienteApi.ObtenerTodosAsync();
+        var filtro = new FiltroClienteDto
+        {
+            Page = 1,
+            PageSize = 25,
+            SortBy = "nombre",
+            Busqueda = string.IsNullOrWhiteSpace(args?.Filter) ? null : args.Filter
+        };
 
-        if (resultado.Exito) clientes = resultado.Datos ?? [];
+        var resultado = await ClienteApi.BuscarAsync(filtro);
+
+        if (resultado.Exito && resultado.Datos is not null) clientes = resultado.Datos.Items;
         else errorClientes = resultado.Mensaje;
 
         cargandoClientes = false;
@@ -478,9 +494,20 @@
 
         if (guardado is true)
         {
-            await CargarClientesAsync();
-            // Se preselecciona el cliente recién creado: es el más reciente por fecha de alta.
-            clienteId = clientes?.OrderByDescending(c => c.FechaRegistro).FirstOrDefault()?.Id;
+            // Se recupera por fecha de alta descendente para preseleccionar el recién creado.
+            var recientes = await ClienteApi.BuscarAsync(new FiltroClienteDto
+            {
+                Page = 1,
+                PageSize = 25,
+                SortBy = "fecharegistro",
+                SortDescending = true
+            });
+
+            if (recientes.Exito && recientes.Datos is not null)
+            {
+                clientes = recientes.Datos.Items;
+                clienteId = clientes.FirstOrDefault()?.Id;
+            }
         }
     }
 

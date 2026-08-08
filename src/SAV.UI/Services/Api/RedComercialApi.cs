@@ -1,3 +1,4 @@
+using SAV.Contracts.Common;
 using SAV.Contracts.Dtos;
 using SAV.UI.Services.Auth;
 
@@ -7,7 +8,7 @@ namespace SAV.UI.Services.Api;
 
 public interface IClienteApi
 {
-    Task<ResultadoApi<IReadOnlyList<ClienteDto>>> ObtenerTodosAsync(CancellationToken ct = default);
+    Task<ResultadoApi<PagedResult<ClienteDto>>> BuscarAsync(FiltroClienteDto filtro, CancellationToken ct = default);
     Task<ResultadoApi<ClienteDto>> ObtenerPorIdAsync(int id, CancellationToken ct = default);
     Task<ResultadoApi<ClienteDto>> CrearAsync(GuardarClienteDto dto, CancellationToken ct = default);
     Task<ResultadoApi<ClienteDto>> ActualizarAsync(int id, GuardarClienteDto dto, CancellationToken ct = default);
@@ -20,8 +21,9 @@ public sealed class ClienteApi : ApiClienteBase, IClienteApi
     public ClienteApi(HttpClient http, ITokenAccessor tokenAccessor, ILogger<ClienteApi> logger)
         : base(http, tokenAccessor, logger) { }
 
-    public Task<ResultadoApi<IReadOnlyList<ClienteDto>>> ObtenerTodosAsync(CancellationToken ct = default)
-        => GetAsync<IReadOnlyList<ClienteDto>>("api/cliente", ct);
+    public Task<ResultadoApi<PagedResult<ClienteDto>>> BuscarAsync(
+        FiltroClienteDto filtro, CancellationToken ct = default)
+        => GetAsync<PagedResult<ClienteDto>>($"api/cliente{ConsultaApi.Construir(filtro)}", ct);
 
     public Task<ResultadoApi<ClienteDto>> ObtenerPorIdAsync(int id, CancellationToken ct = default)
         => GetAsync<ClienteDto>($"api/cliente/{id}", ct);
@@ -155,7 +157,7 @@ public sealed class UsuarioApi : ApiClienteBase, IUsuarioApi
 
 public interface IVentaApi
 {
-    Task<ResultadoApi<IReadOnlyList<VentaDto>>> ObtenerTodasAsync(CancellationToken ct = default);
+    Task<ResultadoApi<PagedResult<VentaDto>>> BuscarAsync(FiltroVentaDto filtro, CancellationToken ct = default);
     Task<ResultadoApi<VentaDto>> ObtenerPorIdAsync(int id, CancellationToken ct = default);
     Task<ResultadoApi<VentaDto>> CrearAsync(CrearVentaDto dto, CancellationToken ct = default);
 }
@@ -165,8 +167,9 @@ public sealed class VentaApi : ApiClienteBase, IVentaApi
     public VentaApi(HttpClient http, ITokenAccessor tokenAccessor, ILogger<VentaApi> logger)
         : base(http, tokenAccessor, logger) { }
 
-    public Task<ResultadoApi<IReadOnlyList<VentaDto>>> ObtenerTodasAsync(CancellationToken ct = default)
-        => GetAsync<IReadOnlyList<VentaDto>>("api/ventas", ct);
+    public Task<ResultadoApi<PagedResult<VentaDto>>> BuscarAsync(
+        FiltroVentaDto filtro, CancellationToken ct = default)
+        => GetAsync<PagedResult<VentaDto>>($"api/ventas{ConsultaApi.Construir(filtro)}", ct);
 
     public Task<ResultadoApi<VentaDto>> ObtenerPorIdAsync(int id, CancellationToken ct = default)
         => GetAsync<VentaDto>($"api/ventas/{id}", ct);

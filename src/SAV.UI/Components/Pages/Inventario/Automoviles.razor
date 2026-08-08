@@ -142,7 +142,8 @@ else
 
     private IReadOnlyList<AutomovilDto> automoviles = [];
     private int total;
-    private bool cargando = true;
+    private bool cargando;
+    private bool cargaInicialHecha;
     private string? error;
 
     private IReadOnlyList<string> nombresDeMarca = [];
@@ -189,7 +190,21 @@ else
         paginaActual = ((args.Skip ?? 0) / Math.Max(tamanoPagina, 1)) + 1;
 
         LeerOrden(args.OrderBy);
+        cargaInicialHecha = true;
         await ConsultarAsync();
+    }
+
+    /// <summary>
+    /// Red de seguridad: si la rejilla no llega a pedir la primera página por sí
+    /// misma, la pedimos aquí. Sin esto la pantalla se quedaría vacía para siempre.
+    /// </summary>
+    protected override async Task OnAfterRenderAsync(bool primerRenderizado)
+    {
+        if (!primerRenderizado || cargaInicialHecha) return;
+
+        cargaInicialHecha = true;
+        await ConsultarAsync();
+        StateHasChanged();
     }
 
     private void LeerOrden(string? orderBy)
