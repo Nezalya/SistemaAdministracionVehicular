@@ -1,0 +1,140 @@
+@page "/modelos"
+@attribute [Authorize(Roles = Roles.AdminOVendedor)]
+
+@inject IModeloApi ModeloApi
+@inject NavigationManager Nav
+
+<PageTitle>Modelos — SAV</PageTitle>
+
+<CabeceraPagina Titulo="Modelos"
+                Descripcion="Catálogo de modelos con su precio base y descuento vigente.">
+    <Acciones>
+        <RadzenButton Text="Actualizar" Icon="refresh" Variant="Variant.Outlined"
+                      ButtonStyle="ButtonStyle.Base" Click="CargarAsync" />
+    </Acciones>
+</CabeceraPagina>
+
+<section class="sav-filtros" aria-label="Búsqueda de modelos">
+    <div class="sav-filtro" style="flex:1 1 320px">
+        <label class="sav-filtro__etiqueta" for="busqueda">Buscar</label>
+        <RadzenTextBox Value="@busqueda" Name="busqueda" class="sav-input"
+                       Placeholder="Marca o nombre del modelo…"
+                       ValueChanged="@((string v) => busqueda = v)" />
+    </div>
+    <div class="sav-filtros__acciones">
+        <RadzenButton Text="Limpiar" Icon="clear" Variant="Variant.Text" ButtonStyle="ButtonStyle.Base"
+                      Click="@(() => busqueda = null)" Disabled="@string.IsNullOrWhiteSpace(busqueda)" />
+    </div>
+</section>
+
+<EstadoDatos TDato="IReadOnlyList<ModeloDto>" Datos="ModelosFiltrados" Cargando="cargando"
+             Error="@error" AlReintentar="CargarAsync"
+             IconoVacio="category"
+             TituloVacio="@(string.IsNullOrWhiteSpace(busqueda) ? "No hay modelos registrados" : "Sin resultados")"
+             TextoVacio="@(string.IsNullOrWhiteSpace(busqueda) ? "El catálogo se rellena importando los datos de fábrica." : "Prueba con otro término de búsqueda.")">
+    <ChildContent>
+        <div class="sav-tabla-scroll">
+            <RadzenDataGrid TItem="ModeloDto" Data="@ModelosFiltrados" AllowPaging="true" PageSize="15"
+                            AllowSorting="true" GridLines="DataGridGridLines.Horizontal"
+                            ShowPagingSummary="true"
+                            PagingSummaryFormat="{0} de {1} páginas · {2} modelos"
+                            EmptyText="Sin modelos.">
+                <Columns>
+                    <RadzenDataGridColumn TItem="ModeloDto" Property="MarcaNombre" Title="Marca"
+                                          Sortable="true" Width="150px">
+                        <Template Context="m">@Formato.OGuion(m.MarcaNombre)</Template>
+                    </RadzenDataGridColumn>
+
+                    <RadzenDataGridColumn TItem="ModeloDto" Property="Nombre" Title="Modelo" Sortable="true" />
+
+                    <RadzenDataGridColumn TItem="ModeloDto" Property="PrecioBase" Title="Precio base"
+                                          Sortable="true" Width="140px" TextAlign="TextAlign.End">
+                        <Template Context="m">
+                            <span class="sav-numero">@Formato.Moneda(m.PrecioBase)</span>
+                        </Template>
+                    </RadzenDataGridColumn>
+
+                    <RadzenDataGridColumn TItem="ModeloDto" Property="Descuento" Title="Descuento"
+                                          Sortable="true" Width="120px" TextAlign="TextAlign.End">
+                        <Template Context="m">
+                            @if (m.Descuento is > 0)
+                            {
+                                <RadzenBadge BadgeStyle="BadgeStyle.Success" Variant="Variant.Flat"
+                                             Shade="Shade.Lighter" Text="@Formato.Porcentaje(m.Descuento)" />
+                            }
+                            else
+                            {
+                                <span>—</span>
+                            }
+                        </Template>
+                    </RadzenDataGridColumn>
+
+                    <RadzenDataGridColumn TItem="ModeloDto" Title="Precio final" Sortable="false"
+                                          Width="140px" TextAlign="TextAlign.End">
+                        <Template Context="m">
+                            <strong class="sav-numero">@Formato.Moneda(PrecioFinal(m))</strong>
+                        </Template>
+                    </RadzenDataGridColumn>
+
+                    <RadzenDataGridColumn TItem="ModeloDto" Title="" Sortable="false" Width="130px"
+                                          TextAlign="TextAlign.End">
+                        <Template Context="m">
+                            <RadzenButton Text="Equipamiento" Variant="Variant.Text"
+                                          ButtonStyle="ButtonStyle.Primary" Size="ButtonSize.Small"
+                                          Click="@(() => Nav.NavigateTo($"/modelos/{m.Id}"))" />
+                        </Template>
+                    </RadzenDataGridColumn>
+                </Columns>
+            </RadzenDataGrid>
+        </div>
+    </ChildContent>
+</EstadoDatos>
+
+@code {
+    [SupplyParameterFromQuery(Name = "marca")] private string? MarcaFiltro { get; set; }
+
+    private IReadOnlyList<ModeloDto>? modelos;
+    private bool cargando = true;
+    private string? error;
+    private string? busqueda;
+
+    private IReadOnlyList<ModeloDto>? ModelosFiltrados
+    {
+        get
+        {
+            if (modelos is null) return null;
+            if (string.IsNullOrWhiteSpace(busqueda)) return modelos;
+
+            var termino = busqueda.Trim();
+            return modelos.Where(m =>
+                    m.Nombre.Contains(termino, StringComparison.OrdinalIgnoreCase)
+                    || (m.MarcaNombre?.Contains(termino, StringComparison.OrdinalIgnoreCase) ?? false))
+                .ToList();
+        }
+    }
+
+    /// <summary>El descuento del modelo se interpreta como porcentaje, igual que en el backend.</summary>
+    private static decimal PrecioFinal(ModeloDto modelo)
+        => modelo.Descuento is > 0
+            ? modelo.PrecioBase - (modelo.PrecioBase * (modelo.Descuento.Value / 100m))
+            : modelo.PrecioBase;
+
+    protected override async Task OnInitializedAsync()
+    {
+        busqueda = MarcaFiltro;
+        await CargarAsync();
+    }
+
+    private async Task CargarAsync()
+    {
+        cargando = true;
+        error = null;
+
+        var resultado = await ModeloApi.ObtenerTodosAsync();
+
+        if (resultado.Exito) modelos = resultado.Datos ?? [];
+        else error = resultado.Mensaje;
+
+        cargando = false;
+    }
+}

@@ -42,10 +42,13 @@ namespace SAV.Application.Services
             var token = _tokenService.GenerarToken(usuario);
             return new ResultadoAutenticacionDto
             {
+                UsuarioId = usuario.Id,
                 Token = token.Token,
                 Usuario = usuario.Username,
                 Rol = usuario.Rol.ToString(),
-                Expira = token.Expira
+                Expira = token.Expira,
+                VendedorId = usuario.VendedorId,
+                ClienteId = usuario.ClienteId
             };
         }
 

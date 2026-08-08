@@ -1,0 +1,114 @@
+@using System.ComponentModel.DataAnnotations
+
+@inject IServicioOficialApi ServicioOficialApi
+@inject DialogService Dialogos
+@inject AvisosUi Avisos
+
+<EditForm Model="entrada" OnValidSubmit="GuardarAsync">
+    <DataAnnotationsValidator />
+
+    <div class="sav-form sav-form--2col">
+        <div class="sav-campo sav-campo--ancho">
+            <label class="sav-label" for="nombre">Nombre</label>
+            <RadzenTextBox @bind-Value="entrada.Nombre" Name="nombre" class="sav-input" MaxLength="150" />
+            <ValidationMessage For="() => entrada.Nombre" class="sav-error" />
+        </div>
+
+        <div class="sav-campo">
+            <label class="sav-label" for="nif">NIF</label>
+            <RadzenTextBox @bind-Value="entrada.Nif" Name="nif" class="sav-input" MaxLength="11"
+                           Placeholder="11 dígitos" />
+            <ValidationMessage For="() => entrada.Nif" class="sav-error" />
+        </div>
+
+        <div class="sav-campo">
+            <label class="sav-label" for="telefono">Teléfono</label>
+            <RadzenTextBox @bind-Value="entrada.Telefono" Name="telefono" class="sav-input" MaxLength="10"
+                           Placeholder="10 dígitos" />
+            <ValidationMessage For="() => entrada.Telefono" class="sav-error" />
+        </div>
+
+        <div class="sav-campo sav-campo--ancho">
+            <label class="sav-label" for="domicilio">
+                Domicilio <span class="sav-label__opcional">(opcional)</span>
+            </label>
+            <RadzenTextBox @bind-Value="entrada.Domicilio" Name="domicilio" class="sav-input" MaxLength="200" />
+            <ValidationMessage For="() => entrada.Domicilio" class="sav-error" />
+        </div>
+    </div>
+
+    <div class="sav-form__acciones">
+        <RadzenButton Text="Cancelar" Variant="Variant.Text" ButtonStyle="ButtonStyle.Base"
+                      Click="@(() => Dialogos.Close(false))" Disabled="guardando" />
+        <RadzenButton ButtonType="ButtonType.Submit" Text="@(EsNuevo ? "Crear servicio" : "Guardar cambios")"
+                      Icon="save" IsBusy="guardando" BusyText="Guardando…" />
+    </div>
+</EditForm>
+
+@code {
+    [Parameter] public ServicioOficialDto? Servicio { get; set; }
+
+    private readonly EntradaServicio entrada = new();
+    private bool guardando;
+
+    private bool EsNuevo => Servicio is null;
+
+    protected override void OnInitialized()
+    {
+        if (Servicio is null) return;
+
+        entrada.Nombre = Servicio.Nombre;
+        entrada.Nif = Servicio.Nif;
+        entrada.Telefono = Servicio.Telefono ?? string.Empty;
+        entrada.Domicilio = Servicio.Domicilio;
+    }
+
+    private async Task GuardarAsync()
+    {
+        guardando = true;
+
+        var dto = new GuardarServicioOficialDto
+        {
+            Nombre = entrada.Nombre.Trim(),
+            Nif = entrada.Nif.Trim(),
+            Telefono = entrada.Telefono.Trim(),
+            Domicilio = string.IsNullOrWhiteSpace(entrada.Domicilio) ? null : entrada.Domicilio.Trim()
+        };
+
+        var resultado = EsNuevo
+            ? await ServicioOficialApi.CrearAsync(dto)
+            : await ServicioOficialApi.ActualizarAsync(Servicio!.Id, dto);
+
+        if (resultado.Exito)
+        {
+            Avisos.Exito(EsNuevo ? "Servicio oficial creado." : "Servicio oficial actualizado.");
+            Dialogos.Close(true);
+        }
+        else
+        {
+            Avisos.ErrorDeApi(resultado, EsNuevo ? "crear el servicio oficial" : "guardar los cambios");
+        }
+
+        guardando = false;
+    }
+
+    private sealed class EntradaServicio
+    {
+        [Required(ErrorMessage = "El nombre es obligatorio.")]
+        [MaxLength(150, ErrorMessage = "El nombre no puede exceder los 150 caracteres.")]
+        [RegularExpression(@"^[a-zA-ZáéíóúÁÉÍÓÚñÑ ]+$",
+            ErrorMessage = "El nombre solo puede contener letras y espacios.")]
+        public string Nombre { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "El NIF es obligatorio.")]
+        [RegularExpression(@"^\d{11}$", ErrorMessage = "El NIF debe contener exactamente 11 dígitos.")]
+        public string Nif { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "El teléfono es obligatorio.")]
+        [RegularExpression(@"^\d{10}$", ErrorMessage = "El teléfono debe contener exactamente 10 dígitos.")]
+        public string Telefono { get; set; } = string.Empty;
+
+        [MaxLength(200, ErrorMessage = "El domicilio no puede exceder los 200 caracteres.")]
+        public string? Domicilio { get; set; }
+    }
+}

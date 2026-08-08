@@ -1,0 +1,210 @@
+@page "/automoviles/lote"
+@attribute [Authorize(Roles = Roles.Administrador)]
+
+@using System.ComponentModel.DataAnnotations
+
+@inject IAutomovilApi AutomovilApi
+@inject IModeloApi ModeloApi
+@inject IServicioOficialApi ServicioOficialApi
+@inject NavigationManager Nav
+@inject AvisosUi Avisos
+
+<PageTitle>Alta por lote — SAV</PageTitle>
+
+<CabeceraPagina Titulo="Alta por lote" Volver="/automoviles"
+                Descripcion="Genera varias unidades de un modelo. El número de bastidor se asigna automáticamente." />
+
+<section class="sav-panel">
+    <EditForm Model="entrada" OnValidSubmit="GenerarAsync">
+        <DataAnnotationsValidator />
+
+        <div class="sav-form sav-form--2col">
+            <div class="sav-campo">
+                <label class="sav-label" for="modelo">Modelo</label>
+                <RadzenDropDown @bind-Value="entrada.ModeloId" Data="@modelos" Name="modelo"
+                                TextProperty="Descripcion" ValueProperty="Id"
+                                AllowFiltering="true" FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive"
+                                Placeholder="Selecciona un modelo" class="sav-input" />
+                <ValidationMessage For="() => entrada.ModeloId" class="sav-error" />
+            </div>
+
+            <div class="sav-campo">
+                <label class="sav-label" for="cantidad">Unidades por color</label>
+                <RadzenNumeric @bind-Value="entrada.CantidadPorColor" Name="cantidad"
+                               class="sav-input" Min="1" Max="100" />
+                <ValidationMessage For="() => entrada.CantidadPorColor" class="sav-error" />
+            </div>
+
+            <div class="sav-campo sav-campo--ancho">
+                <label class="sav-label" for="colores">Colores</label>
+                <div class="sav-fila">
+                    <RadzenTextBox @bind-Value="colorNuevo" Name="colores" class="sav-input"
+                                   Placeholder="Escribe un color y pulsa Añadir"
+                                   style="flex:1 1 220px" MaxLength="20" />
+                    <RadzenButton Text="Añadir" Icon="add" Variant="Variant.Outlined"
+                                  ButtonStyle="ButtonStyle.Base" Click="AnadirColor"
+                                  Disabled="@string.IsNullOrWhiteSpace(colorNuevo)" />
+                </div>
+
+                @if (entrada.Colores.Count > 0)
+                {
+                    <div class="sav-fila sav-separado-corto">
+                        @foreach (var color in entrada.Colores)
+                        {
+                            <RadzenBadge Variant="Variant.Outlined" BadgeStyle="BadgeStyle.Base">
+                                @color
+                                <RadzenButton Icon="close" Variant="Variant.Text" Size="ButtonSize.ExtraSmall"
+                                              ButtonStyle="ButtonStyle.Base"
+                                              title="@($"Quitar {color}")" aria-label="@($"Quitar {color}")"
+                                              Click="@(() => QuitarColor(color))" />
+                            </RadzenBadge>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <p class="sav-ayuda">Añade al menos un color para poder generar el lote.</p>
+                }
+            </div>
+
+            <div class="sav-campo">
+                <label class="sav-label" for="ano">
+                    Año de fabricación <span class="sav-label__opcional">(opcional)</span>
+                </label>
+                <RadzenNumeric @bind-Value="entrada.AnoFabricacion" Name="ano" class="sav-input"
+                               Min="1900" Max="@(DateTime.Now.Year + 1)" />
+            </div>
+
+            <div class="sav-campo">
+                <label class="sav-label" for="ubicacion">Ubicación inicial</label>
+                <RadzenDropDown @bind-Value="ubicacionSeleccionada" Data="@opcionesUbicacion"
+                                TextProperty="Texto" ValueProperty="Clave" Name="ubicacion"
+                                class="sav-input" />
+            </div>
+        </div>
+
+        @if (entrada.Colores.Count > 0 && entrada.CantidadPorColor > 0)
+        {
+            <RadzenAlert AlertStyle="AlertStyle.Info" Variant="Variant.Flat" Shade="Shade.Lighter"
+                         AllowClose="false" class="sav-separado">
+                Se generarán <strong>@(entrada.Colores.Count * entrada.CantidadPorColor)</strong>
+                automóviles: @entrada.CantidadPorColor por cada uno de los
+                @entrada.Colores.Count colores.
+            </RadzenAlert>
+        }
+
+        <div class="sav-form__acciones">
+            <RadzenButton Text="Cancelar" Variant="Variant.Text" ButtonStyle="ButtonStyle.Base"
+                          Click="@(() => Nav.NavigateTo("/automoviles"))" Disabled="generando" />
+            <RadzenButton ButtonType="ButtonType.Submit" Text="Generar lote" Icon="library_add"
+                          IsBusy="generando" BusyText="Generando…"
+                          Disabled="@(entrada.Colores.Count == 0)" />
+        </div>
+    </EditForm>
+</section>
+
+@code {
+    private readonly EntradaLote entrada = new();
+    private string? colorNuevo;
+    private bool generando;
+
+    private const string ClaveConcesionario = "concesionario";
+    private string ubicacionSeleccionada = ClaveConcesionario;
+
+    private readonly record struct OpcionUbicacion(string Texto, string Clave);
+    private List<OpcionUbicacion> opcionesUbicacion = [];
+
+    private sealed record ModeloOpcion(int Id, string Descripcion);
+    private List<ModeloOpcion> modelos = [];
+
+    protected override async Task OnInitializedAsync()
+    {
+        var resultadoModelos = await ModeloApi.ObtenerTodosAsync();
+        if (resultadoModelos.Exito && resultadoModelos.Datos is not null)
+        {
+            modelos = resultadoModelos.Datos
+                .Select(m => new ModeloOpcion(m.Id, $"{m.MarcaNombre} · {m.Nombre}"))
+                .OrderBy(m => m.Descripcion)
+                .ToList();
+        }
+
+        opcionesUbicacion = [new OpcionUbicacion("Concesionario", ClaveConcesionario)];
+
+        var servicios = await ServicioOficialApi.ObtenerTodosAsync();
+        if (servicios.Exito && servicios.Datos is not null)
+        {
+            opcionesUbicacion.AddRange(servicios.Datos.Select(
+                s => new OpcionUbicacion($"Servicio oficial · {s.Nombre}", s.Id.ToString())));
+        }
+    }
+
+    private void AnadirColor()
+    {
+        var color = colorNuevo?.Trim();
+        if (string.IsNullOrWhiteSpace(color)) return;
+
+        if (entrada.Colores.Any(c => c.Equals(color, StringComparison.OrdinalIgnoreCase)))
+        {
+            Avisos.Advertencia("Ese color ya está en la lista.");
+            return;
+        }
+
+        entrada.Colores.Add(color);
+        colorNuevo = null;
+    }
+
+    private void QuitarColor(string color) => entrada.Colores.Remove(color);
+
+    private async Task GenerarAsync()
+    {
+        if (entrada.Colores.Count == 0)
+        {
+            Avisos.Advertencia("Añade al menos un color.");
+            return;
+        }
+
+        generando = true;
+
+        var dto = new GenerarAutomovilesLoteDto
+        {
+            ModeloId = entrada.ModeloId,
+            CantidadPorColor = entrada.CantidadPorColor,
+            Colores = [.. entrada.Colores],
+            AnoFabricacion = entrada.AnoFabricacion
+        };
+
+        if (ubicacionSeleccionada != ClaveConcesionario
+            && int.TryParse(ubicacionSeleccionada, out var servicioId))
+        {
+            dto.ServicioOficialUbicacionId = servicioId;
+        }
+
+        var resultado = await AutomovilApi.RegistrarLoteAsync(dto);
+
+        if (resultado.Exito)
+        {
+            Avisos.Exito(resultado.Datos?.Mensaje ?? "Lote generado correctamente.");
+            Nav.NavigateTo("/automoviles");
+        }
+        else
+        {
+            Avisos.ErrorDeApi(resultado, "generar el lote");
+        }
+
+        generando = false;
+    }
+
+    private sealed class EntradaLote
+    {
+        [Range(1, int.MaxValue, ErrorMessage = "Selecciona un modelo.")]
+        public int ModeloId { get; set; }
+
+        [Range(1, 100, ErrorMessage = "La cantidad por color debe estar entre 1 y 100.")]
+        public int CantidadPorColor { get; set; } = 1;
+
+        public List<string> Colores { get; } = [];
+
+        [Range(1900, 2100, ErrorMessage = "El año de fabricación no es válido.")]
+        public int? AnoFabricacion { get; set; }
+    }
+}

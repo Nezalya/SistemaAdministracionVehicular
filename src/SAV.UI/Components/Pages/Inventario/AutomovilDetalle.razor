@@ -1,0 +1,225 @@
+@page "/automoviles/{Id:int}"
+@attribute [Authorize(Roles = Roles.AdminOVendedor)]
+
+@inject IAutomovilApi AutomovilApi
+@inject IServicioOficialApi ServicioOficialApi
+@inject IConcesionarioApi ConcesionarioApi
+@inject NavigationManager Nav
+@inject AvisosUi Avisos
+
+<PageTitle>@(automovil?.NumBastidor ?? "Automóvil") — SAV</PageTitle>
+
+<CabeceraPagina Titulo="Detalle del automóvil" Volver="/automoviles"
+                Descripcion="@automovil?.NumBastidor">
+    <Acciones>
+        <AuthorizeView Roles="@Roles.Administrador">
+            @if (automovil is not null && !editando)
+            {
+                <RadzenButton Text="Editar" Icon="edit" Click="@(() => editando = true)" />
+            }
+        </AuthorizeView>
+    </Acciones>
+</CabeceraPagina>
+
+<EstadoDatos TDato="AutomovilDto" Datos="automovil" Cargando="cargando" Error="@error"
+             AlReintentar="CargarAsync"
+             IconoVacio="search_off"
+             TituloVacio="Automóvil no encontrado"
+             TextoVacio="El automóvil que buscas no existe o fue eliminado.">
+    <AccionVacio>
+        <RadzenButton Text="Volver al inventario" Icon="arrow_back" Variant="Variant.Outlined"
+                      ButtonStyle="ButtonStyle.Base"
+                      Click="@(() => Nav.NavigateTo("/automoviles"))" />
+    </AccionVacio>
+
+    <ChildContent>
+        <section class="sav-panel">
+            <dl class="sav-datos">
+                <div>
+                    <p class="sav-dato__etiqueta">Bastidor</p>
+                    <p class="sav-dato__valor">@automovil!.NumBastidor</p>
+                </div>
+                <div>
+                    <p class="sav-dato__etiqueta">Marca</p>
+                    <p class="sav-dato__valor">@Formato.OGuion(automovil.MarcaNombre)</p>
+                </div>
+                <div>
+                    <p class="sav-dato__etiqueta">Modelo</p>
+                    <p class="sav-dato__valor">@Formato.OGuion(automovil.ModeloNombre)</p>
+                </div>
+                <div>
+                    <p class="sav-dato__etiqueta">Estado</p>
+                    <p class="sav-dato__valor"><EtiquetaEstado EstadoAutomovil="automovil.Estado" /></p>
+                </div>
+                <div>
+                    <p class="sav-dato__etiqueta">Color</p>
+                    <p class="sav-dato__valor">@Formato.OGuion(automovil.Color)</p>
+                </div>
+                <div>
+                    <p class="sav-dato__etiqueta">Año de fabricación</p>
+                    <p class="sav-dato__valor">@(automovil.AnoFabricacion?.ToString() ?? "—")</p>
+                </div>
+                <div>
+                    <p class="sav-dato__etiqueta">Ubicación</p>
+                    <p class="sav-dato__valor">
+                        @Formato.OGuion(automovil.Ubicacion)
+                        <EtiquetaEstado Ubicacion="automovil.UbicacionTipo" />
+                    </p>
+                </div>
+            </dl>
+        </section>
+
+        @if (editando)
+        {
+            <section class="sav-panel sav-separado">
+                <h2 class="sav-panel__titulo">Editar automóvil</h2>
+
+                <EditForm Model="edicion" OnValidSubmit="GuardarAsync">
+                    <DataAnnotationsValidator />
+
+                    <div class="sav-form sav-form--2col">
+                        <div class="sav-campo">
+                            <label class="sav-label" for="color">Color</label>
+                            <RadzenTextBox @bind-Value="edicion.Color" Name="color" class="sav-input"
+                                           MaxLength="20" />
+                            <ValidationMessage For="() => edicion.Color" class="sav-error" />
+                        </div>
+
+                        <div class="sav-campo">
+                            <label class="sav-label" for="ano">Año de fabricación</label>
+                            <RadzenNumeric @bind-Value="edicion.AnoFabricacion" Name="ano"
+                                           class="sav-input" Min="1900" Max="@(DateTime.Now.Year + 1)" />
+                            <ValidationMessage For="() => edicion.AnoFabricacion" class="sav-error" />
+                        </div>
+
+                        <div class="sav-campo sav-campo--ancho">
+                            <label class="sav-label" for="ubicacion">Ubicación</label>
+                            <RadzenDropDown @bind-Value="ubicacionSeleccionada" Data="@opcionesUbicacion"
+                                            TextProperty="Texto" ValueProperty="Clave" Name="ubicacion"
+                                            class="sav-input" />
+                            <p class="sav-ayuda">
+                                Un automóvil solo puede estar en un sitio: en el concesionario
+                                o en uno de los servicios oficiales.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="sav-form__acciones">
+                        <RadzenButton Text="Cancelar" Variant="Variant.Text" ButtonStyle="ButtonStyle.Base"
+                                      Click="CancelarEdicion" Disabled="guardando" />
+                        <RadzenButton ButtonType="ButtonType.Submit" Text="Guardar cambios"
+                                      Icon="save" IsBusy="guardando" BusyText="Guardando…" />
+                    </div>
+                </EditForm>
+            </section>
+        }
+    </ChildContent>
+</EstadoDatos>
+
+@code {
+    [Parameter] public int Id { get; set; }
+
+    private AutomovilDto? automovil;
+    private bool cargando = true;
+    private bool editando;
+    private bool guardando;
+    private string? error;
+
+    private ActualizarAutomovilDto edicion = new();
+    private string ubicacionSeleccionada = ClaveConcesionario;
+
+    private const string ClaveConcesionario = "concesionario";
+
+    private readonly record struct OpcionUbicacion(string Texto, string Clave);
+    private List<OpcionUbicacion> opcionesUbicacion = [];
+
+    protected override async Task OnParametersSetAsync() => await CargarAsync();
+
+    private async Task CargarAsync()
+    {
+        cargando = true;
+        error = null;
+        editando = false;
+
+        var resultado = await AutomovilApi.ObtenerPorIdAsync(Id);
+
+        // La API responde 200 con cuerpo nulo cuando el recurso no existe,
+        // así que un dato nulo se trata aquí como "no encontrado".
+        if (resultado.Exito) automovil = resultado.Datos;
+        else error = resultado.Mensaje;
+
+        if (automovil is not null)
+        {
+            edicion = new ActualizarAutomovilDto
+            {
+                Color = automovil.Color,
+                AnoFabricacion = automovil.AnoFabricacion,
+                ConcesionarioUbicacionId = automovil.ConcesionarioUbicacionId,
+                ServicioOficialUbicacionId = automovil.ServicioOficialUbicacionId
+            };
+
+            ubicacionSeleccionada = automovil.ServicioOficialUbicacionId.HasValue
+                ? automovil.ServicioOficialUbicacionId.Value.ToString()
+                : ClaveConcesionario;
+
+            await CargarUbicacionesAsync();
+        }
+
+        cargando = false;
+    }
+
+    private async Task CargarUbicacionesAsync()
+    {
+        opcionesUbicacion = [new OpcionUbicacion("Concesionario", ClaveConcesionario)];
+
+        var servicios = await ServicioOficialApi.ObtenerTodosAsync();
+        if (servicios.Exito && servicios.Datos is not null)
+        {
+            opcionesUbicacion.AddRange(servicios.Datos.Select(
+                s => new OpcionUbicacion($"Servicio oficial · {s.Nombre}", s.Id.ToString())));
+        }
+    }
+
+    private void CancelarEdicion()
+    {
+        editando = false;
+        edicion = new ActualizarAutomovilDto
+        {
+            Color = automovil?.Color,
+            AnoFabricacion = automovil?.AnoFabricacion,
+            ConcesionarioUbicacionId = automovil?.ConcesionarioUbicacionId,
+            ServicioOficialUbicacionId = automovil?.ServicioOficialUbicacionId
+        };
+    }
+
+    private async Task GuardarAsync()
+    {
+        guardando = true;
+
+        // La regla del dominio exige una única ubicación: se envía una u otra, nunca las dos.
+        if (ubicacionSeleccionada == ClaveConcesionario)
+        {
+            edicion.ServicioOficialUbicacionId = null;
+            edicion.ConcesionarioUbicacionId = automovil?.ConcesionarioPropietarioId;
+        }
+        else if (int.TryParse(ubicacionSeleccionada, out var servicioId))
+        {
+            edicion.ConcesionarioUbicacionId = null;
+            edicion.ServicioOficialUbicacionId = servicioId;
+        }
+
+        var resultado = await AutomovilApi.ActualizarAsync(Id, edicion);
+
+        if (resultado.Exito)
+        {
+            Avisos.Exito("Automóvil actualizado.");
+            await CargarAsync();
+        }
+        else
+        {
+            Avisos.ErrorDeApi(resultado, "guardar los cambios");
+        }
+
+        guardando = false;
+    }
+}

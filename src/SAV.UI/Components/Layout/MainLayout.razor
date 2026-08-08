@@ -1,9 +1,44 @@
-﻿@inherits LayoutComponentBase
+@inherits LayoutComponentBase
 
-@Body
+@* Aloja diálogos, notificaciones y tooltips de Radzen. Debe existir una sola vez. *@
+<RadzenComponents />
+
+<RadzenLayout class="sav-layout">
+    <RadzenHeader class="sav-header">
+        <div class="sav-header__contenido">
+            <RadzenSidebarToggle Click="@AlternarBarraLateral" />
+
+            <a href="/" class="sav-marca" aria-label="SAV — inicio">
+                <RadzenIcon Icon="directions_car" class="sav-marca__icono" />
+                <span class="sav-marca__texto">SAV</span>
+            </a>
+
+            <div class="sav-header__acciones">
+                <RadzenAppearanceToggle />
+                <UserMenu />
+            </div>
+        </div>
+    </RadzenHeader>
+
+    <RadzenSidebar @bind-Expanded="barraLateralAbierta" Responsive="true" class="sav-sidebar">
+        <NavMenu />
+    </RadzenSidebar>
+
+    <RadzenBody>
+        <main class="sav-contenido">
+            @Body
+        </main>
+    </RadzenBody>
+</RadzenLayout>
 
 <div id="blazor-error-ui" data-nosnippet>
-    An unhandled error has occurred.
-    <a href="." class="reload">Reload</a>
+    Se produjo un error inesperado.
+    <a href="." class="reload">Recargar</a>
     <span class="dismiss">🗙</span>
 </div>
+
+@code {
+    private bool barraLateralAbierta = true;
+
+    private void AlternarBarraLateral() => barraLateralAbierta = !barraLateralAbierta;
+}

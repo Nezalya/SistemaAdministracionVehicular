@@ -1,0 +1,137 @@
+@using System.ComponentModel.DataAnnotations
+
+@inject IClienteApi ClienteApi
+@inject DialogService Dialogos
+@inject AvisosUi Avisos
+
+@*
+    Alta y edición de cliente dentro de un diálogo. Se cierra devolviendo
+    true cuando se ha guardado, para que la pantalla que lo abrió recargue.
+*@
+
+<EditForm Model="entrada" OnValidSubmit="GuardarAsync">
+    <DataAnnotationsValidator />
+
+    <div class="sav-form sav-form--2col">
+        <div class="sav-campo sav-campo--ancho">
+            <label class="sav-label" for="nombre">Nombre completo</label>
+            <RadzenTextBox @bind-Value="entrada.Nombre" Name="nombre" class="sav-input" MaxLength="150" />
+            <ValidationMessage For="() => entrada.Nombre" class="sav-error" />
+        </div>
+
+        <div class="sav-campo">
+            <label class="sav-label" for="nif">NIF / Cédula</label>
+            <RadzenTextBox @bind-Value="entrada.Nif" Name="nif" class="sav-input" MaxLength="11"
+                           Placeholder="11 dígitos" />
+            <ValidationMessage For="() => entrada.Nif" class="sav-error" />
+        </div>
+
+        <div class="sav-campo">
+            <label class="sav-label" for="telefono">Teléfono</label>
+            <RadzenTextBox @bind-Value="entrada.Telefono" Name="telefono" class="sav-input" MaxLength="10"
+                           Placeholder="10 dígitos" />
+            <ValidationMessage For="() => entrada.Telefono" class="sav-error" />
+        </div>
+
+        <div class="sav-campo sav-campo--ancho">
+            <label class="sav-label" for="email">Correo electrónico</label>
+            <RadzenTextBox @bind-Value="entrada.Email" Name="email" class="sav-input" MaxLength="100" />
+            <ValidationMessage For="() => entrada.Email" class="sav-error" />
+        </div>
+
+        <div class="sav-campo sav-campo--ancho">
+            <label class="sav-label" for="domicilio">
+                Domicilio <span class="sav-label__opcional">(opcional)</span>
+            </label>
+            <RadzenTextBox @bind-Value="entrada.Domicilio" Name="domicilio" class="sav-input" MaxLength="200" />
+            <ValidationMessage For="() => entrada.Domicilio" class="sav-error" />
+        </div>
+    </div>
+
+    <div class="sav-form__acciones">
+        <RadzenButton Text="Cancelar" Variant="Variant.Text" ButtonStyle="ButtonStyle.Base"
+                      Click="@(() => Dialogos.Close(false))" Disabled="guardando" />
+        <RadzenButton ButtonType="ButtonType.Submit" Text="@(EsNuevo ? "Crear cliente" : "Guardar cambios")"
+                      Icon="save" IsBusy="guardando" BusyText="Guardando…" />
+    </div>
+</EditForm>
+
+@code {
+    /// <summary>Null para alta; con valor, edición.</summary>
+    [Parameter] public ClienteDto? Cliente { get; set; }
+
+    private readonly EntradaCliente entrada = new();
+    private bool guardando;
+
+    private bool EsNuevo => Cliente is null;
+
+    protected override void OnInitialized()
+    {
+        if (Cliente is null) return;
+
+        entrada.Nombre = Cliente.Nombre;
+        entrada.Nif = Cliente.Nif;
+        entrada.Telefono = Cliente.Telefono ?? string.Empty;
+        entrada.Email = Cliente.Email ?? string.Empty;
+        entrada.Domicilio = Cliente.Domicilio;
+    }
+
+    private async Task GuardarAsync()
+    {
+        guardando = true;
+
+        var dto = new GuardarClienteDto
+        {
+            Nombre = entrada.Nombre.Trim(),
+            Nif = entrada.Nif.Trim(),
+            Telefono = entrada.Telefono.Trim(),
+            Email = entrada.Email.Trim(),
+            Domicilio = string.IsNullOrWhiteSpace(entrada.Domicilio) ? null : entrada.Domicilio.Trim()
+        };
+
+        var resultado = EsNuevo
+            ? await ClienteApi.CrearAsync(dto)
+            : await ClienteApi.ActualizarAsync(Cliente!.Id, dto);
+
+        if (resultado.Exito)
+        {
+            Avisos.Exito(EsNuevo ? "Cliente creado." : "Cliente actualizado.");
+            Dialogos.Close(true);
+        }
+        else
+        {
+            Avisos.ErrorDeApi(resultado, EsNuevo ? "crear el cliente" : "guardar los cambios");
+        }
+
+        guardando = false;
+    }
+
+    /// <summary>
+    /// Las reglas replican las que valida el servidor con FluentValidation,
+    /// para dar respuesta inmediata sin esperar al viaje de ida y vuelta.
+    /// </summary>
+    private sealed class EntradaCliente
+    {
+        [Required(ErrorMessage = "El nombre es obligatorio.")]
+        [MaxLength(150, ErrorMessage = "El nombre no puede exceder los 150 caracteres.")]
+        [RegularExpression(@"^[a-zA-ZáéíóúÁÉÍÓÚñÑ ]+$",
+            ErrorMessage = "El nombre solo puede contener letras y espacios.")]
+        public string Nombre { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "El NIF es obligatorio.")]
+        [RegularExpression(@"^\d{11}$", ErrorMessage = "La cédula debe contener exactamente 11 dígitos.")]
+        public string Nif { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "El teléfono es obligatorio.")]
+        [RegularExpression(@"^\d{10}$", ErrorMessage = "El teléfono debe contener exactamente 10 dígitos.")]
+        public string Telefono { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "El correo es obligatorio.")]
+        [EmailAddress(ErrorMessage = "El correo no tiene un formato válido.")]
+        [MaxLength(100, ErrorMessage = "El correo no puede exceder los 100 caracteres.")]
+        public string Email { get; set; } = string.Empty;
+
+        [MaxLength(200, ErrorMessage = "El domicilio no puede exceder los 200 caracteres.")]
+        public string? Domicilio { get; set; }
+    }
+}

@@ -16,19 +16,20 @@ namespace SAV.Api.Controllers
             _mapper = mapper; 
         }
 
+        /// <summary>Listado paginado. Admite búsqueda por nombre, NIF, correo o teléfono.</summary>
         [HttpGet]
-        public async Task<IActionResult> ObtenerClientes()
+        public async Task<IActionResult> ObtenerClientes([FromQuery] FiltroClienteDto filtro)
         {
-            var clientes = await _clienteService.ObtenerTodosLosClientes();
-            var clientesDto = _mapper.Map<IEnumerable<ClienteDto>>(clientes);
-            return Ok(clientesDto);
+            var clientes = await _clienteService.BuscarClientes(filtro);
+            return Ok(clientes.Map<Cliente, ClienteDto>(_mapper));
         }
-            
 
         [HttpGet("{id}")]
         public async Task<IActionResult> ObtenerClientePorId(int id)
         {
             var cliente = await _clienteService.ObtenerClientePorId(id);
+            if (cliente is null) return NotFound();
+
             var clienteDto = _mapper.Map<ClienteDto>(cliente);
             return Ok(clienteDto);
         }

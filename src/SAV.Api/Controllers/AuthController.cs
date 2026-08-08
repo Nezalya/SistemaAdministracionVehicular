@@ -30,7 +30,7 @@ namespace SAV.Api.Controllers
         {
             var usuario = await _authService.RegistrarAdministrador(dto.Username, dto.Email, dto.Password);
             var respuesta = _mapper.Map<UsuarioRegistradoDto>(usuario);
-            return CreatedAtAction(actionName: "ObtenerUsuariosPorId",controllerName: "Usuario",routeValues: new { id = usuario.Id },value: respuesta);
+            return CreatedAtAction(actionName: nameof(UsuarioController.ObtenerUsuarioPorId),controllerName: "Usuario",routeValues: new { id = usuario.Id },value: respuesta);
         }
 
         [Authorize(Roles = Roles.Administrador)]
@@ -41,7 +41,7 @@ namespace SAV.Api.Controllers
             var usuario = await _authService.RegistrarVendedor(dto.Username, dto.Email, dto.Password, vendedor);
             var respuesta = _mapper.Map<UsuarioRegistradoDto>(usuario);
 
-            return CreatedAtAction("ObtenerUsuariosPorId", "Usuario", new { id = usuario.Id }, respuesta);
+            return CreatedAtAction(nameof(UsuarioController.ObtenerUsuarioPorId), "Usuario", new { id = usuario.Id }, respuesta);
         }
 
         [Authorize(Roles = Roles.AdminOVendedor)]
@@ -52,7 +52,7 @@ namespace SAV.Api.Controllers
             var usuario = await _authService.RegistrarCliente(dto.Username, dto.Email, dto.Password, cliente);
             var respuesta = _mapper.Map<UsuarioRegistradoDto>(usuario);
 
-            return CreatedAtAction("ObtenerUsuariosPorId", "Usuario", new { id = usuario.Id }, respuesta);
+            return CreatedAtAction(nameof(UsuarioController.ObtenerUsuarioPorId), "Usuario", new { id = usuario.Id }, respuesta);
         }
     }
 }

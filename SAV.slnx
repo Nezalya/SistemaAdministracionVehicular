@@ -2,6 +2,7 @@
   <Folder Name="/src/">
     <Project Path="src/SAV.Api/SAV.Api.csproj" />
     <Project Path="src/SAV.Application/SAV.Application.csproj" />
+    <Project Path="src/SAV.Contracts/SAV.Contracts.csproj" />
     <Project Path="src/SAV.Core/SAV.Core.csproj" />
     <Project Path="src/SAV.Infrastructure/SAV.Infrastructure.csproj" />
     <Project Path="src/SAV.UI/SAV.UI.csproj" />

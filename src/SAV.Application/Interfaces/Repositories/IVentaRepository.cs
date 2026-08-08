@@ -4,5 +4,6 @@
     {
         Task<Venta?> ObtenerVentaConDetalle(int id);
         Task<IEnumerable<Venta>> ObtenerVentasConDetalle();
+        Task<PagedResult<Venta>> BuscarVentas(FiltroVentaDto filtro);
     }
 }

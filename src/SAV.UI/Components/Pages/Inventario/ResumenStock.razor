@@ -1,0 +1,100 @@
+@page "/stock"
+@attribute [Authorize(Roles = Roles.AdminOVendedor)]
+
+@inject IAutomovilApi AutomovilApi
+@inject NavigationManager Nav
+
+<PageTitle>Resumen de stock — SAV</PageTitle>
+
+<CabeceraPagina Titulo="Resumen de stock"
+                Descripcion="Unidades disponibles agrupadas por marca y modelo.">
+    <Acciones>
+        <RadzenButton Text="Actualizar" Icon="refresh" Variant="Variant.Outlined"
+                      ButtonStyle="ButtonStyle.Base" Click="CargarAsync" />
+    </Acciones>
+</CabeceraPagina>
+
+<EstadoDatos TDato="ResumenStockDto" Datos="resumen" Cargando="cargando" Error="@error"
+             AlReintentar="CargarAsync"
+             IconoVacio="inventory_2"
+             TituloVacio="No hay unidades en stock"
+             TextoVacio="Todos los automóviles registrados están vendidos, o aún no hay inventario.">
+    <AccionVacio>
+        <RadzenButton Text="Ver automóviles" Icon="directions_car" Variant="Variant.Outlined"
+                      ButtonStyle="ButtonStyle.Base"
+                      Click="@(() => Nav.NavigateTo("/automoviles"))" />
+    </AccionVacio>
+
+    <ChildContent>
+        <section class="sav-metricas">
+            <Metrica Etiqueta="Unidades disponibles" Icono="inventory_2"
+                     Valor="@Formato.Numero(resumen!.TotalDisponibles)"
+                     Pie="En stock ahora mismo" />
+            <Metrica Etiqueta="Marcas con stock" Icono="sell"
+                     Valor="@Formato.Numero(resumen.PorMarca.Count)"
+                     Pie="Con al menos una unidad" />
+            <Metrica Etiqueta="Modelos distintos" Icono="category"
+                     Valor="@Formato.Numero(resumen.PorMarca.Sum(m => m.Modelos.Count))"
+                     Pie="Referencias disponibles" />
+        </section>
+
+        @if (resumen.PorMarca.Count == 0)
+        {
+            <div class="sav-panel">
+                <p class="sav-ayuda">No hay unidades disponibles para desglosar.</p>
+            </div>
+        }
+        else
+        {
+            <div class="sav-rejilla-2">
+                @foreach (var marca in resumen.PorMarca.OrderByDescending(m => m.Cantidad))
+                {
+                    <section class="sav-panel">
+                        <div class="sav-fila" style="justify-content:space-between">
+                            <h2 class="sav-panel__titulo" style="margin-bottom:0">@marca.Marca</h2>
+                            <RadzenBadge BadgeStyle="BadgeStyle.Primary" Variant="Variant.Flat"
+                                         Shade="Shade.Lighter"
+                                         Text="@($"{marca.Cantidad} uds.")" />
+                        </div>
+
+                        <div class="sav-tabla-scroll sav-separado-corto">
+                            <RadzenDataGrid TItem="StockPorModeloDto" Data="@marca.Modelos"
+                                            AllowPaging="false" AllowSorting="true"
+                                            GridLines="DataGridGridLines.Horizontal"
+                                            EmptyText="Sin modelos.">
+                                <Columns>
+                                    <RadzenDataGridColumn TItem="StockPorModeloDto" Property="Modelo"
+                                                          Title="Modelo" Sortable="true" />
+                                    <RadzenDataGridColumn TItem="StockPorModeloDto" Property="Cantidad"
+                                                          Title="Unidades" Sortable="true"
+                                                          Width="110px" TextAlign="TextAlign.End" />
+                                </Columns>
+                            </RadzenDataGrid>
+                        </div>
+                    </section>
+                }
+            </div>
+        }
+    </ChildContent>
+</EstadoDatos>
+
+@code {
+    private ResumenStockDto? resumen;
+    private bool cargando = true;
+    private string? error;
+
+    protected override async Task OnInitializedAsync() => await CargarAsync();
+
+    private async Task CargarAsync()
+    {
+        cargando = true;
+        error = null;
+
+        var resultado = await AutomovilApi.ObtenerResumenStockAsync();
+
+        if (resultado.Exito) resumen = resultado.Datos;
+        else error = resultado.Mensaje;
+
+        cargando = false;
+    }
+}

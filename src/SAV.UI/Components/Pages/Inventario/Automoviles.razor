@@ -1,0 +1,306 @@
+@page "/automoviles"
+@attribute [Authorize(Roles = Roles.AdminOVendedor)]
+
+@inject IAutomovilApi AutomovilApi
+@inject IMarcaApi MarcaApi
+@inject NavigationManager Nav
+@inject DialogService Dialogos
+@inject AvisosUi Avisos
+
+<PageTitle>Automóviles — SAV</PageTitle>
+
+<CabeceraPagina Titulo="Automóviles"
+                Descripcion="Inventario completo del concesionario.">
+    <Acciones>
+        <AuthorizeView Roles="@Roles.Administrador">
+            <RadzenButton Text="Alta por lote" Icon="library_add" Variant="Variant.Outlined"
+                          ButtonStyle="ButtonStyle.Base"
+                          Click="@(() => Nav.NavigateTo("/automoviles/lote"))" />
+            <RadzenButton Text="Nuevo automóvil" Icon="add"
+                          Click="@(() => Nav.NavigateTo("/automoviles/nuevo"))" />
+        </AuthorizeView>
+    </Acciones>
+</CabeceraPagina>
+
+@* ------------------------------------------------------------------ Filtros *@
+<section class="sav-filtros" aria-label="Filtros de búsqueda">
+    <div class="sav-filtro">
+        <label class="sav-filtro__etiqueta" for="f-bastidor">Nº de bastidor</label>
+        <RadzenTextBox @bind-Value="filtroBastidor" Name="f-bastidor" Placeholder="SAV1234…"
+                       class="sav-input" @oninput="@(e => filtroBastidor = e.Value?.ToString())" />
+    </div>
+
+    <div class="sav-filtro">
+        <label class="sav-filtro__etiqueta" for="f-marca">Marca</label>
+        <RadzenDropDown @bind-Value="filtroMarca" Data="@nombresDeMarca" Name="f-marca"
+                        AllowClear="true" Placeholder="Todas" class="sav-input" />
+    </div>
+
+    <div class="sav-filtro">
+        <label class="sav-filtro__etiqueta" for="f-modelo">Modelo</label>
+        <RadzenTextBox @bind-Value="filtroModelo" Name="f-modelo" Placeholder="Todos"
+                       class="sav-input" />
+    </div>
+
+    <div class="sav-filtro">
+        <label class="sav-filtro__etiqueta" for="f-estado">Estado</label>
+        <RadzenDropDown @bind-Value="filtroEstado" Data="@estadosDisponibles" Name="f-estado"
+                        TextProperty="Texto" ValueProperty="Valor"
+                        AllowClear="true" Placeholder="Todos" class="sav-input" />
+    </div>
+
+    <div class="sav-filtros__acciones">
+        <RadzenButton Text="Buscar" Icon="search" Click="AplicarFiltrosAsync" />
+        <RadzenButton Text="Limpiar" Icon="clear" Variant="Variant.Text"
+                      ButtonStyle="ButtonStyle.Base" Click="LimpiarFiltrosAsync"
+                      Disabled="@(!HayFiltros)" />
+    </div>
+</section>
+
+@* ------------------------------------------------------------------ Resultado *@
+@if (error is not null)
+{
+    <EstadoDatos TDato="object" Cargando="false" Error="@error" AlReintentar="RecargarAsync" />
+}
+else
+{
+    <div class="sav-tabla-scroll">
+        <RadzenDataGrid @ref="rejilla" TItem="AutomovilDto"
+                        Data="@automoviles" Count="@total" LoadData="CargarDatosAsync"
+                        IsLoading="@cargando"
+                        AllowPaging="true" PageSize="20"
+                        PageSizeOptions="@(new[] { 10, 20, 50 })"
+                        ShowPagingSummary="true"
+                        PagingSummaryFormat="{0} de {1} páginas · {2} automóviles"
+                        AllowSorting="true"
+                        GridLines="DataGridGridLines.Horizontal"
+                        EmptyText="No hay automóviles que coincidan con la búsqueda."
+                        ColumnWidth="140px">
+            <Columns>
+                <RadzenDataGridColumn TItem="AutomovilDto" Property="NumBastidor" Title="Bastidor"
+                                      Sortable="true" Width="180px" />
+
+                <RadzenDataGridColumn TItem="AutomovilDto" Property="MarcaNombre" Title="Marca"
+                                      SortProperty="marca" Sortable="true" Width="140px">
+                    <Template Context="auto">@Formato.OGuion(auto.MarcaNombre)</Template>
+                </RadzenDataGridColumn>
+
+                <RadzenDataGridColumn TItem="AutomovilDto" Property="ModeloNombre" Title="Modelo"
+                                      SortProperty="modelo" Sortable="true" Width="160px">
+                    <Template Context="auto">@Formato.OGuion(auto.ModeloNombre)</Template>
+                </RadzenDataGridColumn>
+
+                <RadzenDataGridColumn TItem="AutomovilDto" Property="Color" Title="Color"
+                                      Sortable="true" Width="120px">
+                    <Template Context="auto">@Formato.OGuion(auto.Color)</Template>
+                </RadzenDataGridColumn>
+
+                <RadzenDataGridColumn TItem="AutomovilDto" Property="AnoFabricacion" Title="Año"
+                                      Sortable="false" Width="90px" TextAlign="TextAlign.Center">
+                    <Template Context="auto">@(auto.AnoFabricacion?.ToString() ?? "—")</Template>
+                </RadzenDataGridColumn>
+
+                <RadzenDataGridColumn TItem="AutomovilDto" Property="Estado" Title="Estado"
+                                      Sortable="true" Width="120px">
+                    <Template Context="auto">
+                        <EtiquetaEstado EstadoAutomovil="auto.Estado" />
+                    </Template>
+                </RadzenDataGridColumn>
+
+                <RadzenDataGridColumn TItem="AutomovilDto" Title="Ubicación"
+                                      Sortable="false" Width="180px">
+                    <Template Context="auto">
+                        @Formato.OGuion(auto.Ubicacion)
+                    </Template>
+                </RadzenDataGridColumn>
+
+                <RadzenDataGridColumn TItem="AutomovilDto" Title="" Sortable="false"
+                                      Width="130px" TextAlign="TextAlign.End" Frozen="false">
+                    <Template Context="auto">
+                        <div class="sav-fila sav-fila--fin">
+                            <RadzenButton Icon="visibility" Variant="Variant.Text"
+                                          ButtonStyle="ButtonStyle.Base" Size="ButtonSize.Small"
+                                          title="Ver detalle" aria-label="Ver detalle"
+                                          Click="@(() => Nav.NavigateTo($"/automoviles/{auto.Id}"))" />
+                            <AuthorizeView Roles="@Roles.Administrador" Context="admin">
+                                <RadzenButton Icon="delete" Variant="Variant.Text"
+                                              ButtonStyle="ButtonStyle.Danger" Size="ButtonSize.Small"
+                                              title="Eliminar" aria-label="Eliminar"
+                                              Disabled="@(auto.Estado == EstadoAutomovil.Vendido)"
+                                              Click="@(() => EliminarAsync(auto))" />
+                            </AuthorizeView>
+                        </div>
+                    </Template>
+                </RadzenDataGridColumn>
+            </Columns>
+        </RadzenDataGrid>
+    </div>
+}
+
+@code {
+    private RadzenDataGrid<AutomovilDto>? rejilla;
+
+    private IReadOnlyList<AutomovilDto> automoviles = [];
+    private int total;
+    private bool cargando;
+    private bool cargaInicialHecha;
+    private string? error;
+
+    private IReadOnlyList<string> nombresDeMarca = [];
+
+    private string? filtroBastidor;
+    private string? filtroMarca;
+    private string? filtroModelo;
+    private EstadoAutomovil? filtroEstado;
+
+    // Estado de paginación conservado entre recargas del grid.
+    private int paginaActual = 1;
+    private int tamanoPagina = 20;
+    private string? ordenarPor;
+    private bool ordenDescendente;
+
+    private readonly record struct OpcionEstado(string Texto, EstadoAutomovil Valor);
+
+    private readonly OpcionEstado[] estadosDisponibles =
+    [
+        new("En stock", EstadoAutomovil.Stock),
+        new("Vendido", EstadoAutomovil.Vendido)
+    ];
+
+    private bool HayFiltros =>
+        !string.IsNullOrWhiteSpace(filtroBastidor)
+        || !string.IsNullOrWhiteSpace(filtroMarca)
+        || !string.IsNullOrWhiteSpace(filtroModelo)
+        || filtroEstado.HasValue;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var marcas = await MarcaApi.ObtenerTodasAsync();
+        if (marcas.Exito && marcas.Datos is not null)
+            nombresDeMarca = marcas.Datos.Select(m => m.Nombre).OrderBy(n => n).ToList();
+    }
+
+    /// <summary>
+    /// Traduce lo que emite Radzen (Skip/Top/OrderBy) a lo que espera la API
+    /// (Page/PageSize/SortBy/SortDescending). La paginación es de servidor.
+    /// </summary>
+    private async Task CargarDatosAsync(LoadDataArgs args)
+    {
+        tamanoPagina = args.Top ?? tamanoPagina;
+        paginaActual = ((args.Skip ?? 0) / Math.Max(tamanoPagina, 1)) + 1;
+
+        LeerOrden(args.OrderBy);
+        cargaInicialHecha = true;
+        await ConsultarAsync();
+    }
+
+    /// <summary>
+    /// Red de seguridad: si la rejilla no llega a pedir la primera página por sí
+    /// misma, la pedimos aquí. Sin esto la pantalla se quedaría vacía para siempre.
+    /// </summary>
+    protected override async Task OnAfterRenderAsync(bool primerRenderizado)
+    {
+        if (!primerRenderizado || cargaInicialHecha) return;
+
+        cargaInicialHecha = true;
+        await ConsultarAsync();
+        StateHasChanged();
+    }
+
+    private void LeerOrden(string? orderBy)
+    {
+        if (string.IsNullOrWhiteSpace(orderBy))
+        {
+            ordenarPor = null;
+            ordenDescendente = false;
+            return;
+        }
+
+        // Radzen entrega "Propiedad asc" o "Propiedad desc".
+        var partes = orderBy.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        ordenDescendente = partes.Length > 1 && partes[1].Equals("desc", StringComparison.OrdinalIgnoreCase);
+
+        // La API solo admite estos campos de ordenación.
+        ordenarPor = partes[0].ToLowerInvariant() switch
+        {
+            "marcanombre" or "marca" => "marca",
+            "modelonombre" or "modelo" => "modelo",
+            "numbastidor" => "numbastidor",
+            "color" => "color",
+            "estado" => "estado",
+            _ => null
+        };
+    }
+
+    private async Task ConsultarAsync()
+    {
+        cargando = true;
+        error = null;
+
+        var filtro = new FiltroAutomovilDto
+        {
+            Page = paginaActual,
+            PageSize = tamanoPagina,
+            SortBy = ordenarPor,
+            SortDescending = ordenDescendente,
+            NumBastidor = string.IsNullOrWhiteSpace(filtroBastidor) ? null : filtroBastidor.Trim(),
+            Marca = string.IsNullOrWhiteSpace(filtroMarca) ? null : filtroMarca,
+            Modelo = string.IsNullOrWhiteSpace(filtroModelo) ? null : filtroModelo.Trim(),
+            Estado = filtroEstado
+        };
+
+        var resultado = await AutomovilApi.BuscarAsync(filtro);
+
+        if (resultado.Exito && resultado.Datos is not null)
+        {
+            automoviles = resultado.Datos.Items;
+            total = resultado.Datos.TotalCount;
+        }
+        else
+        {
+            automoviles = [];
+            total = 0;
+            error = resultado.Mensaje;
+        }
+
+        cargando = false;
+    }
+
+    private async Task AplicarFiltrosAsync()
+    {
+        paginaActual = 1;
+        if (rejilla is not null) await rejilla.FirstPage();
+        else await ConsultarAsync();
+    }
+
+    private async Task LimpiarFiltrosAsync()
+    {
+        filtroBastidor = null;
+        filtroMarca = null;
+        filtroModelo = null;
+        filtroEstado = null;
+        await AplicarFiltrosAsync();
+    }
+
+    private async Task RecargarAsync() => await ConsultarAsync();
+
+    private async Task EliminarAsync(AutomovilDto auto)
+    {
+        var confirmado = await Confirmacion.EliminarAsync(
+            Dialogos, $"el automóvil con bastidor {auto.NumBastidor}");
+
+        if (!confirmado) return;
+
+        var resultado = await AutomovilApi.EliminarAsync(auto.Id);
+
+        if (resultado.Exito)
+        {
+            Avisos.Exito("Automóvil eliminado.");
+            await ConsultarAsync();
+        }
+        else
+        {
+            Avisos.ErrorDeApi(resultado, "eliminar el automóvil");
+        }
+    }
+}

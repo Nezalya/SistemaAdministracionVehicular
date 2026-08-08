@@ -1,0 +1,14 @@
+@page "/acceso-denegado"
+@inject NavigationManager Nav
+
+<PageTitle>Acceso denegado — SAV</PageTitle>
+
+<div class="sav-estado">
+    <RadzenIcon Icon="lock" class="sav-estado__icono" />
+    <h1 class="sav-estado__titulo">No tienes permiso para ver esta página</h1>
+    <p class="sav-estado__texto">
+        Tu usuario no dispone del rol necesario para acceder a esta sección.
+        Si crees que se trata de un error, contacta con el administrador del sistema.
+    </p>
+    <RadzenButton Text="Volver al inicio" Icon="home" Click="@(() => Nav.NavigateTo("/"))" />
+</div>

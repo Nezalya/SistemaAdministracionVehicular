@@ -1,0 +1,580 @@
+@page "/ventas/nueva"
+@attribute [Authorize(Roles = Roles.AdminOVendedor)]
+
+@using System.ComponentModel.DataAnnotations
+
+@inject IVentaApi VentaApi
+@inject IAutomovilApi AutomovilApi
+@inject IClienteApi ClienteApi
+@inject IModeloApi ModeloApi
+@inject IVendedorApi VendedorApi
+@inject IServicioOficialApi ServicioOficialApi
+@inject SesionUsuario Sesion
+@inject DialogService Dialogos
+@inject AvisosUi Avisos
+@inject NavigationManager Nav
+
+<PageTitle>Nueva venta — SAV</PageTitle>
+
+<CabeceraPagina Titulo="Nueva venta" Volver="/ventas"
+                Descripcion="Registra la operación paso a paso: vehículo, cliente, extras y cierre." />
+
+<RadzenSteps @bind-SelectedIndex="paso" ShowStepsButtons="false">
+    <Steps>
+
+        @* ---------------------------------------------------- 1. Vehículo *@
+        <RadzenStepsItem Text="Vehículo">
+            <EstadoDatos TDato="IReadOnlyList<AutomovilDto>" Datos="disponibles" Cargando="cargandoAutos"
+                         Error="@errorAutos" AlReintentar="CargarDisponiblesAsync"
+                         IconoVacio="directions_car"
+                         TituloVacio="No hay automóviles en stock"
+                         TextoVacio="Todas las unidades están vendidas. Registra inventario antes de vender.">
+                <ChildContent>
+                    <p class="sav-ayuda">Selecciona la unidad que se va a vender.</p>
+                    <div class="sav-tabla-scroll sav-separado-corto">
+                        <RadzenDataGrid TItem="AutomovilDto" Data="@disponibles" AllowPaging="true" PageSize="8"
+                                        AllowSorting="true" GridLines="DataGridGridLines.Horizontal"
+                                        SelectionMode="DataGridSelectionMode.Single"
+                                        Value="@autosSeleccionados"
+                                        ValueChanged="@SeleccionarAutomovil"
+                                        EmptyText="Sin unidades disponibles.">
+                            <Columns>
+                                <RadzenDataGridColumn TItem="AutomovilDto" Property="NumBastidor"
+                                                      Title="Bastidor" Width="170px" />
+                                <RadzenDataGridColumn TItem="AutomovilDto" Property="MarcaNombre" Title="Marca"
+                                                      Width="130px">
+                                    <Template Context="a">@Formato.OGuion(a.MarcaNombre)</Template>
+                                </RadzenDataGridColumn>
+                                <RadzenDataGridColumn TItem="AutomovilDto" Property="ModeloNombre" Title="Modelo">
+                                    <Template Context="a">@Formato.OGuion(a.ModeloNombre)</Template>
+                                </RadzenDataGridColumn>
+                                <RadzenDataGridColumn TItem="AutomovilDto" Property="Color" Title="Color"
+                                                      Width="110px">
+                                    <Template Context="a">@Formato.OGuion(a.Color)</Template>
+                                </RadzenDataGridColumn>
+                                <RadzenDataGridColumn TItem="AutomovilDto" Title="Ubicación" Width="160px">
+                                    <Template Context="a">@Formato.OGuion(a.Ubicacion)</Template>
+                                </RadzenDataGridColumn>
+                            </Columns>
+                        </RadzenDataGrid>
+                    </div>
+
+                    @if (automovil is not null)
+                    {
+                        <RadzenAlert AlertStyle="AlertStyle.Success" Variant="Variant.Flat" Shade="Shade.Lighter"
+                                     AllowClose="false" class="sav-separado">
+                            Seleccionado: <strong>@automovil.MarcaNombre @automovil.ModeloNombre</strong>
+                            · @automovil.NumBastidor
+                        </RadzenAlert>
+                    }
+                </ChildContent>
+            </EstadoDatos>
+
+            <div class="sav-form__acciones">
+                <RadzenButton Text="Siguiente" Icon="arrow_forward" Disabled="@(automovil is null)"
+                              Click="@(() => paso = 1)" />
+            </div>
+        </RadzenStepsItem>
+
+        @* ---------------------------------------------------- 2. Cliente *@
+        <RadzenStepsItem Text="Cliente">
+            <EstadoDatos TDato="IReadOnlyList<ClienteDto>" Datos="clientes" Cargando="cargandoClientes"
+                         Error="@errorClientes" AlReintentar="CargarClientesAsync"
+                         IconoVacio="groups"
+                         TituloVacio="Aún no hay clientes"
+                         TextoVacio="Da de alta el cliente para poder continuar con la venta.">
+                <AccionVacio>
+                    <RadzenButton Text="Nuevo cliente" Icon="person_add" Click="CrearClienteAsync" />
+                </AccionVacio>
+
+                <ChildContent>
+                    <div class="sav-fila" style="justify-content:space-between">
+                        <p class="sav-ayuda">Selecciona quién compra el vehículo.</p>
+                        <RadzenButton Text="Nuevo cliente" Icon="person_add" Variant="Variant.Outlined"
+                                      ButtonStyle="ButtonStyle.Base" Size="ButtonSize.Small"
+                                      Click="CrearClienteAsync" />
+                    </div>
+
+                    <div class="sav-campo sav-separado-corto">
+                        <label class="sav-label" for="cliente">Cliente</label>
+                        @* La búsqueda se resuelve en el servidor: no se descarga
+                           la lista completa de clientes al abrir la pantalla. *@
+                        <RadzenDropDown @bind-Value="clienteId" Data="@clientes" Name="cliente"
+                                        TextProperty="Nombre" ValueProperty="Id"
+                                        AllowFiltering="true" LoadData="BuscarClientesAsync"
+                                        FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive"
+                                        Placeholder="Busca por nombre o NIF…" class="sav-input" />
+                    </div>
+
+                    @if (ClienteSeleccionado is not null)
+                    {
+                        <div class="sav-panel sav-separado">
+                            <dl class="sav-datos">
+                                <div>
+                                    <p class="sav-dato__etiqueta">Nombre</p>
+                                    <p class="sav-dato__valor">@ClienteSeleccionado.Nombre</p>
+                                </div>
+                                <div>
+                                    <p class="sav-dato__etiqueta">NIF</p>
+                                    <p class="sav-dato__valor">@ClienteSeleccionado.Nif</p>
+                                </div>
+                                <div>
+                                    <p class="sav-dato__etiqueta">Contacto</p>
+                                    <p class="sav-dato__valor">@Formato.OGuion(ClienteSeleccionado.Telefono)</p>
+                                </div>
+                            </dl>
+                        </div>
+                    }
+                </ChildContent>
+            </EstadoDatos>
+
+            <div class="sav-form__acciones">
+                <RadzenButton Text="Atrás" Icon="arrow_back" Variant="Variant.Text"
+                              ButtonStyle="ButtonStyle.Base" Click="@(() => paso = 0)" />
+                <RadzenButton Text="Siguiente" Icon="arrow_forward" Disabled="@(clienteId is null)"
+                              Click="@(async () => { paso = 2; await CargarEquipamientoAsync(); })" />
+            </div>
+        </RadzenStepsItem>
+
+        @* ---------------------------------------------------- 3. Extras *@
+        <RadzenStepsItem Text="Configuración">
+            @if (cargandoEquipamiento)
+            {
+                <EstadoDatos TDato="object" Cargando="true" TextoCargando="Cargando equipamiento del modelo…" />
+            }
+            else if (configuracion is null)
+            {
+                <EstadoDatos TDato="object" Cargando="false" Error="@errorEquipamiento"
+                             AlReintentar="CargarEquipamientoAsync" />
+            }
+            else
+            {
+                <div class="sav-rejilla-2">
+                    <section class="sav-panel">
+                        <h2 class="sav-panel__titulo">Equipamiento de serie</h2>
+                        @if (configuracion.EquipamientoDeSerie.Count == 0)
+                        {
+                            <p class="sav-ayuda">Este modelo no tiene equipamiento de serie.</p>
+                        }
+                        else
+                        {
+                            <p class="sav-ayuda">Incluido en el precio, sin coste adicional.</p>
+                            <ul class="sav-lista">
+                                @foreach (var serie in configuracion.EquipamientoDeSerie)
+                                {
+                                    <li>
+                                        <RadzenIcon Icon="check" class="sav-lista__icono" />
+                                        @serie.Nombre
+                                    </li>
+                                }
+                            </ul>
+                        }
+                    </section>
+
+                    <section class="sav-panel">
+                        <h2 class="sav-panel__titulo">Extras disponibles</h2>
+                        @if (configuracion.ExtrasDisponibles.Count == 0)
+                        {
+                            <p class="sav-ayuda">Este modelo no admite extras.</p>
+                        }
+                        else
+                        {
+                            <p class="sav-ayuda">Marca los que se instalarán. El total se actualiza al momento.</p>
+                            <ul class="sav-lista">
+                                @foreach (var extra in configuracion.ExtrasDisponibles)
+                                {
+                                    <li class="sav-extra">
+                                        <RadzenCheckBox TValue="bool"
+                                                        Value="@extrasElegidos.Contains(extra.CaracteristicaId)"
+                                                        Change="@(( bool v) => AlternarExtra(extra.CaracteristicaId, v))"
+                                                        Name="@($"extra-{extra.CaracteristicaId}")" />
+                                        <label for="@($"extra-{extra.CaracteristicaId}")" class="sav-extra__nombre">
+                                            @extra.Nombre
+                                        </label>
+                                        <span class="sav-numero">@Formato.Moneda(extra.PrecioExtra)</span>
+                                    </li>
+                                }
+                            </ul>
+                        }
+                    </section>
+                </div>
+
+                <section class="sav-panel sav-separado">
+                    <dl class="sav-datos">
+                        <div>
+                            <p class="sav-dato__etiqueta">Precio base (con descuento)</p>
+                            <p class="sav-dato__valor sav-numero">@Formato.Moneda(PrecioBaseEstimado)</p>
+                        </div>
+                        <div>
+                            <p class="sav-dato__etiqueta">Extras seleccionados</p>
+                            <p class="sav-dato__valor sav-numero">@Formato.Moneda(TotalExtrasEstimado)</p>
+                        </div>
+                        <div>
+                            <p class="sav-dato__etiqueta">Total estimado</p>
+                            <p class="sav-dato__valor sav-numero"><strong>@Formato.Moneda(TotalEstimado)</strong></p>
+                        </div>
+                    </dl>
+                    <p class="sav-ayuda sav-separado-corto">
+                        El importe definitivo lo calcula el servidor al confirmar la venta.
+                        Esta cifra es una previsualización.
+                    </p>
+                </section>
+            }
+
+            <div class="sav-form__acciones">
+                <RadzenButton Text="Atrás" Icon="arrow_back" Variant="Variant.Text"
+                              ButtonStyle="ButtonStyle.Base" Click="@(() => paso = 1)" />
+                <RadzenButton Text="Siguiente" Icon="arrow_forward" Click="@(() => paso = 3)" />
+            </div>
+        </RadzenStepsItem>
+
+        @* ---------------------------------------------------- 4. Cierre *@
+        <RadzenStepsItem Text="Cierre">
+            <EditForm Model="cierre" OnValidSubmit="ConfirmarVentaAsync">
+                <DataAnnotationsValidator />
+
+                <div class="sav-form sav-form--2col">
+                    <div class="sav-campo">
+                        <label class="sav-label" for="pago">Forma de pago</label>
+                        <RadzenDropDown @bind-Value="cierre.FormaPago" Data="@formasPago" Name="pago"
+                                        TextProperty="Texto" ValueProperty="Valor" class="sav-input" />
+                    </div>
+
+                    @if (cierre.FormaPago == FormaPago.Financiera)
+                    {
+                        <div class="sav-campo">
+                            <label class="sav-label" for="financiera">Financiera</label>
+                            <RadzenTextBox @bind-Value="cierre.Financiera" Name="financiera"
+                                           class="sav-input" MaxLength="100" />
+                            <ValidationMessage For="() => cierre.Financiera" class="sav-error" />
+                        </div>
+                    }
+
+                    <div class="sav-campo">
+                        <label class="sav-label" for="matricula">Matrícula</label>
+                        <RadzenTextBox @bind-Value="cierre.Matricula" Name="matricula"
+                                       class="sav-input" MaxLength="10" />
+                        <ValidationMessage For="() => cierre.Matricula" class="sav-error" />
+                    </div>
+
+                    <div class="sav-campo">
+                        <label class="sav-label" for="entrega">Fecha de entrega</label>
+                        <RadzenDatePicker @bind-Value="cierre.FechaEntrega" Name="entrega"
+                                          DateFormat="dd/MM/yyyy" class="sav-input" />
+                        <ValidationMessage For="() => cierre.FechaEntrega" class="sav-error" />
+                    </div>
+
+                    <div class="sav-campo">
+                        <label class="sav-label" for="origen">Origen del vehículo</label>
+                        <RadzenDropDown @bind-Value="cierre.Origen" Data="@origenes" Name="origen"
+                                        TextProperty="Texto" ValueProperty="Valor" class="sav-input" />
+                    </div>
+
+                    <div class="sav-campo">
+                        <label class="sav-label" for="responsable">Responsable de la venta</label>
+                        <RadzenDropDown @bind-Value="responsableClave" Data="@responsables" Name="responsable"
+                                        TextProperty="Texto" ValueProperty="Clave" class="sav-input" />
+                        <p class="sav-ayuda">La venta la realiza un vendedor o un servicio oficial, nunca ambos.</p>
+                    </div>
+                </div>
+
+                <section class="sav-panel sav-separado">
+                    <h2 class="sav-panel__titulo">Resumen</h2>
+                    <dl class="sav-datos">
+                        <div>
+                            <p class="sav-dato__etiqueta">Vehículo</p>
+                            <p class="sav-dato__valor">
+                                @automovil?.MarcaNombre @automovil?.ModeloNombre
+                                <br /><span class="sav-ayuda">@automovil?.NumBastidor</span>
+                            </p>
+                        </div>
+                        <div>
+                            <p class="sav-dato__etiqueta">Cliente</p>
+                            <p class="sav-dato__valor">@ClienteSeleccionado?.Nombre</p>
+                        </div>
+                        <div>
+                            <p class="sav-dato__etiqueta">Extras</p>
+                            <p class="sav-dato__valor">@extrasElegidos.Count seleccionados</p>
+                        </div>
+                        <div>
+                            <p class="sav-dato__etiqueta">Total estimado</p>
+                            <p class="sav-dato__valor sav-numero"><strong>@Formato.Moneda(TotalEstimado)</strong></p>
+                        </div>
+                    </dl>
+                </section>
+
+                <div class="sav-form__acciones">
+                    <RadzenButton Text="Atrás" Icon="arrow_back" Variant="Variant.Text"
+                                  ButtonStyle="ButtonStyle.Base" Click="@(() => paso = 2)"
+                                  Disabled="guardando" />
+                    <RadzenButton ButtonType="ButtonType.Submit" Text="Confirmar venta" Icon="check"
+                                  IsBusy="guardando" BusyText="Registrando…" />
+                </div>
+            </EditForm>
+        </RadzenStepsItem>
+
+    </Steps>
+</RadzenSteps>
+
+@code {
+    private int paso;
+
+    // Paso 1
+    private IReadOnlyList<AutomovilDto>? disponibles;
+    private IList<AutomovilDto>? autosSeleccionados;
+    private AutomovilDto? automovil;
+    private bool cargandoAutos = true;
+    private string? errorAutos;
+
+    // Paso 2
+    private IReadOnlyList<ClienteDto>? clientes;
+    private int? clienteId;
+    private bool cargandoClientes = true;
+    private string? errorClientes;
+    private ClienteDto? ClienteSeleccionado => clientes?.FirstOrDefault(c => c.Id == clienteId);
+
+    // Paso 3
+    private ConfiguracionModeloDto? configuracion;
+    private readonly HashSet<int> extrasElegidos = [];
+    private bool cargandoEquipamiento;
+    private string? errorEquipamiento;
+
+    // Paso 4
+    private readonly EntradaCierre cierre = new();
+    private bool guardando;
+    private string responsableClave = string.Empty;
+    private int? vendedorSesionId;
+
+    private readonly record struct OpcionPago(string Texto, FormaPago Valor);
+    private readonly OpcionPago[] formasPago =
+    [
+        new("Contado", FormaPago.Contado),
+        new("Financiada", FormaPago.Financiera)
+    ];
+
+    private readonly record struct OpcionOrigen(string Texto, OrigenVenta Valor);
+    private readonly OpcionOrigen[] origenes =
+    [
+        new("Desde stock", OrigenVenta.Stock),
+        new("Encargo a fábrica", OrigenVenta.EncargoFabrica)
+    ];
+
+    private readonly record struct OpcionResponsable(string Texto, string Clave);
+    private List<OpcionResponsable> responsables = [];
+
+    private decimal PrecioBaseEstimado => configuracion is null
+        ? 0
+        : configuracion.Descuento is > 0
+            ? configuracion.PrecioBase - (configuracion.PrecioBase * (configuracion.Descuento.Value / 100m))
+            : configuracion.PrecioBase;
+
+    private decimal TotalExtrasEstimado => configuracion is null
+        ? 0
+        : configuracion.ExtrasDisponibles
+            .Where(e => extrasElegidos.Contains(e.CaracteristicaId))
+            .Sum(e => e.PrecioExtra);
+
+    private decimal TotalEstimado => PrecioBaseEstimado + TotalExtrasEstimado;
+
+    protected override async Task OnInitializedAsync()
+    {
+        vendedorSesionId = await Sesion.ObtenerVendedorIdAsync();
+
+        await CargarDisponiblesAsync();
+        await CargarClientesAsync();
+        await CargarResponsablesAsync();
+    }
+
+    private async Task CargarDisponiblesAsync()
+    {
+        cargandoAutos = true;
+        errorAutos = null;
+
+        var resultado = await AutomovilApi.ObtenerDisponiblesAsync();
+
+        if (resultado.Exito) disponibles = resultado.Datos ?? [];
+        else errorAutos = resultado.Mensaje;
+
+        cargandoAutos = false;
+    }
+
+    private async Task CargarClientesAsync() => await BuscarClientesAsync(null);
+
+    /// <summary>
+    /// Alimenta el desplegable de clientes. Se dispara al abrirlo y al teclear,
+    /// de modo que la búsqueda la resuelve el servidor y no el navegador.
+    /// </summary>
+    private async Task BuscarClientesAsync(LoadDataArgs? args)
+    {
+        cargandoClientes = true;
+        errorClientes = null;
+
+        var filtro = new FiltroClienteDto
+        {
+            Page = 1,
+            PageSize = 25,
+            SortBy = "nombre",
+            Busqueda = string.IsNullOrWhiteSpace(args?.Filter) ? null : args.Filter
+        };
+
+        var resultado = await ClienteApi.BuscarAsync(filtro);
+
+        if (resultado.Exito && resultado.Datos is not null) clientes = resultado.Datos.Items;
+        else errorClientes = resultado.Mensaje;
+
+        cargandoClientes = false;
+    }
+
+    private async Task CargarResponsablesAsync()
+    {
+        responsables = [];
+
+        // Si el usuario es vendedor, su propia cuenta es el responsable natural.
+        if (vendedorSesionId is int propio)
+        {
+            responsables.Add(new OpcionResponsable("Yo (vendedor de esta sesión)", $"v:{propio}"));
+            responsableClave = $"v:{propio}";
+        }
+
+        var vendedores = await VendedorApi.ObtenerTodosAsync();
+        if (vendedores.Exito && vendedores.Datos is not null)
+        {
+            foreach (var v in vendedores.Datos.Where(v => v.Id != vendedorSesionId))
+                responsables.Add(new OpcionResponsable($"Vendedor · {v.Nombre}", $"v:{v.Id}"));
+        }
+
+        var servicios = await ServicioOficialApi.ObtenerTodosAsync();
+        if (servicios.Exito && servicios.Datos is not null)
+        {
+            foreach (var s in servicios.Datos)
+                responsables.Add(new OpcionResponsable($"Servicio oficial · {s.Nombre}", $"s:{s.Id}"));
+        }
+
+        if (string.IsNullOrEmpty(responsableClave) && responsables.Count > 0)
+            responsableClave = responsables[0].Clave;
+    }
+
+    private void SeleccionarAutomovil(IList<AutomovilDto> seleccion)
+    {
+        autosSeleccionados = seleccion;
+        automovil = seleccion?.FirstOrDefault();
+
+        // Cambiar de vehículo invalida los extras elegidos del modelo anterior.
+        configuracion = null;
+        extrasElegidos.Clear();
+    }
+
+    private async Task CargarEquipamientoAsync()
+    {
+        if (automovil is null) return;
+
+        cargandoEquipamiento = true;
+        errorEquipamiento = null;
+
+        var resultado = await ModeloApi.ObtenerEquipamientoAsync(automovil.ModeloId);
+
+        if (resultado.Exito) configuracion = resultado.Datos;
+        else errorEquipamiento = resultado.Mensaje;
+
+        cargandoEquipamiento = false;
+    }
+
+    private void AlternarExtra(int caracteristicaId, bool seleccionado)
+    {
+        if (seleccionado) extrasElegidos.Add(caracteristicaId);
+        else extrasElegidos.Remove(caracteristicaId);
+    }
+
+    private async Task CrearClienteAsync()
+    {
+        var guardado = await Dialogos.OpenAsync<SAV.UI.Components.Pages.Clientes.ClienteFormulario>(
+            "Nuevo cliente",
+            new Dictionary<string, object?>(),
+            new DialogOptions { Width = "560px", CloseDialogOnOverlayClick = false, ShowClose = true });
+
+        if (guardado is true)
+        {
+            // Se recupera por fecha de alta descendente para preseleccionar el recién creado.
+            var recientes = await ClienteApi.BuscarAsync(new FiltroClienteDto
+            {
+                Page = 1,
+                PageSize = 25,
+                SortBy = "fecharegistro",
+                SortDescending = true
+            });
+
+            if (recientes.Exito && recientes.Datos is not null)
+            {
+                clientes = recientes.Datos.Items;
+                clienteId = clientes.FirstOrDefault()?.Id;
+            }
+        }
+    }
+
+    private async Task ConfirmarVentaAsync()
+    {
+        if (automovil is null || clienteId is null)
+        {
+            Avisos.Advertencia("Faltan datos", "Selecciona el vehículo y el cliente antes de confirmar.");
+            return;
+        }
+
+        guardando = true;
+
+        var dto = new CrearVentaDto
+        {
+            AutomovilId = automovil.Id,
+            ClienteId = clienteId.Value,
+            FormaPago = cierre.FormaPago,
+            Financiera = cierre.FormaPago == FormaPago.Financiera ? cierre.Financiera?.Trim() : null,
+            FechaEntrega = cierre.FechaEntrega,
+            Matricula = cierre.Matricula?.Trim(),
+            Origen = cierre.Origen,
+            CaracteristicaIdsExtras = [.. extrasElegidos]
+        };
+
+        // El responsable es exclusivo: vendedor o servicio oficial, nunca los dos.
+        if (responsableClave.StartsWith("v:", StringComparison.Ordinal)
+            && int.TryParse(responsableClave[2..], out var vendedorId))
+        {
+            dto.VendedorId = vendedorId;
+        }
+        else if (responsableClave.StartsWith("s:", StringComparison.Ordinal)
+                 && int.TryParse(responsableClave[2..], out var servicioId))
+        {
+            dto.ServicioOficialId = servicioId;
+        }
+
+        var resultado = await VentaApi.CrearAsync(dto);
+
+        if (resultado.Exito && resultado.Datos is not null)
+        {
+            Avisos.Exito("Venta registrada.",
+                $"Importe final: {Formato.Moneda(resultado.Datos.PrecioTotal)}");
+            Nav.NavigateTo($"/ventas/{resultado.Datos.Id}");
+        }
+        else
+        {
+            Avisos.ErrorDeApi(resultado, "registrar la venta");
+        }
+
+        guardando = false;
+    }
+
+    private sealed class EntradaCierre
+    {
+        public FormaPago FormaPago { get; set; } = FormaPago.Contado;
+
+        [MaxLength(100, ErrorMessage = "La financiera no puede exceder los 100 caracteres.")]
+        public string? Financiera { get; set; }
+
+        [Required(ErrorMessage = "La matrícula es obligatoria.")]
+        [MaxLength(10, ErrorMessage = "La matrícula no puede exceder los 10 caracteres.")]
+        public string? Matricula { get; set; }
+
+        [Required(ErrorMessage = "La fecha de entrega es obligatoria.")]
+        public DateTime? FechaEntrega { get; set; } = DateTime.Today.AddDays(7);
+
+        public OrigenVenta Origen { get; set; } = OrigenVenta.Stock;
+    }
+}

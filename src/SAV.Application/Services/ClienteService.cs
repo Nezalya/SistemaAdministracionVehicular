@@ -14,7 +14,12 @@ namespace SAV.Application.Services
         { 
             return await _clienteRepository.GetAll();
         }
-        public async Task<Cliente?> ObtenerClientePorId(int id) 
+        public async Task<PagedResult<Cliente>> BuscarClientes(FiltroClienteDto filtro)
+        {
+            return await _clienteRepository.BuscarClientes(filtro);
+        }
+
+        public async Task<Cliente?> ObtenerClientePorId(int id)
         {
             return await _clienteRepository.GetById(id);
         }

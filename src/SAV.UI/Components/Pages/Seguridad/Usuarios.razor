@@ -1,0 +1,124 @@
+@page "/usuarios"
+@attribute [Authorize(Roles = Roles.Administrador)]
+
+@inject IUsuarioApi UsuarioApi
+@inject NavigationManager Nav
+
+<PageTitle>Usuarios — SAV</PageTitle>
+
+<CabeceraPagina Titulo="Usuarios"
+                Descripcion="Cuentas con acceso al sistema y su rol.">
+    <Acciones>
+        <RadzenButton Text="Registrar usuario" Icon="person_add"
+                      Click="@(() => Nav.NavigateTo("/usuarios/nuevo"))" />
+    </Acciones>
+</CabeceraPagina>
+
+<section class="sav-filtros" aria-label="Filtros de usuarios">
+    <div class="sav-filtro" style="flex:1 1 280px">
+        <label class="sav-filtro__etiqueta" for="busqueda">Buscar</label>
+        <RadzenTextBox Value="@busqueda" Name="busqueda" class="sav-input"
+                       Placeholder="Usuario o correo…"
+                       ValueChanged="@((string v) => busqueda = v)" />
+    </div>
+
+    <div class="sav-filtro">
+        <label class="sav-filtro__etiqueta" for="rol">Rol</label>
+        <RadzenDropDown @bind-Value="rolFiltro" Data="@rolesDisponibles" Name="rol"
+                        AllowClear="true" Placeholder="Todos" class="sav-input" />
+    </div>
+
+    <div class="sav-filtros__acciones">
+        <RadzenButton Text="Limpiar" Icon="clear" Variant="Variant.Text" ButtonStyle="ButtonStyle.Base"
+                      Click="Limpiar" Disabled="@(!HayFiltros)" />
+    </div>
+</section>
+
+<EstadoDatos TDato="IReadOnlyList<UsuarioDto>" Datos="Filtrados" Cargando="cargando" Error="@error"
+             AlReintentar="CargarAsync"
+             IconoVacio="manage_accounts"
+             TituloVacio="@(HayFiltros ? "Sin resultados" : "No hay usuarios registrados")"
+             TextoVacio="@(HayFiltros ? "Prueba con otros criterios." : "Crea la primera cuenta de acceso.")">
+    <ChildContent>
+        <div class="sav-tabla-scroll">
+            <RadzenDataGrid TItem="UsuarioDto" Data="@Filtrados" AllowPaging="true" PageSize="15"
+                            AllowSorting="true" GridLines="DataGridGridLines.Horizontal"
+                            ShowPagingSummary="true"
+                            PagingSummaryFormat="{0} de {1} páginas · {2} usuarios"
+                            EmptyText="Sin usuarios.">
+                <Columns>
+                    <RadzenDataGridColumn TItem="UsuarioDto" Property="Username" Title="Usuario" Sortable="true" />
+                    <RadzenDataGridColumn TItem="UsuarioDto" Property="Email" Title="Correo" Sortable="true" />
+                    <RadzenDataGridColumn TItem="UsuarioDto" Property="Rol" Title="Rol" Sortable="true"
+                                          Width="150px">
+                        <Template Context="u"><EtiquetaEstado Rol="@u.Rol.ToString()" /></Template>
+                    </RadzenDataGridColumn>
+                    <RadzenDataGridColumn TItem="UsuarioDto" Property="Activo" Title="Estado" Sortable="true"
+                                          Width="120px">
+                        <Template Context="u"><EtiquetaEstado Activo="u.Activo" /></Template>
+                    </RadzenDataGridColumn>
+                    <RadzenDataGridColumn TItem="UsuarioDto" Property="FechaRegistro" Title="Alta"
+                                          Sortable="true" Width="120px">
+                        <Template Context="u">@Formato.Fecha(u.FechaRegistro)</Template>
+                    </RadzenDataGridColumn>
+                </Columns>
+            </RadzenDataGrid>
+        </div>
+    </ChildContent>
+</EstadoDatos>
+
+@code {
+    private IReadOnlyList<UsuarioDto>? usuarios;
+    private bool cargando = true;
+    private string? error;
+    private string? busqueda;
+    private string? rolFiltro;
+
+    private readonly string[] rolesDisponibles = [Roles.Administrador, Roles.Vendedor, Roles.Cliente];
+
+    private bool HayFiltros => !string.IsNullOrWhiteSpace(busqueda) || !string.IsNullOrWhiteSpace(rolFiltro);
+
+    private IReadOnlyList<UsuarioDto>? Filtrados
+    {
+        get
+        {
+            if (usuarios is null) return null;
+
+            IEnumerable<UsuarioDto> consulta = usuarios;
+
+            if (!string.IsNullOrWhiteSpace(busqueda))
+            {
+                var t = busqueda.Trim();
+                consulta = consulta.Where(u =>
+                    u.Username.Contains(t, StringComparison.OrdinalIgnoreCase)
+                    || u.Email.Contains(t, StringComparison.OrdinalIgnoreCase));
+            }
+
+            if (!string.IsNullOrWhiteSpace(rolFiltro))
+                consulta = consulta.Where(u => u.Rol.ToString() == rolFiltro);
+
+            return consulta.ToList();
+        }
+    }
+
+    protected override async Task OnInitializedAsync() => await CargarAsync();
+
+    private void Limpiar()
+    {
+        busqueda = null;
+        rolFiltro = null;
+    }
+
+    private async Task CargarAsync()
+    {
+        cargando = true;
+        error = null;
+
+        var resultado = await UsuarioApi.ObtenerTodosAsync();
+
+        if (resultado.Exito) usuarios = resultado.Datos ?? [];
+        else error = resultado.Mensaje;
+
+        cargando = false;
+    }
+}

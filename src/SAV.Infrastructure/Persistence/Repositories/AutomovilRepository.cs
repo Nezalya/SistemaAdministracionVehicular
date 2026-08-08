@@ -1,4 +1,4 @@
-﻿using SAV.Application.Common;
+﻿using SAV.Contracts.Common;
 
 namespace SAV.Infrastructure.Persistence.Repositories;
 

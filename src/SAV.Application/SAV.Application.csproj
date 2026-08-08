@@ -8,6 +8,7 @@
 
 	<ItemGroup>
 		<ProjectReference Include="..\SAV.Core\SAV.Core.csproj" />
+		<ProjectReference Include="..\SAV.Contracts\SAV.Contracts.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>

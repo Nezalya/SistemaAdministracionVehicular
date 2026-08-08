@@ -1,0 +1,46 @@
+@inject DialogService Dialogos
+
+<AuthorizeView>
+    <Authorized>
+        <div class="sav-usuario">
+            <RadzenProfileMenu Click="AlPulsarMenu">
+                <Template>
+                    <span class="sav-usuario__disparador">
+                        <RadzenIcon Icon="account_circle" />
+                        <span class="sav-usuario__nombre">@context.User.Identity!.Name</span>
+                    </span>
+                </Template>
+                <ChildContent>
+                    <RadzenProfileMenuItem Text="@Rol(context)" Icon="badge" Value="rol" />
+                    <RadzenProfileMenuItem Text="Cerrar sesión" Icon="logout" Value="logout" />
+                </ChildContent>
+            </RadzenProfileMenu>
+
+            @* Salida siempre visible: no obliga a descubrir el menú desplegable. *@
+            <RadzenButton Icon="logout" Variant="Variant.Text" ButtonStyle="ButtonStyle.Base"
+                          title="Cerrar sesión" aria-label="Cerrar sesión"
+                          Click="AbrirDialogoCierre" />
+        </div>
+    </Authorized>
+</AuthorizeView>
+
+@code {
+    private static string Rol(AuthenticationState estado)
+        => estado.User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value ?? "Sin rol";
+
+    private async Task AlPulsarMenu(RadzenProfileMenuItem item)
+    {
+        if (item.Value?.ToString() == "logout")
+            await AbrirDialogoCierre();
+    }
+
+    private Task AbrirDialogoCierre()
+        => Dialogos.OpenAsync<CerrarSesionDialogo>(
+            "Cerrar sesión",
+            options: new DialogOptions
+            {
+                Width = "420px",
+                CloseDialogOnOverlayClick = true,
+                ShowClose = true
+            });
+}

@@ -1,0 +1,247 @@
+@page "/ventas"
+@attribute [Authorize(Roles = Roles.AdminOVendedor)]
+
+@inject IVentaApi VentaApi
+@inject NavigationManager Nav
+
+<PageTitle>Ventas — SAV</PageTitle>
+
+<CabeceraPagina Titulo="Ventas"
+                Descripcion="Operaciones registradas en el concesionario.">
+    <Acciones>
+        <RadzenButton Text="Nueva venta" Icon="add_shopping_cart"
+                      Click="@(() => Nav.NavigateTo("/ventas/nueva"))" />
+    </Acciones>
+</CabeceraPagina>
+
+<section class="sav-filtros" aria-label="Filtros de ventas">
+    <div class="sav-filtro" style="flex:1 1 240px">
+        <label class="sav-filtro__etiqueta" for="busqueda">Buscar</label>
+        <RadzenTextBox @bind-Value="busqueda" Name="busqueda" class="sav-input"
+                       Placeholder="Matrícula, cliente o bastidor…" />
+    </div>
+
+    <div class="sav-filtro">
+        <label class="sav-filtro__etiqueta" for="desde">Desde</label>
+        <RadzenDatePicker @bind-Value="desde" Name="desde" DateFormat="dd/MM/yyyy"
+                          AllowClear="true" class="sav-input" />
+    </div>
+
+    <div class="sav-filtro">
+        <label class="sav-filtro__etiqueta" for="hasta">Hasta</label>
+        <RadzenDatePicker @bind-Value="hasta" Name="hasta" DateFormat="dd/MM/yyyy"
+                          AllowClear="true" class="sav-input" />
+    </div>
+
+    <div class="sav-filtro">
+        <label class="sav-filtro__etiqueta" for="pago">Forma de pago</label>
+        <RadzenDropDown @bind-Value="formaPago" Data="@formasPago" Name="pago"
+                        TextProperty="Texto" ValueProperty="Valor"
+                        AllowClear="true" Placeholder="Todas" class="sav-input" />
+    </div>
+
+    <div class="sav-filtros__acciones">
+        <RadzenButton Text="Buscar" Icon="search" Click="AplicarFiltrosAsync" />
+        <RadzenButton Text="Limpiar" Icon="clear" Variant="Variant.Text" ButtonStyle="ButtonStyle.Base"
+                      Click="LimpiarAsync" Disabled="@(!HayFiltros)" />
+    </div>
+</section>
+
+@if (error is not null)
+{
+    <EstadoDatos TDato="object" Cargando="false" Error="@error" AlReintentar="ConsultarAsync" />
+}
+else
+{
+    <div class="sav-tabla-scroll">
+        <RadzenDataGrid @ref="rejilla" TItem="VentaDto"
+                        Data="@ventas" Count="@total" LoadData="CargarDatosAsync"
+                        IsLoading="@cargando"
+                        AllowPaging="true" PageSize="15"
+                        PageSizeOptions="@(new[] { 10, 15, 50 })"
+                        ShowPagingSummary="true"
+                        PagingSummaryFormat="{0} de {1} páginas · {2} ventas"
+                        AllowSorting="true"
+                        GridLines="DataGridGridLines.Horizontal"
+                        EmptyText="No hay ventas que coincidan con la búsqueda.">
+            <Columns>
+                <RadzenDataGridColumn TItem="VentaDto" Property="Id" Title="Nº" Sortable="false"
+                                      Width="70px" TextAlign="TextAlign.Center" />
+
+                <RadzenDataGridColumn TItem="VentaDto" Property="FechaVenta" Title="Fecha"
+                                      SortProperty="fecha" Sortable="true" Width="110px">
+                    <Template Context="v">@Formato.Fecha(v.FechaVenta)</Template>
+                </RadzenDataGridColumn>
+
+                <RadzenDataGridColumn TItem="VentaDto" Property="ClienteNombre" Title="Cliente"
+                                      SortProperty="cliente" Sortable="true">
+                    <Template Context="v">@Formato.OGuion(v.ClienteNombre)</Template>
+                </RadzenDataGridColumn>
+
+                <RadzenDataGridColumn TItem="VentaDto" Title="Vehículo" Sortable="false">
+                    <Template Context="v">
+                        @Formato.OGuion($"{v.AutomovilMarca} {v.AutomovilModelo}".Trim())
+                        <br />
+                        <span class="sav-ayuda">@Formato.OGuion(v.AutomovilBastidor)</span>
+                    </Template>
+                </RadzenDataGridColumn>
+
+                <RadzenDataGridColumn TItem="VentaDto" Property="Matricula" Title="Matrícula"
+                                      SortProperty="matricula" Sortable="true" Width="120px">
+                    <Template Context="v">@Formato.OGuion(v.Matricula)</Template>
+                </RadzenDataGridColumn>
+
+                <RadzenDataGridColumn TItem="VentaDto" Title="Responsable" Sortable="false" Width="160px">
+                    <Template Context="v">@Formato.OGuion(v.VendedorNombre ?? v.ServicioOficialNombre)</Template>
+                </RadzenDataGridColumn>
+
+                <RadzenDataGridColumn TItem="VentaDto" Property="FormaPago" Title="Pago"
+                                      Sortable="false" Width="120px">
+                    <Template Context="v"><EtiquetaEstado FormaPago="v.FormaPago" /></Template>
+                </RadzenDataGridColumn>
+
+                <RadzenDataGridColumn TItem="VentaDto" Property="PrecioCobrado" Title="Importe"
+                                      SortProperty="importe" Sortable="true" Width="130px"
+                                      TextAlign="TextAlign.End">
+                    <Template Context="v">
+                        <strong class="sav-numero">@Formato.Moneda(v.PrecioCobrado)</strong>
+                    </Template>
+                </RadzenDataGridColumn>
+
+                <RadzenDataGridColumn TItem="VentaDto" Title="" Sortable="false" Width="70px"
+                                      TextAlign="TextAlign.End">
+                    <Template Context="v">
+                        <RadzenButton Icon="visibility" Variant="Variant.Text" ButtonStyle="ButtonStyle.Base"
+                                      Size="ButtonSize.Small" title="Ver detalle" aria-label="Ver detalle"
+                                      Click="@(() => Nav.NavigateTo($"/ventas/{v.Id}"))" />
+                    </Template>
+                </RadzenDataGridColumn>
+            </Columns>
+        </RadzenDataGrid>
+    </div>
+}
+
+@code {
+    private RadzenDataGrid<VentaDto>? rejilla;
+
+    private IReadOnlyList<VentaDto> ventas = [];
+    private int total;
+    private bool cargando;
+    private bool cargaInicialHecha;
+    private string? error;
+
+    private string? busqueda;
+    private DateTime? desde;
+    private DateTime? hasta;
+    private FormaPago? formaPago;
+
+    private int paginaActual = 1;
+    private int tamanoPagina = 15;
+    private string? ordenarPor;
+    private bool ordenDescendente;
+
+    private readonly record struct OpcionPago(string Texto, FormaPago Valor);
+    private readonly OpcionPago[] formasPago =
+    [
+        new("Contado", FormaPago.Contado),
+        new("Financiada", FormaPago.Financiera)
+    ];
+
+    private bool HayFiltros => !string.IsNullOrWhiteSpace(busqueda)
+        || desde.HasValue || hasta.HasValue || formaPago.HasValue;
+
+    private async Task CargarDatosAsync(LoadDataArgs args)
+    {
+        tamanoPagina = args.Top ?? tamanoPagina;
+        paginaActual = ((args.Skip ?? 0) / Math.Max(tamanoPagina, 1)) + 1;
+
+        LeerOrden(args.OrderBy);
+        cargaInicialHecha = true;
+        await ConsultarAsync();
+    }
+
+    /// <summary>
+    /// Red de seguridad: si la rejilla no llega a pedir la primera página por sí
+    /// misma, la pedimos aquí. Sin esto la pantalla se quedaría vacía para siempre.
+    /// </summary>
+    protected override async Task OnAfterRenderAsync(bool primerRenderizado)
+    {
+        if (!primerRenderizado || cargaInicialHecha) return;
+
+        cargaInicialHecha = true;
+        await ConsultarAsync();
+        StateHasChanged();
+    }
+
+    private void LeerOrden(string? orderBy)
+    {
+        if (string.IsNullOrWhiteSpace(orderBy))
+        {
+            ordenarPor = null;
+            ordenDescendente = false;
+            return;
+        }
+
+        var partes = orderBy.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        ordenDescendente = partes.Length > 1 && partes[1].Equals("desc", StringComparison.OrdinalIgnoreCase);
+
+        ordenarPor = partes[0].ToLowerInvariant() switch
+        {
+            "fechaventa" or "fecha" => "fecha",
+            "preciocobrado" or "importe" => "importe",
+            "clientenombre" or "cliente" => "cliente",
+            "matricula" => "matricula",
+            _ => null
+        };
+    }
+
+    private async Task ConsultarAsync()
+    {
+        cargando = true;
+        error = null;
+
+        var filtro = new FiltroVentaDto
+        {
+            Page = paginaActual,
+            PageSize = tamanoPagina,
+            SortBy = ordenarPor,
+            SortDescending = ordenDescendente,
+            Busqueda = string.IsNullOrWhiteSpace(busqueda) ? null : busqueda.Trim(),
+            Desde = desde,
+            Hasta = hasta,
+            FormaPago = formaPago
+        };
+
+        var resultado = await VentaApi.BuscarAsync(filtro);
+
+        if (resultado.Exito && resultado.Datos is not null)
+        {
+            ventas = resultado.Datos.Items;
+            total = resultado.Datos.TotalCount;
+        }
+        else
+        {
+            ventas = [];
+            total = 0;
+            error = resultado.Mensaje;
+        }
+
+        cargando = false;
+    }
+
+    private async Task AplicarFiltrosAsync()
+    {
+        paginaActual = 1;
+        if (rejilla is not null) await rejilla.FirstPage();
+        else await ConsultarAsync();
+    }
+
+    private async Task LimpiarAsync()
+    {
+        busqueda = null;
+        desde = null;
+        hasta = null;
+        formaPago = null;
+        await AplicarFiltrosAsync();
+    }
+}

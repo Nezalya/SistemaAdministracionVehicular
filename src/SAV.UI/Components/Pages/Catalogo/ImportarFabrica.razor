@@ -1,0 +1,102 @@
+@page "/fabrica"
+@attribute [Authorize(Roles = Roles.Administrador)]
+
+@inject IFabricaApi FabricaApi
+@inject IMarcaApi MarcaApi
+@inject DialogService Dialogos
+@inject AvisosUi Avisos
+@inject NavigationManager Nav
+
+<PageTitle>Importar de fábrica — SAV</PageTitle>
+
+<CabeceraPagina Titulo="Importar catálogo de fábrica"
+                Descripcion="Carga marcas, modelos y características desde el archivo que publica la fábrica." />
+
+<section class="sav-panel" style="max-width:720px">
+    <h2 class="sav-panel__titulo">Cómo funciona</h2>
+
+    <p class="sav-ayuda">
+        La importación crea el catálogo completo en una sola operación: marcas con
+        sus modelos, el equipamiento de serie de cada uno y los extras que admite
+        con su precio.
+    </p>
+
+    <RadzenAlert AlertStyle="AlertStyle.Info" Variant="Variant.Flat" Shade="Shade.Lighter"
+                 AllowClose="false" class="sav-separado">
+        La operación es de una sola vez: si el catálogo ya tiene marcas, la
+        importación no vuelve a ejecutarse y no se duplica nada.
+    </RadzenAlert>
+
+    @if (yaHayCatalogo == true)
+    {
+        <RadzenAlert AlertStyle="AlertStyle.Warning" Variant="Variant.Flat" Shade="Shade.Lighter"
+                     AllowClose="false" class="sav-separado">
+            Ya existen <strong>@marcasExistentes</strong> marcas en el catálogo.
+            Volver a importar no tendrá efecto.
+        </RadzenAlert>
+    }
+
+    <div class="sav-form__acciones">
+        <RadzenButton Text="Ver catálogo" Icon="menu_book" Variant="Variant.Text"
+                      ButtonStyle="ButtonStyle.Base" Click="@(() => Nav.NavigateTo("/marcas"))" />
+        <RadzenButton Text="Importar ahora" Icon="cloud_download" Click="ImportarAsync"
+                      IsBusy="importando" BusyText="Importando…" />
+    </div>
+
+    @if (!string.IsNullOrWhiteSpace(resultadoImportacion))
+    {
+        <RadzenAlert AlertStyle="AlertStyle.Success" Variant="Variant.Flat" Shade="Shade.Lighter"
+                     AllowClose="false" class="sav-separado">
+            @resultadoImportacion
+        </RadzenAlert>
+    }
+</section>
+
+@code {
+    private bool importando;
+    private bool? yaHayCatalogo;
+    private int marcasExistentes;
+    private string? resultadoImportacion;
+
+    protected override async Task OnInitializedAsync() => await ComprobarCatalogoAsync();
+
+    private async Task ComprobarCatalogoAsync()
+    {
+        var marcas = await MarcaApi.ObtenerTodasAsync();
+
+        if (marcas.Exito && marcas.Datos is not null)
+        {
+            marcasExistentes = marcas.Datos.Count;
+            yaHayCatalogo = marcasExistentes > 0;
+        }
+    }
+
+    private async Task ImportarAsync()
+    {
+        var confirmado = await Confirmacion.PreguntarAsync(
+            Dialogos,
+            "Importar catálogo",
+            "Se cargarán las marcas, modelos y características del archivo de fábrica. ¿Continuar?",
+            "Importar");
+
+        if (!confirmado) return;
+
+        importando = true;
+        resultadoImportacion = null;
+
+        var resultado = await FabricaApi.ImportarAsync();
+
+        if (resultado.Exito)
+        {
+            resultadoImportacion = resultado.Datos?.Mensaje ?? "Importación completada.";
+            Avisos.Exito("Importación completada.");
+            await ComprobarCatalogoAsync();
+        }
+        else
+        {
+            Avisos.ErrorDeApi(resultado, "importar el catálogo");
+        }
+
+        importando = false;
+    }
+}

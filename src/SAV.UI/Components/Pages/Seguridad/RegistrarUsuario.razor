@@ -1,0 +1,197 @@
+@page "/usuarios/nuevo"
+@attribute [Authorize(Roles = Roles.AdminOVendedor)]
+
+@using System.ComponentModel.DataAnnotations
+
+@inject IAuthApi AuthApi
+@inject SesionUsuario Sesion
+@inject AvisosUi Avisos
+@inject NavigationManager Nav
+
+<PageTitle>Registrar usuario — SAV</PageTitle>
+
+<CabeceraPagina Titulo="Registrar usuario" Volver="/usuarios"
+                Descripcion="Crea una cuenta de acceso al sistema." />
+
+<section class="sav-panel" style="max-width:760px">
+    <div class="sav-campo">
+        <label class="sav-label" for="tipo">Tipo de cuenta</label>
+        <RadzenSelectBar @bind-Value="tipo" Data="@TiposPermitidos" TextProperty="Texto"
+                         ValueProperty="Valor" TValue="string" Name="tipo" />
+        <p class="sav-ayuda">@DescripcionTipo</p>
+    </div>
+
+    <EditForm Model="entrada" OnValidSubmit="RegistrarAsync" class="sav-separado">
+        <DataAnnotationsValidator />
+
+        <div class="sav-form sav-form--2col">
+            <div class="sav-campo">
+                <label class="sav-label" for="username">Nombre de usuario</label>
+                <RadzenTextBox @bind-Value="entrada.Username" Name="username" class="sav-input" MaxLength="50" />
+                <ValidationMessage For="() => entrada.Username" class="sav-error" />
+            </div>
+
+            <div class="sav-campo">
+                <label class="sav-label" for="email">Correo electrónico</label>
+                <RadzenTextBox @bind-Value="entrada.Email" Name="email" class="sav-input" MaxLength="100" />
+                <ValidationMessage For="() => entrada.Email" class="sav-error" />
+            </div>
+
+            <div class="sav-campo sav-campo--ancho">
+                <label class="sav-label" for="password">Contraseña</label>
+                <RadzenPassword @bind-Value="entrada.Password" Name="password" class="sav-input" />
+                <ValidationMessage For="() => entrada.Password" class="sav-error" />
+                <p class="sav-ayuda">Mínimo 8 caracteres, con al menos una mayúscula y un número.</p>
+            </div>
+
+            @if (tipo != TipoAdministrador)
+            {
+                <div class="sav-campo sav-campo--ancho">
+                    <label class="sav-label" for="nombre">Nombre completo</label>
+                    <RadzenTextBox @bind-Value="entrada.Nombre" Name="nombre" class="sav-input" MaxLength="150" />
+                    <ValidationMessage For="() => entrada.Nombre" class="sav-error" />
+                </div>
+
+                <div class="sav-campo">
+                    <label class="sav-label" for="nif">NIF / Cédula</label>
+                    <RadzenTextBox @bind-Value="entrada.Nif" Name="nif" class="sav-input" MaxLength="11" />
+                    <ValidationMessage For="() => entrada.Nif" class="sav-error" />
+                </div>
+
+                <div class="sav-campo">
+                    <label class="sav-label" for="telefono">Teléfono</label>
+                    <RadzenTextBox @bind-Value="entrada.Telefono" Name="telefono" class="sav-input" MaxLength="10" />
+                    <ValidationMessage For="() => entrada.Telefono" class="sav-error" />
+                </div>
+
+                <div class="sav-campo sav-campo--ancho">
+                    <label class="sav-label" for="domicilio">
+                        Domicilio <span class="sav-label__opcional">(opcional)</span>
+                    </label>
+                    <RadzenTextBox @bind-Value="entrada.Domicilio" Name="domicilio" class="sav-input" MaxLength="200" />
+                </div>
+            }
+        </div>
+
+        <div class="sav-form__acciones">
+            <RadzenButton Text="Cancelar" Variant="Variant.Text" ButtonStyle="ButtonStyle.Base"
+                          Click="@(() => Nav.NavigateTo("/usuarios"))" Disabled="registrando" />
+            <RadzenButton ButtonType="ButtonType.Submit" Text="Crear cuenta" Icon="person_add"
+                          IsBusy="registrando" BusyText="Creando…" />
+        </div>
+    </EditForm>
+</section>
+
+@code {
+    private const string TipoAdministrador = "administrador";
+    private const string TipoVendedor = "vendedor";
+    private const string TipoCliente = "cliente";
+
+    private readonly EntradaUsuario entrada = new();
+    private string tipo = TipoVendedor;
+    private bool registrando;
+    private bool esAdministrador;
+
+    private readonly record struct OpcionTipo(string Texto, string Valor);
+
+    // La API restringe el registro de administradores y vendedores al rol Administrador;
+    // el registro de clientes lo admite también para vendedores.
+    private List<OpcionTipo> TiposPermitidos => esAdministrador
+        ?
+        [
+            new("Administrador", TipoAdministrador),
+            new("Vendedor", TipoVendedor),
+            new("Cliente", TipoCliente)
+        ]
+        : [new("Cliente", TipoCliente)];
+
+    private string DescripcionTipo => tipo switch
+    {
+        TipoAdministrador => "Acceso completo al sistema, incluidos informes y configuración.",
+        TipoVendedor => "Puede registrar ventas, clientes y consultar el inventario.",
+        _ => "Cuenta de cliente. Hoy el sistema no expone funciones para este rol."
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        esAdministrador = await Sesion.EsAdministradorAsync();
+        if (!esAdministrador) tipo = TipoCliente;
+    }
+
+    private async Task RegistrarAsync()
+    {
+        registrando = true;
+
+        var resultado = tipo switch
+        {
+            TipoAdministrador => await AuthApi.RegistrarAdministradorAsync(new RegistrarAdministradorDto
+            {
+                Username = entrada.Username.Trim(),
+                Email = entrada.Email.Trim(),
+                Password = entrada.Password
+            }),
+
+            TipoVendedor => await AuthApi.RegistrarVendedorAsync(new RegistrarVendedorDto
+            {
+                Username = entrada.Username.Trim(),
+                Email = entrada.Email.Trim(),
+                Password = entrada.Password,
+                Nombre = entrada.Nombre.Trim(),
+                Nif = entrada.Nif.Trim(),
+                Telefono = entrada.Telefono.Trim(),
+                Domicilio = string.IsNullOrWhiteSpace(entrada.Domicilio) ? null : entrada.Domicilio.Trim()
+            }),
+
+            _ => await AuthApi.RegistrarClienteAsync(new RegistrarClienteDto
+            {
+                Username = entrada.Username.Trim(),
+                Email = entrada.Email.Trim(),
+                Password = entrada.Password,
+                Nombre = entrada.Nombre.Trim(),
+                Nif = entrada.Nif.Trim(),
+                Telefono = entrada.Telefono.Trim(),
+                Domicilio = string.IsNullOrWhiteSpace(entrada.Domicilio) ? null : entrada.Domicilio.Trim()
+            })
+        };
+
+        if (resultado.Exito)
+        {
+            Avisos.Exito("Cuenta creada.", $"Usuario {entrada.Username}.");
+            Nav.NavigateTo("/usuarios");
+        }
+        else
+        {
+            Avisos.ErrorDeApi(resultado, "crear la cuenta");
+        }
+
+        registrando = false;
+    }
+
+    private sealed class EntradaUsuario
+    {
+        [Required(ErrorMessage = "El nombre de usuario es obligatorio.")]
+        [MaxLength(50, ErrorMessage = "No puede exceder los 50 caracteres.")]
+        public string Username { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "El correo es obligatorio.")]
+        [EmailAddress(ErrorMessage = "El correo no tiene un formato válido.")]
+        [MaxLength(100, ErrorMessage = "No puede exceder los 100 caracteres.")]
+        public string Email { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "La contraseña es obligatoria.")]
+        [MinLength(8, ErrorMessage = "Debe tener al menos 8 caracteres.")]
+        [RegularExpression(@"^(?=.*[A-Z])(?=.*\d).+$",
+            ErrorMessage = "Debe incluir al menos una mayúscula y un número.")]
+        public string Password { get; set; } = string.Empty;
+
+        [MaxLength(150, ErrorMessage = "No puede exceder los 150 caracteres.")]
+        public string Nombre { get; set; } = string.Empty;
+
+        public string Nif { get; set; } = string.Empty;
+
+        public string Telefono { get; set; } = string.Empty;
+
+        [MaxLength(200, ErrorMessage = "No puede exceder los 200 caracteres.")]
+        public string? Domicilio { get; set; }
+    }
+}
