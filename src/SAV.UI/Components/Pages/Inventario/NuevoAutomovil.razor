@@ -1,0 +1,157 @@
+@page "/automoviles/nuevo"
+@attribute [Authorize(Roles = Roles.Administrador)]
+
+@using System.ComponentModel.DataAnnotations
+
+@inject IAutomovilApi AutomovilApi
+@inject IModeloApi ModeloApi
+@inject IServicioOficialApi ServicioOficialApi
+@inject NavigationManager Nav
+@inject AvisosUi Avisos
+
+<PageTitle>Nuevo automóvil — SAV</PageTitle>
+
+<CabeceraPagina Titulo="Nuevo automóvil" Volver="/automoviles"
+                Descripcion="Alta individual de una unidad en el inventario." />
+
+<section class="sav-panel">
+    <EditForm Model="entrada" OnValidSubmit="GuardarAsync">
+        <DataAnnotationsValidator />
+
+        <div class="sav-form sav-form--2col">
+            <div class="sav-campo">
+                <label class="sav-label" for="modelo">Modelo</label>
+                <RadzenDropDown @bind-Value="entrada.ModeloId" Data="@modelos" Name="modelo"
+                                TextProperty="Descripcion" ValueProperty="Id"
+                                AllowFiltering="true" FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive"
+                                Placeholder="Selecciona un modelo" class="sav-input" />
+                <ValidationMessage For="() => entrada.ModeloId" class="sav-error" />
+            </div>
+
+            <div class="sav-campo">
+                <label class="sav-label" for="bastidor">Número de bastidor</label>
+                <RadzenTextBox @bind-Value="entrada.NumBastidor" Name="bastidor" class="sav-input"
+                               MaxLength="17" Placeholder="Máximo 17 caracteres" />
+                <ValidationMessage For="() => entrada.NumBastidor" class="sav-error" />
+            </div>
+
+            <div class="sav-campo">
+                <label class="sav-label" for="color">
+                    Color <span class="sav-label__opcional">(opcional)</span>
+                </label>
+                <RadzenTextBox @bind-Value="entrada.Color" Name="color" class="sav-input" MaxLength="20" />
+                <ValidationMessage For="() => entrada.Color" class="sav-error" />
+            </div>
+
+            <div class="sav-campo">
+                <label class="sav-label" for="ano">
+                    Año de fabricación <span class="sav-label__opcional">(opcional)</span>
+                </label>
+                <RadzenNumeric @bind-Value="entrada.AnoFabricacion" Name="ano" class="sav-input"
+                               Min="1900" Max="@(DateTime.Now.Year + 1)" />
+                <ValidationMessage For="() => entrada.AnoFabricacion" class="sav-error" />
+            </div>
+
+            <div class="sav-campo sav-campo--ancho">
+                <label class="sav-label" for="ubicacion">Ubicación inicial</label>
+                <RadzenDropDown @bind-Value="ubicacionSeleccionada" Data="@opcionesUbicacion"
+                                TextProperty="Texto" ValueProperty="Clave" Name="ubicacion"
+                                class="sav-input" />
+                <p class="sav-ayuda">
+                    Si no eliges un servicio oficial, la unidad queda en el concesionario.
+                </p>
+            </div>
+        </div>
+
+        <div class="sav-form__acciones">
+            <RadzenButton Text="Cancelar" Variant="Variant.Text" ButtonStyle="ButtonStyle.Base"
+                          Click="@(() => Nav.NavigateTo("/automoviles"))" Disabled="guardando" />
+            <RadzenButton ButtonType="ButtonType.Submit" Text="Registrar automóvil" Icon="save"
+                          IsBusy="guardando" BusyText="Registrando…" />
+        </div>
+    </EditForm>
+</section>
+
+@code {
+    private readonly EntradaAutomovil entrada = new();
+    private bool guardando;
+
+    private const string ClaveConcesionario = "concesionario";
+    private string ubicacionSeleccionada = ClaveConcesionario;
+
+    private readonly record struct OpcionUbicacion(string Texto, string Clave);
+    private List<OpcionUbicacion> opcionesUbicacion = [];
+
+    private sealed record ModeloOpcion(int Id, string Descripcion);
+    private List<ModeloOpcion> modelos = [];
+
+    protected override async Task OnInitializedAsync()
+    {
+        var resultadoModelos = await ModeloApi.ObtenerTodosAsync();
+        if (resultadoModelos.Exito && resultadoModelos.Datos is not null)
+        {
+            modelos = resultadoModelos.Datos
+                .Select(m => new ModeloOpcion(m.Id, $"{m.MarcaNombre} · {m.Nombre}"))
+                .OrderBy(m => m.Descripcion)
+                .ToList();
+        }
+
+        opcionesUbicacion = [new OpcionUbicacion("Concesionario", ClaveConcesionario)];
+
+        var servicios = await ServicioOficialApi.ObtenerTodosAsync();
+        if (servicios.Exito && servicios.Datos is not null)
+        {
+            opcionesUbicacion.AddRange(servicios.Datos.Select(
+                s => new OpcionUbicacion($"Servicio oficial · {s.Nombre}", s.Id.ToString())));
+        }
+    }
+
+    private async Task GuardarAsync()
+    {
+        guardando = true;
+
+        var dto = new RegistrarAutomovilDto
+        {
+            ModeloId = entrada.ModeloId,
+            NumBastidor = entrada.NumBastidor.Trim(),
+            Color = string.IsNullOrWhiteSpace(entrada.Color) ? null : entrada.Color.Trim(),
+            AnoFabricacion = entrada.AnoFabricacion
+        };
+
+        if (ubicacionSeleccionada != ClaveConcesionario
+            && int.TryParse(ubicacionSeleccionada, out var servicioId))
+        {
+            dto.ServicioOficialUbicacionId = servicioId;
+        }
+
+        var resultado = await AutomovilApi.RegistrarAsync(dto);
+
+        if (resultado.Exito)
+        {
+            Avisos.Exito("Automóvil registrado.");
+            Nav.NavigateTo("/automoviles");
+        }
+        else
+        {
+            Avisos.ErrorDeApi(resultado, "registrar el automóvil");
+        }
+
+        guardando = false;
+    }
+
+    private sealed class EntradaAutomovil
+    {
+        [Range(1, int.MaxValue, ErrorMessage = "Selecciona un modelo.")]
+        public int ModeloId { get; set; }
+
+        [Required(ErrorMessage = "El número de bastidor es obligatorio.")]
+        [MaxLength(17, ErrorMessage = "El bastidor no puede exceder los 17 caracteres.")]
+        public string NumBastidor { get; set; } = string.Empty;
+
+        [MaxLength(20, ErrorMessage = "El color no puede exceder los 20 caracteres.")]
+        public string? Color { get; set; }
+
+        [Range(1900, 2100, ErrorMessage = "El año de fabricación no es válido.")]
+        public int? AnoFabricacion { get; set; }
+    }
+}

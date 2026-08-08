@@ -576,3 +576,7 @@ h1, h2, h3, h4 {
     color: var(--rz-text-secondary-color, rgba(0, 0, 0, .6));
     flex-shrink: 0;
 }
+
+.sav-separado-corto {
+    margin-top: .75rem;
+}
