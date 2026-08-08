@@ -16,6 +16,14 @@
 <RadzenCard Variant="Variant.Outlined" class="rz-p-6">
     <h1 class="rz-text-h5 rz-mt-0 rz-mb-4">Iniciar sesión</h1>
 
+    @if (Expirada && error is null)
+    {
+        <RadzenAlert AlertStyle="AlertStyle.Info" Variant="Variant.Flat"
+                     Shade="Shade.Lighter" AllowClose="false" class="rz-mb-4">
+            Tu sesión caducó por seguridad. Vuelve a identificarte para continuar.
+        </RadzenAlert>
+    }
+
     @if (error is not null)
     {
         <RadzenAlert AlertStyle="AlertStyle.Danger" Variant="Variant.Flat"
@@ -72,6 +80,9 @@
     [CascadingParameter] private HttpContext HttpContext { get; set; } = default!;
     [SupplyParameterFromForm] private EntradaLogin Entrada { get; set; } = default!;
     [SupplyParameterFromQuery] private string? ReturnUrl { get; set; }
+
+    /// <summary>Llega desde /sesion-expirada para explicar por qué se cerró la sesión.</summary>
+    [SupplyParameterFromQuery(Name = "expirada")] private bool Expirada { get; set; }
 
     private string? error;
 

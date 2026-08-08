@@ -1,0 +1,55 @@
+@*
+    Pantalla de mensaje a página completa: error, no encontrado, sesión caducada.
+    Comparte identidad con el resto de la aplicación mediante el logotipo,
+    para que un fallo no parezca que te ha expulsado a otro sitio.
+*@
+
+<div class="sav-mensaje">
+    <div class="sav-mensaje__panel">
+
+        <div class="sav-mensaje__marca" aria-hidden="true">
+            <RadzenIcon Icon="directions_car" class="sav-mensaje__logo" />
+            @if (!string.IsNullOrWhiteSpace(Codigo))
+            {
+                <span class="sav-mensaje__codigo">@Codigo</span>
+            }
+        </div>
+
+        <h1 class="sav-mensaje__titulo">@Titulo</h1>
+
+        @if (!string.IsNullOrWhiteSpace(Descripcion))
+        {
+            <p class="sav-mensaje__descripcion">@Descripcion</p>
+        }
+
+        @if (Detalle is not null)
+        {
+            <div class="sav-mensaje__detalle">
+                @Detalle
+            </div>
+        }
+
+        @if (Acciones is not null)
+        {
+            <div class="sav-mensaje__acciones">
+                @Acciones
+            </div>
+        }
+
+        <p class="sav-mensaje__pie">SAV · Sistema de Administración Vehicular</p>
+    </div>
+</div>
+
+@code {
+    /// <summary>Código grande junto al logotipo (por ejemplo, 404). Opcional.</summary>
+    [Parameter] public string? Codigo { get; set; }
+
+    [Parameter, EditorRequired] public string Titulo { get; set; } = string.Empty;
+
+    [Parameter] public string? Descripcion { get; set; }
+
+    /// <summary>Bloque secundario, para datos de diagnóstico no sensibles.</summary>
+    [Parameter] public RenderFragment? Detalle { get; set; }
+
+    [Parameter] public RenderFragment? Acciones { get; set; }
+}

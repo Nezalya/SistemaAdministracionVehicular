@@ -19,8 +19,8 @@ public interface IAutomovilApi
 
 public sealed class AutomovilApi : ApiClienteBase, IAutomovilApi
 {
-    public AutomovilApi(HttpClient http, ITokenAccessor tokenAccessor, ILogger<AutomovilApi> logger)
-        : base(http, tokenAccessor, logger) { }
+    public AutomovilApi(HttpClient http, ITokenAccessor tokenAccessor, ControlSesion sesion, ILogger<AutomovilApi> logger)
+        : base(http, tokenAccessor, sesion, logger) { }
 
     public Task<ResultadoApi<PagedResult<AutomovilDto>>> BuscarAsync(
         FiltroAutomovilDto filtro, CancellationToken ct = default)

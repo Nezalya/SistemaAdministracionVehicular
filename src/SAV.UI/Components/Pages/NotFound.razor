@@ -1,5 +1,36 @@
-﻿@page "/not-found"
-@layout MainLayout
+@page "/not-found"
+@attribute [AllowAnonymous]
+@layout EmptyLayout
 
-<h3>Not Found</h3>
-<p>Sorry, the content you are looking for does not exist.</p>
+@inject NavigationManager Nav
+
+<PageTitle>Página no encontrada — SAV</PageTitle>
+
+<PaginaMensaje Codigo="404"
+               Titulo="Esta página se salió de la carretera"
+               Descripcion="La dirección que has abierto no existe, cambió de sitio o el enlace estaba mal escrito. No es culpa tuya: revisa la ruta o vuelve al inicio.">
+    <Acciones>
+        <RadzenButton Text="Volver al inicio" Icon="home"
+                      Click="@(() => Nav.NavigateTo("/", forceLoad: true))" />
+        <RadzenButton Text="Ir atrás" Icon="arrow_back" Variant="Variant.Outlined"
+                      ButtonStyle="ButtonStyle.Base" Click="Atras" />
+    </Acciones>
+</PaginaMensaje>
+
+@code {
+    [Inject] private IJSRuntime Js { get; set; } = default!;
+
+    private async Task Atras()
+    {
+        // history.back() solo está disponible cuando el circuito es interactivo;
+        // si no lo es, el botón simplemente lleva al inicio.
+        try
+        {
+            await Js.InvokeVoidAsync("history.back");
+        }
+        catch (InvalidOperationException)
+        {
+            Nav.NavigateTo("/", forceLoad: true);
+        }
+    }
+}

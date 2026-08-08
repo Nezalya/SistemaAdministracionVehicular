@@ -13,8 +13,8 @@ public interface IMarcaApi
 
 public sealed class MarcaApi : ApiClienteBase, IMarcaApi
 {
-    public MarcaApi(HttpClient http, ITokenAccessor tokenAccessor, ILogger<MarcaApi> logger)
-        : base(http, tokenAccessor, logger) { }
+    public MarcaApi(HttpClient http, ITokenAccessor tokenAccessor, ControlSesion sesion, ILogger<MarcaApi> logger)
+        : base(http, tokenAccessor, sesion, logger) { }
 
     public Task<ResultadoApi<IReadOnlyList<MarcaDto>>> ObtenerTodasAsync(CancellationToken ct = default)
         => GetAsync<IReadOnlyList<MarcaDto>>("api/marca", ct);
@@ -36,8 +36,8 @@ public interface IModeloApi
 
 public sealed class ModeloApi : ApiClienteBase, IModeloApi
 {
-    public ModeloApi(HttpClient http, ITokenAccessor tokenAccessor, ILogger<ModeloApi> logger)
-        : base(http, tokenAccessor, logger) { }
+    public ModeloApi(HttpClient http, ITokenAccessor tokenAccessor, ControlSesion sesion, ILogger<ModeloApi> logger)
+        : base(http, tokenAccessor, sesion, logger) { }
 
     public Task<ResultadoApi<IReadOnlyList<ModeloDto>>> ObtenerTodosAsync(CancellationToken ct = default)
         => GetAsync<IReadOnlyList<ModeloDto>>("api/modelo", ct);
@@ -65,8 +65,8 @@ public interface ICaracteristicaApi
 
 public sealed class CaracteristicaApi : ApiClienteBase, ICaracteristicaApi
 {
-    public CaracteristicaApi(HttpClient http, ITokenAccessor tokenAccessor, ILogger<CaracteristicaApi> logger)
-        : base(http, tokenAccessor, logger) { }
+    public CaracteristicaApi(HttpClient http, ITokenAccessor tokenAccessor, ControlSesion sesion, ILogger<CaracteristicaApi> logger)
+        : base(http, tokenAccessor, sesion, logger) { }
 
     public Task<ResultadoApi<IReadOnlyList<CaracteristicaDto>>> ObtenerTodasAsync(CancellationToken ct = default)
         => GetAsync<IReadOnlyList<CaracteristicaDto>>("api/caracteristica", ct);
@@ -84,8 +84,8 @@ public interface IFabricaApi
 
 public sealed class FabricaApi : ApiClienteBase, IFabricaApi
 {
-    public FabricaApi(HttpClient http, ITokenAccessor tokenAccessor, ILogger<FabricaApi> logger)
-        : base(http, tokenAccessor, logger) { }
+    public FabricaApi(HttpClient http, ITokenAccessor tokenAccessor, ControlSesion sesion, ILogger<FabricaApi> logger)
+        : base(http, tokenAccessor, sesion, logger) { }
 
     public Task<ResultadoApi<ImportacionFabricaDto>> ImportarAsync(CancellationToken ct = default)
         => PostAsync<ImportacionFabricaDto>("api/fabrica/importar", null, ct);

@@ -15,9 +15,15 @@ public static class RegistroApiExtensions
 
         var segundos = config.GetValue<int?>("Api:TiempoEsperaSegundos") ?? 30;
 
-        // Solo se permite saltarse la validación del certificado en desarrollo.
+#if DEBUG
+        // Válvula de escape para certificados de desarrollo no confiados.
+        // Queda fuera de la compilación de Release: el binario que se despliega
+        // no contiene siquiera la posibilidad de saltarse la validación TLS.
         var ignorarCertificado = entorno.IsDevelopment()
             && config.GetValue<bool>("Api:IgnorarErroresDeCertificado");
+#else
+        const bool ignorarCertificado = false;
+#endif
 
         void Configurar(HttpClient cliente)
         {

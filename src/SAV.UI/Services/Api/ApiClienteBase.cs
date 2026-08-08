@@ -22,12 +22,15 @@ public abstract class ApiClienteBase
 
     private readonly HttpClient _http;
     private readonly ITokenAccessor _tokenAccessor;
+    private readonly ControlSesion _sesion;
     private readonly ILogger _logger;
 
-    protected ApiClienteBase(HttpClient http, ITokenAccessor tokenAccessor, ILogger logger)
+    protected ApiClienteBase(
+        HttpClient http, ITokenAccessor tokenAccessor, ControlSesion sesion, ILogger logger)
     {
         _http = http;
         _tokenAccessor = tokenAccessor;
+        _sesion = sesion;
         _logger = logger;
     }
 
@@ -69,8 +72,12 @@ public abstract class ApiClienteBase
             if (respuesta.IsSuccessStatusCode)
                 return ResultadoApi<T>.Ok(sobre is not null ? sobre.Datos : default, codigo);
 
-            return ResultadoApi<T>.Fallo(
-                sobre?.Mensaje ?? MensajePorDefecto(codigo), codigo, sobre?.Errores);
+            // El token ya no vale: se cierra la sesión en lugar de dejar al usuario
+            // dentro de una aplicación en la que ninguna operación funciona.
+            if (codigo == (int)HttpStatusCode.Unauthorized)
+                _sesion.SesionCaducada();
+
+            return ResultadoApi<T>.Fallo(MensajeDeError(codigo, sobre?.Mensaje), codigo, sobre?.Errores);
         }
         catch (TaskCanceledException) when (!ct.IsCancellationRequested)
         {
@@ -107,6 +114,20 @@ public abstract class ApiClienteBase
         }
     }
 
+    /// <summary>
+    /// Decide qué se le enseña al usuario. Para errores de negocio (4xx) se respeta
+    /// el mensaje de la API, que está redactado para leerse. A partir de 500 se
+    /// descarta: un fallo interno puede arrastrar detalles de implementación, y la
+    /// UI no debe convertirse en el canal por el que se filtren.
+    /// </summary>
+    private static string MensajeDeError(int codigo, string? mensajeApi)
+    {
+        if (codigo >= 500 || codigo == 0)
+            return "Se produjo un error inesperado en el servidor. Inténtalo de nuevo más tarde.";
+
+        return string.IsNullOrWhiteSpace(mensajeApi) ? MensajePorDefecto(codigo) : mensajeApi;
+    }
+
     private static string MensajePorDefecto(int codigo) => codigo switch
     {
         400 => "Los datos enviados no son válidos.",
@@ -114,6 +135,8 @@ public abstract class ApiClienteBase
         403 => "No tienes permiso para realizar esta acción.",
         404 => "No se encontró el recurso solicitado.",
         409 => "La operación entra en conflicto con el estado actual de los datos.",
-        _ => "Se produjo un error inesperado en el servidor."
+        422 => "Los datos enviados no se pueden procesar.",
+        429 => "Demasiados intentos. Espera un momento antes de reintentar.",
+        _ => "No se pudo completar la operación."
     };
 }

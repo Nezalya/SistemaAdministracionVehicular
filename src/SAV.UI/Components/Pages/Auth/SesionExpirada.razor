@@ -1,0 +1,42 @@
+@page "/sesion-expirada"
+@attribute [AllowAnonymous]
+@attribute [ExcludeFromInteractiveRouting]
+@layout EmptyLayout
+
+@using Microsoft.AspNetCore.Authentication
+@using Microsoft.AspNetCore.Authentication.Cookies
+
+@inject NavigationManager Nav
+
+@*
+    Destino al que se envía al usuario cuando la API responde 401.
+    Se renderiza de forma estática porque eliminar la cookie exige HttpContext.
+    Limpia la sesión y devuelve al login conservando a dónde quería ir.
+*@
+
+<PageTitle>Sesión caducada — SAV</PageTitle>
+
+<PaginaMensaje Titulo="Tu sesión ha caducado"
+               Descripcion="Por seguridad cerramos la sesión tras un tiempo de inactividad. Vuelve a identificarte para continuar donde lo dejaste." />
+
+@code {
+    [CascadingParameter] private HttpContext HttpContext { get; set; } = default!;
+    [SupplyParameterFromQuery(Name = "returnUrl")] private string? ReturnUrl { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (HttpContext.User.Identity?.IsAuthenticated == true)
+            await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+
+        Nav.NavigateTo($"/login?expirada=true{DestinoSeguro()}", forceLoad: true);
+    }
+
+    /// <summary>Solo se admiten rutas locales, para evitar redirecciones abiertas.</summary>
+    private string DestinoSeguro()
+    {
+        if (string.IsNullOrWhiteSpace(ReturnUrl)) return string.Empty;
+        if (!ReturnUrl.StartsWith('/') || ReturnUrl.StartsWith("//")) return string.Empty;
+
+        return $"&returnUrl={Uri.EscapeDataString(ReturnUrl)}";
+    }
+}

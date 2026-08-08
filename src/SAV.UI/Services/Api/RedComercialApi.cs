@@ -18,8 +18,8 @@ public interface IClienteApi
 
 public sealed class ClienteApi : ApiClienteBase, IClienteApi
 {
-    public ClienteApi(HttpClient http, ITokenAccessor tokenAccessor, ILogger<ClienteApi> logger)
-        : base(http, tokenAccessor, logger) { }
+    public ClienteApi(HttpClient http, ITokenAccessor tokenAccessor, ControlSesion sesion, ILogger<ClienteApi> logger)
+        : base(http, tokenAccessor, sesion, logger) { }
 
     public Task<ResultadoApi<PagedResult<ClienteDto>>> BuscarAsync(
         FiltroClienteDto filtro, CancellationToken ct = default)
@@ -54,8 +54,8 @@ public interface IVendedorApi
 
 public sealed class VendedorApi : ApiClienteBase, IVendedorApi
 {
-    public VendedorApi(HttpClient http, ITokenAccessor tokenAccessor, ILogger<VendedorApi> logger)
-        : base(http, tokenAccessor, logger) { }
+    public VendedorApi(HttpClient http, ITokenAccessor tokenAccessor, ControlSesion sesion, ILogger<VendedorApi> logger)
+        : base(http, tokenAccessor, sesion, logger) { }
 
     public Task<ResultadoApi<IReadOnlyList<VendedorDto>>> ObtenerTodosAsync(CancellationToken ct = default)
         => GetAsync<IReadOnlyList<VendedorDto>>("api/vendedor", ct);
@@ -86,8 +86,8 @@ public interface IServicioOficialApi
 
 public sealed class ServicioOficialApi : ApiClienteBase, IServicioOficialApi
 {
-    public ServicioOficialApi(HttpClient http, ITokenAccessor tokenAccessor, ILogger<ServicioOficialApi> logger)
-        : base(http, tokenAccessor, logger) { }
+    public ServicioOficialApi(HttpClient http, ITokenAccessor tokenAccessor, ControlSesion sesion, ILogger<ServicioOficialApi> logger)
+        : base(http, tokenAccessor, sesion, logger) { }
 
     public Task<ResultadoApi<IReadOnlyList<ServicioOficialDto>>> ObtenerTodosAsync(CancellationToken ct = default)
         => GetAsync<IReadOnlyList<ServicioOficialDto>>("api/serviciosoficiales", ct);
@@ -117,8 +117,8 @@ public interface IConcesionarioApi
 
 public sealed class ConcesionarioApi : ApiClienteBase, IConcesionarioApi
 {
-    public ConcesionarioApi(HttpClient http, ITokenAccessor tokenAccessor, ILogger<ConcesionarioApi> logger)
-        : base(http, tokenAccessor, logger) { }
+    public ConcesionarioApi(HttpClient http, ITokenAccessor tokenAccessor, ControlSesion sesion, ILogger<ConcesionarioApi> logger)
+        : base(http, tokenAccessor, sesion, logger) { }
 
     public Task<ResultadoApi<IReadOnlyList<ConcesionarioDto>>> ObtenerTodosAsync(CancellationToken ct = default)
         => GetAsync<IReadOnlyList<ConcesionarioDto>>("api/concesionario", ct);
@@ -143,8 +143,8 @@ public interface IUsuarioApi
 
 public sealed class UsuarioApi : ApiClienteBase, IUsuarioApi
 {
-    public UsuarioApi(HttpClient http, ITokenAccessor tokenAccessor, ILogger<UsuarioApi> logger)
-        : base(http, tokenAccessor, logger) { }
+    public UsuarioApi(HttpClient http, ITokenAccessor tokenAccessor, ControlSesion sesion, ILogger<UsuarioApi> logger)
+        : base(http, tokenAccessor, sesion, logger) { }
 
     public Task<ResultadoApi<IReadOnlyList<UsuarioDto>>> ObtenerTodosAsync(CancellationToken ct = default)
         => GetAsync<IReadOnlyList<UsuarioDto>>("api/usuario", ct);
@@ -164,8 +164,8 @@ public interface IVentaApi
 
 public sealed class VentaApi : ApiClienteBase, IVentaApi
 {
-    public VentaApi(HttpClient http, ITokenAccessor tokenAccessor, ILogger<VentaApi> logger)
-        : base(http, tokenAccessor, logger) { }
+    public VentaApi(HttpClient http, ITokenAccessor tokenAccessor, ControlSesion sesion, ILogger<VentaApi> logger)
+        : base(http, tokenAccessor, sesion, logger) { }
 
     public Task<ResultadoApi<PagedResult<VentaDto>>> BuscarAsync(
         FiltroVentaDto filtro, CancellationToken ct = default)
