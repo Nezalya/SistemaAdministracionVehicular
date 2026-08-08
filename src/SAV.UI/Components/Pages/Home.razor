@@ -1,7 +1,69 @@
 ﻿@page "/"
+@inject IReportesApi ReportesApi
 
-<PageTitle>Home</PageTitle>
+<PageTitle>Inicio — SAV</PageTitle>
 
-<h1>Hello, world!</h1>
+<AuthorizeView Context="sesion">
+    <h1 class="rz-text-h4 rz-mt-0 rz-mb-1">Hola, @sesion.User.Identity!.Name</h1>
+    <RadzenText TextStyle="TextStyle.Body1" class="rz-mb-6">
+        Has entrado como <strong>@Rol(sesion)</strong>.
+    </RadzenText>
+</AuthorizeView>
 
-Welcome to your new app.
+<RadzenCard Variant="Variant.Outlined" Style="max-width:640px">
+    <RadzenText TextStyle="TextStyle.H6" class="rz-mt-0 rz-mb-3">Conexión con la API</RadzenText>
+
+    @if (comprobando)
+    {
+        <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.75rem">
+            <RadzenProgressBarCircular ShowValue="false" Size="ProgressBarCircularSize.ExtraSmall"
+                                       Mode="ProgressBarMode.Indeterminate" />
+            <RadzenText class="rz-my-0">Comprobando…</RadzenText>
+        </RadzenStack>
+    }
+    else if (resultado?.Exito == true && resultado.Datos is not null)
+    {
+        <RadzenAlert AlertStyle="AlertStyle.Success" Variant="Variant.Flat"
+                     Shade="Shade.Lighter" AllowClose="false">
+            Comunicación correcta. La API responde y el token es válido.
+        </RadzenAlert>
+        <RadzenText TextStyle="TextStyle.Body2" class="rz-mt-3 rz-mb-0">
+            @resultado.Datos.Inventario.TotalAutos automóviles registrados ·
+            @resultado.Datos.Ventas.TotalVentas ventas ·
+            @resultado.Datos.Entidades.TotalClientes clientes.
+        </RadzenText>
+    }
+    else if (resultado?.SinPermiso == true)
+    {
+        <RadzenAlert AlertStyle="AlertStyle.Info" Variant="Variant.Flat"
+                     Shade="Shade.Lighter" AllowClose="false">
+            Conexión correcta. Este resumen está reservado al rol Administrador.
+        </RadzenAlert>
+    }
+    else
+    {
+        <RadzenAlert AlertStyle="AlertStyle.Warning" Variant="Variant.Flat"
+                     Shade="Shade.Lighter" AllowClose="false">
+            @(resultado?.Mensaje ?? "No se pudo contactar con la API.")
+        </RadzenAlert>
+        <RadzenButton Text="Reintentar" Icon="refresh" Variant="Variant.Text"
+                      Click="ComprobarAsync" class="rz-mt-3" />
+    }
+</RadzenCard>
+
+@code {
+    private ResultadoApi<DashboardDto>? resultado;
+    private bool comprobando = true;
+
+    protected override Task OnInitializedAsync() => ComprobarAsync();
+
+    private async Task ComprobarAsync()
+    {
+        comprobando = true;
+        resultado = await ReportesApi.ObtenerDashboardAsync();
+        comprobando = false;
+    }
+
+    private static string Rol(AuthenticationState estado) =>
+        estado.User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value ?? "sin rol";
+}

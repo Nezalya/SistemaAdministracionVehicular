@@ -1,0 +1,34 @@
+﻿@page "/logout"
+@attribute [AllowAnonymous]
+@attribute [ExcludeFromInteractiveRouting]
+@layout LayoutAutenticacion
+
+@using Microsoft.AspNetCore.Authentication
+@using Microsoft.AspNetCore.Authentication.Cookies
+
+@inject NavigationManager Nav
+
+<PageTitle>Cerrar sesión — SAV</PageTitle>
+
+<RadzenCard Variant="Variant.Outlined" class="rz-p-6">
+    <h1 class="rz-text-h6 rz-mt-0 rz-mb-4">¿Cerrar la sesión?</h1>
+
+    <EditForm Model="this" FormName="logout" OnValidSubmit="CerrarSesionAsync" method="post">
+        <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem">
+            <RadzenButton ButtonType="ButtonType.Submit" Text="Cerrar sesión"
+                          Icon="logout" ButtonStyle="ButtonStyle.Danger" />
+            <RadzenButton Text="Cancelar" Variant="Variant.Text"
+                          ButtonStyle="ButtonStyle.Base" Click="@(() => Nav.NavigateTo("/"))" />
+        </RadzenStack>
+    </EditForm>
+</RadzenCard>
+
+@code {
+    [CascadingParameter] private HttpContext HttpContext { get; set; } = default!;
+
+    private async Task CerrarSesionAsync()
+    {
+        await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+        Nav.NavigateTo("/login", forceLoad: true);
+    }
+}

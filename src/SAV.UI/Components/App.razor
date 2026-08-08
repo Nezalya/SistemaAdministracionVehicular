@@ -1,21 +1,33 @@
 ﻿<!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <base href="/" />
     <ResourcePreloader />
+    <RadzenTheme Theme="material" Wcag="true" @rendermode="@ModoDeRenderizado" />
     <link rel="stylesheet" href="@Assets["app.css"]" />
     <link rel="stylesheet" href="@Assets["SAV.UI.styles.css"]" />
     <ImportMap />
-    <HeadOutlet @rendermode="InteractiveServer" />
+    <HeadOutlet @rendermode="@ModoDeRenderizado" />
 </head>
 
 <body>
-    <Routes @rendermode="InteractiveServer" />
+    <Routes @rendermode="@ModoDeRenderizado" />
     <ReconnectModal />
     <script src="@Assets["_framework/blazor.web.js"]"></script>
 </body>
 
 </html>
+
+@code {
+    [CascadingParameter]
+    private HttpContext HttpContext { get; set; } = default!;
+
+    // Las páginas marcadas con [ExcludeFromInteractiveRouting] (login y cierre de sesión)
+    // se renderizan de forma estática, que es la única manera de disponer de HttpContext
+    // para emitir o eliminar la cookie de autenticación.
+    private IComponentRenderMode? ModoDeRenderizado =>
+        HttpContext.AcceptsInteractiveRouting() ? InteractiveServer : null;
+}

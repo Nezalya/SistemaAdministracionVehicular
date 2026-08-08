@@ -1,0 +1,43 @@
+﻿<RadzenPanelMenu>
+    <RadzenPanelMenuItem Text="Inicio" Icon="home" Path="/" Match="NavLinkMatch.All" />
+
+    @* Las secciones deshabilitadas se van activando conforme avanzan las fases:
+       basta con quitar Disabled y poner el Path definitivo. *@
+
+    <AuthorizeView Roles="Administrador,Vendedor">
+        <RadzenPanelMenuItem Text="Inventario" Icon="directions_car" Expanded="true">
+            <RadzenPanelMenuItem Text="Automóviles" Icon="list" Disabled="true" />
+            <RadzenPanelMenuItem Text="Resumen de stock" Icon="inventory_2" Disabled="true" />
+            <AuthorizeView Roles="Administrador" Context="admin">
+                <RadzenPanelMenuItem Text="Alta por lote" Icon="library_add" Disabled="true" />
+            </AuthorizeView>
+        </RadzenPanelMenuItem>
+
+        <RadzenPanelMenuItem Text="Catálogo" Icon="menu_book">
+            <RadzenPanelMenuItem Text="Marcas" Icon="sell" Disabled="true" />
+            <RadzenPanelMenuItem Text="Modelos" Icon="category" Disabled="true" />
+            <RadzenPanelMenuItem Text="Características" Icon="tune" Disabled="true" />
+        </RadzenPanelMenuItem>
+
+        <RadzenPanelMenuItem Text="Ventas" Icon="receipt_long">
+            <RadzenPanelMenuItem Text="Listado" Icon="list_alt" Disabled="true" />
+            <RadzenPanelMenuItem Text="Nueva venta" Icon="add_shopping_cart" Disabled="true" />
+        </RadzenPanelMenuItem>
+
+        <RadzenPanelMenuItem Text="Clientes" Icon="groups" Disabled="true" />
+
+        <RadzenPanelMenuItem Text="Red de distribución" Icon="hub">
+            <RadzenPanelMenuItem Text="Concesionario" Icon="store" Disabled="true" />
+            <RadzenPanelMenuItem Text="Servicios oficiales" Icon="build" Disabled="true" />
+            <AuthorizeView Roles="Administrador" Context="admin">
+                <RadzenPanelMenuItem Text="Vendedores" Icon="badge" Disabled="true" />
+            </AuthorizeView>
+        </RadzenPanelMenuItem>
+    </AuthorizeView>
+
+    <AuthorizeView Roles="Administrador">
+        <RadzenPanelMenuItem Text="Seguridad" Icon="admin_panel_settings">
+            <RadzenPanelMenuItem Text="Usuarios" Icon="manage_accounts" Disabled="true" />
+        </RadzenPanelMenuItem>
+    </AuthorizeView>
+</RadzenPanelMenu>

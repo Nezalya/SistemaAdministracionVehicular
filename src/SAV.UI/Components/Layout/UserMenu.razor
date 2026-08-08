@@ -1,0 +1,24 @@
+﻿<AuthorizeView>
+    <Authorized>
+        <RadzenProfileMenu>
+            <Template>
+                <RadzenStack Orientation="Orientation.Horizontal"
+                             AlignItems="AlignItems.Center" Gap="0.5rem">
+                    <RadzenIcon Icon="account_circle" />
+                    <RadzenText TextStyle="TextStyle.Body2" class="rz-my-0 rz-display-none rz-display-sm-inline-flex">
+                        @context.User.Identity!.Name
+                    </RadzenText>
+                </RadzenStack>
+            </Template>
+            <ChildContent>
+                <RadzenProfileMenuItem Text="@Rol(context)" Icon="badge" Disabled="true" />
+                <RadzenProfileMenuItem Text="Cerrar sesión" Icon="logout" Path="/logout" />
+            </ChildContent>
+        </RadzenProfileMenu>
+    </Authorized>
+</AuthorizeView>
+
+@code {
+    private static string Rol(AuthenticationState estado) =>
+        estado.User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value ?? "Sin rol";
+}

@@ -1,0 +1,121 @@
+﻿@page "/login"
+@attribute [AllowAnonymous]
+@attribute [ExcludeFromInteractiveRouting]
+@layout LayoutAutenticacion
+
+@using System.ComponentModel.DataAnnotations
+@using System.Security.Claims
+@using Microsoft.AspNetCore.Authentication
+@using Microsoft.AspNetCore.Authentication.Cookies
+
+@inject IAuthApi AuthApi
+@inject NavigationManager Nav
+
+<PageTitle>Iniciar sesión — SAV</PageTitle>
+
+<RadzenCard Variant="Variant.Outlined" class="rz-p-6">
+    <h1 class="rz-text-h5 rz-mt-0 rz-mb-4">Iniciar sesión</h1>
+
+    @if (error is not null)
+    {
+        <RadzenAlert AlertStyle="AlertStyle.Danger" Variant="Variant.Flat"
+                     Shade="Shade.Lighter" AllowClose="false" class="rz-mb-4">
+            @error
+        </RadzenAlert>
+    }
+
+    <EditForm Model="Entrada" FormName="login" OnValidSubmit="IniciarSesionAsync" method="post">
+        <DataAnnotationsValidator />
+
+        <div class="rz-mb-4">
+            <label for="email" class="rz-text-body2 sav-label">Correo electrónico</label>
+            <InputText id="email" @bind-Value="Entrada.Email" class="rz-textbox sav-input"
+                       autocomplete="username" autofocus />
+            <ValidationMessage For="() => Entrada.Email" class="sav-error" />
+        </div>
+
+        <div class="rz-mb-5">
+            <label for="password" class="rz-text-body2 sav-label">Contraseña</label>
+            <InputText id="password" type="password" @bind-Value="Entrada.Password"
+                       class="rz-textbox sav-input" autocomplete="current-password" />
+            <ValidationMessage For="() => Entrada.Password" class="sav-error" />
+        </div>
+
+        <RadzenButton ButtonType="ButtonType.Submit" Text="Entrar"
+                      Icon="login" Style="width:100%" />
+    </EditForm>
+</RadzenCard>
+
+@code {
+    [CascadingParameter] private HttpContext HttpContext { get; set; } = default!;
+    [SupplyParameterFromForm] private EntradaLogin Entrada { get; set; } = new();
+    [SupplyParameterFromQuery] private string? ReturnUrl { get; set; }
+
+    private string? error;
+
+    protected override void OnInitialized()
+    {
+        if (HttpContext.User.Identity?.IsAuthenticated == true)
+            Nav.NavigateTo(DestinoSeguro(), forceLoad: true);
+    }
+
+    private async Task IniciarSesionAsync()
+    {
+        error = null;
+
+        var resultado = await AuthApi.LoginAsync(
+            new LoginDto { Email = Entrada.Email, Password = Entrada.Password });
+
+        if (!resultado.Exito || resultado.Datos is null)
+        {
+            error = resultado.Mensaje ?? "No se pudo iniciar sesión.";
+            return;
+        }
+
+        var datos = resultado.Datos;
+
+        var claims = new List<Claim>
+        {
+            new(ClaimTypes.NameIdentifier, datos.UsuarioId.ToString()),
+            new(ClaimTypes.Name, datos.Usuario),
+            new(ClaimTypes.Role, datos.Rol),
+            new(ClaimsSav.Token, datos.Token)
+        };
+
+        if (datos.VendedorId is int vendedorId)
+            claims.Add(new Claim(ClaimsSav.VendedorId, vendedorId.ToString()));
+
+        if (datos.ClienteId is int clienteId)
+            claims.Add(new Claim(ClaimsSav.ClienteId, clienteId.ToString()));
+
+        var identidad = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+
+        // El JWT viene con expiración en UTC; tras el viaje por JSON pierde el Kind.
+        var expira = new DateTimeOffset(DateTime.SpecifyKind(datos.Expira, DateTimeKind.Utc));
+
+        await HttpContext.SignInAsync(
+            CookieAuthenticationDefaults.AuthenticationScheme,
+            new ClaimsPrincipal(identidad),
+            new AuthenticationProperties { IsPersistent = false, ExpiresUtc = expira });
+
+        Nav.NavigateTo(DestinoSeguro(), forceLoad: true);
+    }
+
+    /// <summary>Evita redirecciones abiertas: solo se admiten rutas locales.</summary>
+    private string DestinoSeguro()
+    {
+        if (string.IsNullOrWhiteSpace(ReturnUrl)) return "/";
+        if (!ReturnUrl.StartsWith('/') || ReturnUrl.StartsWith("//")) return "/";
+        return ReturnUrl;
+    }
+
+    private sealed class EntradaLogin
+    {
+        [Required(ErrorMessage = "El correo es obligatorio.")]
+        [EmailAddress(ErrorMessage = "El formato del correo no es válido.")]
+        public string Email { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "La contraseña es obligatoria.")]
+        public string Password { get; set; } = string.Empty;
+    }
+}

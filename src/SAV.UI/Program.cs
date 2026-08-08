@@ -1,23 +1,73 @@
+using System.Globalization;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Localization;
+using Radzen;
 using SAV.UI.Components;
+using SAV.UI.Services.Api;
+using SAV.UI.Services.Auth;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
+// ---------- Radzen ----------
+builder.Services.AddRadzenComponents();
+builder.Services.AddRadzenCookieThemeService(options =>
+{
+    options.Name = "SAV.Theme";
+    options.Duration = TimeSpan.FromDays(365);
+});
+
+// ---------- Autenticación ----------
+// La cookie transporta el JWT como claim: cifrada por Data Protection y HttpOnly,
+// el token nunca queda accesible desde el navegador.
+var duracionSesion = TimeSpan.FromMinutes(
+    builder.Configuration.GetValue<int?>("Sesion:DuracionMinutos") ?? 120);
+
+builder.Services.AddCascadingAuthenticationState();
+builder.Services
+    .AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+    .AddCookie(options =>
+    {
+        options.Cookie.Name = "SAV.Auth";
+        options.Cookie.HttpOnly = true;
+        options.Cookie.SameSite = SameSiteMode.Lax;
+        options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+        options.LoginPath = "/login";
+        options.LogoutPath = "/logout";
+        options.AccessDeniedPath = "/acceso-denegado";
+        options.ExpireTimeSpan = duracionSesion;
+        options.SlidingExpiration = false; // El JWT no se renueva, así que la cookie tampoco.
+    });
+builder.Services.AddAuthorization();
+
+// ---------- Acceso a la API ----------
+builder.Services.AddScoped<ITokenAccessor, TokenAccessor>();
+builder.Services.AddApiClients(builder.Configuration, builder.Environment);
+
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+// ---------- Cultura ----------
+var culturas = new[] { new CultureInfo("es-ES") };
+app.UseRequestLocalization(new RequestLocalizationOptions
+{
+    DefaultRequestCulture = new RequestCulture(culturas[0]),
+    SupportedCultures = culturas,
+    SupportedUICultures = culturas
+});
+
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Error", createScopeForErrors: true);
-    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
+
 app.UseStatusCodePagesWithReExecute("/not-found", createScopeForStatusCodePages: true);
 app.UseHttpsRedirection();
 
+app.UseAuthentication();
+app.UseAuthorization();
 app.UseAntiforgery();
 
 app.MapStaticAssets();

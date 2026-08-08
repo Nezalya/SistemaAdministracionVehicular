@@ -1,0 +1,17 @@
+﻿@page "/acceso-denegado"
+
+<PageTitle>Acceso denegado — SAV</PageTitle>
+
+<RadzenStack AlignItems="AlignItems.Center" Gap="1rem" class="rz-p-12">
+    <RadzenIcon Icon="lock" Style="font-size:3rem" />
+    <h1 class="rz-text-h5 rz-my-0">No tienes permiso para ver esta página</h1>
+    <RadzenText TextStyle="TextStyle.Body1" class="rz-my-0 rz-text-align-center">
+        Tu usuario no dispone del rol necesario. Si crees que es un error,
+        contacta con el administrador del sistema.
+    </RadzenText>
+    <RadzenButton Text="Volver al inicio" Icon="home" Click="@(() => Nav.NavigateTo("/"))" />
+</RadzenStack>
+
+@code {
+    [Inject] private NavigationManager Nav { get; set; } = default!;
+}

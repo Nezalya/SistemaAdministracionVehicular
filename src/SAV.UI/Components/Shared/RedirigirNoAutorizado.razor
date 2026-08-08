@@ -1,0 +1,23 @@
+﻿@inject NavigationManager Nav
+
+@code {
+    [Parameter, EditorRequired]
+    public AuthenticationState Estado { get; set; } = default!;
+
+    protected override void OnInitialized()
+    {
+        // Autenticado pero sin el rol necesario: no tiene sentido volver a pedirle la contraseña.
+        if (Estado.User.Identity?.IsAuthenticated == true)
+        {
+            Nav.NavigateTo("/acceso-denegado", replace: true);
+            return;
+        }
+
+        // Anónimo: al login, recordando a dónde quería ir.
+        var destino = Uri.EscapeDataString(new Uri(Nav.Uri).PathAndQuery);
+
+        // forceLoad es imprescindible: la página de login se renderiza de forma
+        // estática y necesita una petición HTTP real, no una navegación del circuito.
+        Nav.NavigateTo($"/login?returnUrl={destino}", forceLoad: true);
+    }
+}
