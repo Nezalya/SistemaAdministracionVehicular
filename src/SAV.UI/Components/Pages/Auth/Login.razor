@@ -10,6 +10,7 @@
 
 @inject IAuthApi AuthApi
 @inject NavigationManager Nav
+@inject ControlIntentosLogin Intentos
 
 <PageTitle>Iniciar sesión — SAV</PageTitle>
 
@@ -137,11 +138,24 @@
 
     private async Task AutenticarAsync()
     {
+        var origen = HttpContext.Connection.RemoteIpAddress?.ToString();
+
+        // Tras varios fallos seguidos contra la misma cuenta desde el mismo origen
+        // se deja de consultar a la API: no se le da al atacante ni la señal de si
+        // la contraseña iba bien encaminada.
+        if (Intentos.EstaBloqueado(origen, Entrada.Email))
+        {
+            error = $"Demasiados intentos fallidos. Espera {Intentos.TiempoDeEspera.TotalMinutes:0} "
+                  + "minutos antes de volver a intentarlo.";
+            return;
+        }
+
         var resultado = await AuthApi.LoginAsync(
             new LoginDto { Email = Entrada.Email, Password = Entrada.Password });
 
         if (!resultado.Exito || resultado.Datos is null)
         {
+            Intentos.RegistrarFallo(origen, Entrada.Email);
             error = resultado.Mensaje ?? "No se pudo iniciar sesión.";
             return;
         }
@@ -178,6 +192,9 @@
 
         if (datos.ClienteId is int clienteId)
             claims.Add(new Claim(ClaimsSav.ClienteId, clienteId.ToString()));
+
+        // Credenciales correctas: se borra el historial de fallos de esta cuenta.
+        Intentos.RegistrarExito(origen, Entrada.Email);
 
         var identidad = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
 

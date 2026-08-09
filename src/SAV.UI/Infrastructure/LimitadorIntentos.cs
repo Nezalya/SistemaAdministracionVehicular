@@ -3,19 +3,22 @@ using System.Threading.RateLimiting;
 namespace SAV.UI.Infrastructure;
 
 /// <summary>
-/// Limita los intentos de inicio de sesión por dirección IP.
+/// Freno grueso contra el envío masivo de formularios de acceso.
 /// </summary>
 /// <remarks>
-/// El formulario de login se envía a esta aplicación, que a su vez consulta a la
-/// API. Sin este freno, un atacante puede probar contraseñas al ritmo que aguante
-/// el servidor. El resto de peticiones no se limita: la aplicación es de uso
-/// interno y estrangularlas solo estorbaría.
+/// Protege al servidor de una avalancha de peticiones desde un mismo origen, no
+/// del descubrimiento de contraseñas: de eso se ocupa <see cref="Services.Auth.ControlIntentosLogin"/>,
+/// que cuenta fallos por IP y cuenta.
+///
+/// El límite es holgado a propósito. Todo el personal de un concesionario suele
+/// salir a Internet por la misma IP pública, así que un umbral estrecho dejaría
+/// fuera a empleados legítimos que solo coincidieron en la hora de entrada.
 /// </remarks>
 public static class LimitadorIntentos
 {
     public const string Politica = "login";
 
-    private const int IntentosPermitidos = 5;
+    private const int IntentosPermitidos = 30;
     private static readonly TimeSpan Ventana = TimeSpan.FromMinutes(1);
 
     public static IServiceCollection AddLimitadorDeIntentos(this IServiceCollection services)

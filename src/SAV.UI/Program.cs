@@ -63,7 +63,11 @@ builder.Services
 builder.Services.AddAuthorization();
 
 // ---------- Defensa del inicio de sesión ----------
+// Dos capas: el limitador frena avalanchas de peticiones; el control de intentos
+// bloquea el descubrimiento de contraseñas contando fallos por IP y cuenta.
 builder.Services.AddLimitadorDeIntentos();
+builder.Services.AddMemoryCache();
+builder.Services.AddSingleton<ControlIntentosLogin>();
 
 // ---------- Servicios de la UI ----------
 builder.Services.AddScoped<ITokenAccessor, TokenAccessor>();
