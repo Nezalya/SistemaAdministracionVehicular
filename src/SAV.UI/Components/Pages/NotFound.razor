@@ -8,29 +8,38 @@
 
 <PaginaMensaje Codigo="404"
                Titulo="Esta página se salió de la carretera"
-               Descripcion="La dirección que has abierto no existe, cambió de sitio o el enlace estaba mal escrito. No es culpa tuya: revisa la ruta o vuelve al inicio.">
+               Descripcion="La dirección que has abierto no existe, cambió de sitio o el enlace estaba mal escrito. No es culpa tuya: Revisa la ruta o vuelve al inicio.">
     <Acciones>
         <RadzenButton Text="Volver al inicio" Icon="home"
                       Click="@(() => Nav.NavigateTo("/", forceLoad: true))" />
-        <RadzenButton Text="Ir atrás" Icon="arrow_back" Variant="Variant.Outlined"
-                      ButtonStyle="ButtonStyle.Base" Click="Atras" />
+        <RadzenButton Text="Volver atrás" Icon="arrow_back" Variant="Variant.Outlined"
+                      ButtonStyle="ButtonStyle.Base" Click="VolverAtras" />
     </Acciones>
 </PaginaMensaje>
 
 @code {
     [Inject] private IJSRuntime Js { get; set; } = default!;
 
-    private async Task Atras()
+    /// <summary>
+    /// Vuelve a la página anterior del historial. Si el circuito todavía no es
+    /// interactivo —o no hay historial previo— lleva al inicio, de modo que el
+    /// botón nunca se quede sin hacer nada.
+    /// </summary>
+    private async Task VolverAtras()
     {
-        // history.back() solo está disponible cuando el circuito es interactivo;
-        // si no lo es, el botón simplemente lleva al inicio.
         try
         {
-            await Js.InvokeVoidAsync("history.back");
+            if (await Js.InvokeAsync<bool>("sav.volverAtras")) return;
+        }
+        catch (JSException)
+        {
+            // El script todavía no está disponible: se usa la ruta alternativa.
         }
         catch (InvalidOperationException)
         {
-            Nav.NavigateTo("/", forceLoad: true);
+            // El circuito aún no es interactivo (renderizado estático).
         }
+
+        Nav.NavigateTo("/", forceLoad: true);
     }
 }

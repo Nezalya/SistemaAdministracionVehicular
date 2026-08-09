@@ -52,7 +52,9 @@ builder.Services
         options.Cookie.HttpOnly = true;
         options.Cookie.SameSite = SameSiteMode.Lax;
         options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
-        options.LoginPath = "/login";
+        // Quien llega sin sesión aterriza en la presentación del concesionario,
+        // que explica qué es SAV y da paso al formulario de acceso.
+        options.LoginPath = "/bienvenida";
         options.LogoutPath = "/logout";
         options.AccessDeniedPath = "/acceso-denegado";
         options.ExpireTimeSpan = duracionSesion;

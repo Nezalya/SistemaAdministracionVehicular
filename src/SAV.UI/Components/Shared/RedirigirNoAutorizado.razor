@@ -13,11 +13,11 @@
             return;
         }
 
-        // Anónimo: al login, recordando a dónde quería ir.
+        // Anónimo: a la presentación, recordando a dónde quería ir.
         var destino = Uri.EscapeDataString(new Uri(Nav.Uri).PathAndQuery);
 
-        // forceLoad es imprescindible: la página de login se renderiza de forma
-        // estática y necesita una petición HTTP real, no una navegación del circuito.
-        Nav.NavigateTo($"/login?returnUrl={destino}", forceLoad: true);
+        // forceLoad es imprescindible: las páginas de acceso se renderizan de forma
+        // estática y necesitan una petición HTTP real, no una navegación del circuito.
+        Nav.NavigateTo($"/bienvenida?returnUrl={destino}", forceLoad: true);
     }
 }

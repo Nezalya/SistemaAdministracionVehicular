@@ -12,6 +12,9 @@ public static class CabecerasSeguridad
     /// de scripts, imágenes y conexiones, impide incrustar la aplicación en otro
     /// sitio y bloquea plugins y cambios de &lt;base&gt;.
     /// </summary>
+    /// <summary>Origen del mapa incrustado en la página de bienvenida.</summary>
+    private const string OrigenMapa = "https://www.openstreetmap.org";
+
     private const string PoliticaContenido =
         "default-src 'self'; " +
         "script-src 'self' 'unsafe-inline'; " +
@@ -19,6 +22,8 @@ public static class CabecerasSeguridad
         "img-src 'self' data:; " +
         "font-src 'self'; " +
         "connect-src 'self'; " +
+        // Solo se admite incrustar el mapa de OpenStreetMap; ningún otro origen.
+        "frame-src " + OrigenMapa + "; " +
         "frame-ancestors 'self'; " +
         "base-uri 'self'; " +
         "form-action 'self'; " +
