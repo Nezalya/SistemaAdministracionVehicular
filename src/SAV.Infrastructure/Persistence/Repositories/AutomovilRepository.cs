@@ -92,17 +92,29 @@ public class AutomovilRepository : BaseRepository<Automovil>, IAutomovilReposito
         .Include(a => a.ServicioOficialUbicacion)
         .AsQueryable();
 
+        // La marca llega de un desplegable con los nombres existentes, así que se
+        // compara completa. El modelo y el bastidor se escriben a mano: exigir el
+        // valor exacto hacía que una búsqueda parcial no devolviera nada.
         if (!string.IsNullOrWhiteSpace(filtro.Marca))
-            query = query.Where(a => a.Modelo.Marca.Nombre == filtro.Marca);
+        {
+            var marca = filtro.Marca.Trim();
+            query = query.Where(a => a.Modelo.Marca.Nombre == marca);
+        }
 
         if (!string.IsNullOrWhiteSpace(filtro.Modelo))
-            query = query.Where(a => a.Modelo.Nombre == filtro.Modelo);
+        {
+            var modelo = filtro.Modelo.Trim();
+            query = query.Where(a => a.Modelo.Nombre.Contains(modelo));
+        }
 
         if (filtro.Estado.HasValue)
             query = query.Where(a => a.Estado == filtro.Estado.Value);
 
         if (!string.IsNullOrWhiteSpace(filtro.NumBastidor))
-            query = query.Where(a => a.NumBastidor == filtro.NumBastidor);
+        {
+            var bastidor = filtro.NumBastidor.Trim();
+            query = query.Where(a => a.NumBastidor.Contains(bastidor));
+        }
 
         if (filtro.ServicioOficialUbicacionId.HasValue)
             query = query.Where(a => a.ServicioOficialUbicacionId == filtro.ServicioOficialUbicacionId.Value);

@@ -26,8 +26,10 @@
 <section class="sav-filtros" aria-label="Filtros de búsqueda">
     <div class="sav-filtro">
         <label class="sav-filtro__etiqueta" for="f-bastidor">Nº de bastidor</label>
-        <RadzenTextBox @bind-Value="filtroBastidor" Name="f-bastidor" Placeholder="SAV1234…"
-                       class="sav-input" @oninput="@(e => filtroBastidor = e.Value?.ToString())" />
+        @* Solo @bind-Value: añadir además @oninput duplicaba el enlace sobre el
+           mismo campo y las dos vías competían por escribir el valor. *@
+        <RadzenTextBox @bind-Value="filtroBastidor" Name="f-bastidor" Placeholder="Parte del bastidor…"
+                       class="sav-input" />
     </div>
 
     <div class="sav-filtro">
@@ -266,10 +268,18 @@ else
         cargando = false;
     }
 
+    /// <summary>
+    /// Vuelve a la primera página y relanza la consulta con los filtros actuales.
+    /// </summary>
+    /// <remarks>
+    /// FirstPage necesita forceReload: sin él, estando ya en la primera página no
+    /// dispara LoadData y el botón «Buscar» no producía ningún efecto.
+    /// </remarks>
     private async Task AplicarFiltrosAsync()
     {
         paginaActual = 1;
-        if (rejilla is not null) await rejilla.FirstPage();
+
+        if (rejilla is not null) await rejilla.FirstPage(true);
         else await ConsultarAsync();
     }
 
