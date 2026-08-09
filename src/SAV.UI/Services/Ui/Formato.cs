@@ -11,7 +11,7 @@ public static class Formato
 {
     /// <summary>Importe con separador de miles y dos decimales.</summary>
     public static string Moneda(decimal valor)
-        => valor.ToString("N2", CultureInfo.CurrentCulture) + " €";
+        => valor.ToString("N2", CultureInfo.CurrentCulture) + " $";
 
     public static string Moneda(decimal? valor)
         => valor.HasValue ? Moneda(valor.Value) : "—";

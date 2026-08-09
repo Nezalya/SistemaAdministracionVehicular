@@ -16,6 +16,15 @@ html, body {
     margin: 0;
 }
 
+/* El tema de Radzen solo tipografía sus propios componentes. Sin esto, todo
+   elemento propio (títulos, párrafos, tablas de datos) caía en la serif por
+   defecto del navegador y rompía la coherencia visual de la aplicación. */
+body {
+    font-family: var(--rz-text-font-family, Roboto, "Segoe UI", system-ui, -apple-system, sans-serif);
+    color: var(--rz-text-color, rgba(0, 0, 0, .87));
+    -webkit-font-smoothing: antialiased;
+}
+
 h1, h2, h3, h4 {
     font-weight: 500;
 }
@@ -34,6 +43,25 @@ h1, h2, h3, h4 {
 :focus-visible {
     outline: 2px solid var(--rz-primary, #4340D2);
     outline-offset: 2px;
+}
+
+/* FocusOnNavigate (Routes.razor) lleva el foco al <h1> de cada página tras
+   navegar, para que un lector de pantalla anuncie la sección. Blazor le pone
+   tabindex="-1" y el anillo de foco acababa dibujando un recuadro alrededor del
+   título, que desaparecía al hacer clic en cualquier sitio.
+
+   Un encabezado no es interactivo: el recuadro sugería lo contrario. Se retira
+   solo ahí. El foco sigue moviéndose y anunciándose, así que la navegación
+   asistida no pierde nada.
+
+   La regla se limita a los encabezados a propósito: Radzen también usa
+   tabindex="-1" en los enlaces del menú lateral, que sí son interactivos y
+   deben conservar su indicador. */
+h1[tabindex="-1"]:focus,
+h1[tabindex="-1"]:focus-visible,
+h2[tabindex="-1"]:focus,
+h2[tabindex="-1"]:focus-visible {
+    outline: none;
 }
 
 /* ---------------------------------------------------------------- Layout */
@@ -616,4 +644,397 @@ h1, h2, h3, h4 {
 .sav-extra__nombre {
     flex: 1;
     cursor: pointer;
+}
+
+/* ------------------------------------------- Pantallas de mensaje a pantalla completa */
+
+.sav-mensaje {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 2rem 1.5rem;
+    background: var(--rz-base-200, #eeeeee);
+}
+
+.sav-mensaje__panel {
+    width: 100%;
+    max-width: 34rem;
+    text-align: center;
+}
+
+.sav-mensaje__marca {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: .75rem;
+    margin-bottom: 1.25rem;
+}
+
+.sav-mensaje__logo {
+    font-size: 3.5rem;
+    color: var(--rz-primary, #4340D2);
+}
+
+.sav-mensaje__codigo {
+    font-size: 3.25rem;
+    font-weight: 500;
+    line-height: 1;
+    letter-spacing: -.02em;
+    color: var(--rz-text-disabled-color, rgba(0, 0, 0, .38));
+    font-variant-numeric: tabular-nums;
+}
+
+.sav-mensaje__titulo {
+    margin: 0 0 .75rem;
+    font-size: 1.5rem;
+    line-height: 1.3;
+}
+
+.sav-mensaje__descripcion {
+    margin: 0 auto;
+    max-width: 46ch;
+    color: var(--rz-text-secondary-color, rgba(0, 0, 0, .6));
+    font-size: .9375rem;
+    line-height: 1.6;
+}
+
+.sav-mensaje__detalle:not(:empty) {
+    margin-top: 1.25rem;
+}
+
+.sav-mensaje__referencia {
+    margin: 0;
+    font-size: .8125rem;
+    color: var(--rz-text-secondary-color, rgba(0, 0, 0, .6));
+}
+
+.sav-mensaje__referencia code {
+    display: inline-block;
+    margin-left: .35rem;
+    padding: .15rem .45rem;
+    border: var(--sav-borde);
+    border-radius: var(--sav-radio);
+    background: var(--rz-base-background-color, #fff);
+    font-size: .75rem;
+    word-break: break-all;
+}
+
+.sav-mensaje__acciones {
+    display: flex;
+    gap: .5rem;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-top: 1.75rem;
+}
+
+.sav-mensaje__pie {
+    margin: 2.5rem 0 0;
+    font-size: .75rem;
+    letter-spacing: .04em;
+    color: var(--rz-text-disabled-color, rgba(0, 0, 0, .38));
+}
+
+@media (max-width: 480px) {
+    .sav-mensaje__logo {
+        font-size: 2.75rem;
+    }
+
+    .sav-mensaje__codigo {
+        font-size: 2.5rem;
+    }
+
+    .sav-mensaje__titulo {
+        font-size: 1.25rem;
+    }
+
+    .sav-mensaje__acciones > * {
+        flex: 1 1 auto;
+    }
+}
+
+/* ============================================================
+   Tarjeta de autenticación e inputs con icono
+   ============================================================ */
+
+.sav-auth__logo-container {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 4.5rem;
+    height: 4.5rem;
+    margin-bottom: .75rem;
+    border-radius: 50%;
+    background: var(--rz-primary-lighter, rgba(67, 64, 210, .12));
+}
+
+.sav-auth__logo {
+    font-size: 2.25rem;
+    color: var(--rz-primary, #4340D2);
+}
+
+.sav-auth__nombre {
+    margin: 0;
+    font-size: 2rem;
+    font-weight: 700;
+    letter-spacing: -.01em;
+    line-height: 1.1;
+}
+
+.sav-auth__subtitulo {
+    margin: .25rem 0 0;
+    font-size: .875rem;
+    color: var(--rz-text-secondary-color, rgba(0, 0, 0, .6));
+}
+
+.sav-auth__card {
+    padding: 2rem 1.75rem;
+    border: var(--sav-borde);
+    border-radius: 12px;
+    background: var(--rz-base-background-color, #fff);
+    box-shadow: 0 10px 30px rgba(16, 24, 40, .08), 0 2px 6px rgba(16, 24, 40, .04);
+}
+
+.sav-auth__bienvenida {
+    margin-bottom: 1.5rem;
+}
+
+.sav-auth__titulo {
+    margin: 0;
+    font-size: 1.375rem;
+    font-weight: 600;
+}
+
+.sav-auth__intro {
+    margin: .25rem 0 0;
+    font-size: .875rem;
+    color: var(--rz-text-secondary-color, rgba(0, 0, 0, .6));
+}
+
+.sav-auth__error {
+    display: flex;
+    align-items: flex-start;
+    gap: .6rem;
+    margin-bottom: 1.25rem;
+    padding: .75rem .9rem;
+    border-radius: var(--sav-radio);
+    background: var(--rz-danger-lighter, rgba(183, 27, 27, .12));
+    color: var(--rz-danger, #b71b1b);
+    font-size: .875rem;
+    line-height: 1.45;
+}
+
+.sav-auth__pie {
+    margin: 1.5rem 0 0;
+    text-align: center;
+    font-size: .8125rem;
+}
+
+.sav-auth__pie a {
+    color: var(--rz-primary, #4340D2);
+    text-decoration: none;
+}
+
+.sav-auth__pie a:hover {
+    text-decoration: underline;
+}
+
+/* ---- Input con icono integrado ---- */
+
+.sav-input-wrapper {
+    position: relative;
+    display: block;
+}
+
+.sav-input-icon {
+    position: absolute;
+    top: 50%;
+    left: .75rem;
+    transform: translateY(-50%);
+    pointer-events: none;
+    font-size: 1.25rem;
+    color: var(--rz-text-secondary-color, rgba(0, 0, 0, .54));
+}
+
+.sav-input--has-icon {
+    padding-left: 2.6rem;
+}
+
+.sav-input-wrapper .sav-input {
+    height: 2.85rem;
+    border-radius: var(--sav-radio);
+    transition: border-color var(--sav-transicion), box-shadow var(--sav-transicion);
+}
+
+.sav-input-wrapper .sav-input:focus {
+    outline: none;
+    border-color: var(--rz-primary, #4340D2);
+    box-shadow: 0 0 0 3px var(--rz-primary-lighter, rgba(67, 64, 210, .18));
+}
+
+/* ============================================================
+   Página de bienvenida (presentación del concesionario)
+   ============================================================ */
+
+.sav-landing {
+    display: flex;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 3rem 1.5rem;
+    background: var(--rz-base-200, #eeeeee);
+}
+
+.sav-landing__contenido {
+    width: 100%;
+    max-width: 52rem;
+}
+
+.sav-landing__cabecera {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.sav-landing__sistema {
+    margin: 0 0 .35rem;
+    font-size: .75rem;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--rz-text-secondary-color, rgba(0, 0, 0, .6));
+}
+
+.sav-landing__titulo {
+    margin: 0;
+    font-size: 2.25rem;
+    font-weight: 700;
+    letter-spacing: -.02em;
+    line-height: 1.15;
+}
+
+.sav-landing__lema {
+    margin: .35rem 0 0;
+    color: var(--rz-text-secondary-color, rgba(0, 0, 0, .6));
+    font-size: .9375rem;
+}
+
+.sav-landing__panel {
+    padding: 1.75rem;
+    margin-bottom: 1.25rem;
+    border: var(--sav-borde);
+    border-radius: 12px;
+    background: var(--rz-base-background-color, #fff);
+    box-shadow: 0 4px 16px rgba(16, 24, 40, .05);
+}
+
+.sav-landing__texto {
+    margin: 0 0 1rem;
+    font-size: .9375rem;
+    line-height: 1.7;
+    color: var(--rz-text-color, rgba(0, 0, 0, .82));
+}
+
+.sav-landing__texto:last-of-type {
+    margin-bottom: 0;
+}
+
+.sav-landing__capacidades {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: .75rem;
+    list-style: none;
+    margin: 1.5rem 0 0;
+    padding: 0;
+}
+
+.sav-landing__capacidades li {
+    display: flex;
+    align-items: center;
+    gap: .6rem;
+    padding: .7rem .85rem;
+    border-radius: var(--sav-radio);
+    background: var(--rz-base-200, #eeeeee);
+    font-size: .875rem;
+}
+
+.sav-landing__capacidades .rzi {
+    font-size: 1.25rem;
+    color: var(--rz-primary, #4340D2);
+}
+
+.sav-landing__subtitulo {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    margin: 0 0 .5rem;
+    font-size: 1.05rem;
+    font-weight: 600;
+}
+
+.sav-landing__subtitulo .rzi {
+    color: var(--rz-primary, #4340D2);
+}
+
+.sav-landing__direccion {
+    margin: 0 0 1.25rem;
+    font-size: .875rem;
+    line-height: 1.6;
+    color: var(--rz-text-secondary-color, rgba(0, 0, 0, .6));
+}
+
+.sav-mapa {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    border: var(--sav-borde);
+    border-radius: var(--sav-radio);
+    overflow: hidden;
+    background: var(--rz-base-200, #eeeeee);
+}
+
+.sav-mapa__marco {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    border: 0;
+}
+
+.sav-landing__credito {
+    margin: .5rem 0 0;
+    font-size: .75rem;
+    color: var(--rz-text-disabled-color, rgba(0, 0, 0, .38));
+}
+
+.sav-landing__acciones {
+    display: flex;
+    justify-content: center;
+    margin: 2rem 0 0;
+}
+
+.sav-landing__aviso {
+    margin: 2.5rem 0 0;
+    text-align: center;
+    font-size: .75rem;
+    color: var(--rz-text-disabled-color, rgba(0, 0, 0, .38));
+}
+
+@media (max-width: 640px) {
+    .sav-landing {
+        padding: 2rem 1rem;
+    }
+
+    .sav-landing__panel {
+        padding: 1.25rem;
+    }
+
+    .sav-landing__titulo {
+        font-size: 1.75rem;
+    }
+
+    .sav-mapa {
+        aspect-ratio: 4 / 3;
+    }
+
+    .sav-landing__acciones > * {
+        width: 100%;
+    }
 }

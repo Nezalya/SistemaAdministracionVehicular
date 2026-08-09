@@ -10,39 +10,61 @@
 
 @inject IAuthApi AuthApi
 @inject NavigationManager Nav
+@inject ControlIntentosLogin Intentos
 
 <PageTitle>Iniciar sesión — SAV</PageTitle>
 
-<RadzenCard Variant="Variant.Outlined" class="rz-p-6">
-    <h1 class="rz-text-h5 rz-mt-0 rz-mb-4">Iniciar sesión</h1>
+<div class="sav-auth__card">
+    <header class="sav-auth__bienvenida">
+        <h1 class="sav-auth__titulo">Bienvenido</h1>
+        <p class="sav-auth__intro">Introduce tus credenciales para acceder al sistema.</p>
+    </header>
+
+    @if (Expirada && error is null)
+    {
+        <RadzenAlert AlertStyle="AlertStyle.Info" Variant="Variant.Flat"
+                     Shade="Shade.Lighter" AllowClose="false" class="rz-mb-4">
+            Tu sesión caducó por seguridad. Vuelve a identificarte para continuar.
+        </RadzenAlert>
+    }
 
     @if (error is not null)
     {
-        <RadzenAlert AlertStyle="AlertStyle.Danger" Variant="Variant.Flat"
-                     Shade="Shade.Lighter" AllowClose="false" class="rz-mb-4">
-            @error
-        </RadzenAlert>
+        <div class="sav-auth__error" role="alert">
+            <RadzenIcon Icon="error_outline" />
+            <span>@error</span>
+        </div>
     }
 
     <EditForm Model="Entrada" FormName="login" OnValidSubmit="IniciarSesionAsync" method="post">
         <DataAnnotationsValidator />
 
         <div class="rz-mb-4">
-            <label for="email" class="rz-text-body2 sav-label">Correo electrónico</label>
-            <InputText id="email" @bind-Value="Entrada.Email" class="rz-textbox sav-input"
-                       autocomplete="username" autofocus />
+            <label for="email" class="sav-label">Correo electrónico</label>
+            <div class="sav-input-wrapper">
+                <RadzenIcon Icon="mail_outline" class="sav-input-icon" />
+                <InputText id="email" @bind-Value="Entrada.Email"
+                           class="rz-textbox sav-input sav-input--has-icon"
+                           placeholder="nombre@ejemplo.com"
+                           autocomplete="username" autofocus />
+            </div>
             <ValidationMessage For="() => Entrada.Email" class="sav-error" />
         </div>
 
         <div class="rz-mb-4">
-            <label for="password" class="rz-text-body2 sav-label">Contraseña</label>
-            <InputText id="password" type="password" @bind-Value="Entrada.Password"
-                       class="rz-textbox sav-input" autocomplete="current-password" />
+            <label for="password" class="sav-label">Contraseña</label>
+            <div class="sav-input-wrapper">
+                <RadzenIcon Icon="lock_outline" class="sav-input-icon" />
+                <InputText id="password" type="password" @bind-Value="Entrada.Password"
+                           class="rz-textbox sav-input sav-input--has-icon"
+                           placeholder="••••••••"
+                           autocomplete="current-password" />
+            </div>
             <ValidationMessage For="() => Entrada.Password" class="sav-error" />
         </div>
 
         <div class="rz-mb-5">
-            <span class="rz-text-body2 sav-label">Iniciar sesión como</span>
+            <span class="sav-label">Iniciar sesión como</span>
 
             <div class="sav-roles">
                 <input type="radio" id="rol-vendedor" name="Entrada.Rol" value="Vendedor"
@@ -63,15 +85,29 @@
             <ValidationMessage For="() => Entrada.Rol" class="sav-error" />
         </div>
 
-        <RadzenButton ButtonType="ButtonType.Submit" Text="Entrar"
-                      Icon="login" Style="width:100%" />
+        <RadzenButton ButtonType="ButtonType.Submit" Text="Entrar" Icon="login"
+                      Size="ButtonSize.Large" Style="width:100%"
+                      IsBusy="isSubmitting" BusyText="Comprobando…" Disabled="isSubmitting" />
     </EditForm>
-</RadzenCard>
+
+    <p class="sav-auth__pie">
+        <a href="/bienvenida">¿Qué es SAV y quién lo usa?</a>
+    </p>
+</div>
 
 @code {
     [CascadingParameter] private HttpContext HttpContext { get; set; } = default!;
     [SupplyParameterFromForm] private EntradaLogin Entrada { get; set; } = default!;
     [SupplyParameterFromQuery] private string? ReturnUrl { get; set; }
+
+    /// <summary>
+    /// Marca la autenticación en curso. El formulario se renderiza de forma estática,
+    /// así que evita reentrar en el manejador mientras se consulta a la API.
+    /// </summary>
+    private bool isSubmitting;
+
+    /// <summary>Llega desde /sesion-expirada para explicar por qué se cerró la sesión.</summary>
+    [SupplyParameterFromQuery(Name = "expirada")] private bool Expirada { get; set; }
 
     private string? error;
 
@@ -85,13 +121,41 @@
 
     private async Task IniciarSesionAsync()
     {
+        if (isSubmitting) return;
+
+        isSubmitting = true;
         error = null;
+
+        try
+        {
+            await AutenticarAsync();
+        }
+        finally
+        {
+            isSubmitting = false;
+        }
+    }
+
+    private async Task AutenticarAsync()
+    {
+        var origen = HttpContext.Connection.RemoteIpAddress?.ToString();
+
+        // Tras varios fallos seguidos contra la misma cuenta desde el mismo origen
+        // se deja de consultar a la API: no se le da al atacante ni la señal de si
+        // la contraseña iba bien encaminada.
+        if (Intentos.EstaBloqueado(origen, Entrada.Email))
+        {
+            error = $"Demasiados intentos fallidos. Espera {Intentos.TiempoDeEspera.TotalMinutes:0} "
+                  + "minutos antes de volver a intentarlo.";
+            return;
+        }
 
         var resultado = await AuthApi.LoginAsync(
             new LoginDto { Email = Entrada.Email, Password = Entrada.Password });
 
         if (!resultado.Exito || resultado.Datos is null)
         {
+            Intentos.RegistrarFallo(origen, Entrada.Email);
             error = resultado.Mensaje ?? "No se pudo iniciar sesión.";
             return;
         }
@@ -128,6 +192,9 @@
 
         if (datos.ClienteId is int clienteId)
             claims.Add(new Claim(ClaimsSav.ClienteId, clienteId.ToString()));
+
+        // Credenciales correctas: se borra el historial de fallos de esta cuenta.
+        Intentos.RegistrarExito(origen, Entrada.Email);
 
         var identidad = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
 

@@ -1,13 +1,18 @@
 using System.Globalization;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Localization;
 using Radzen;
 using SAV.UI.Components;
+using SAV.UI.Infrastructure;
 using SAV.UI.Services.Api;
 using SAV.UI.Services.Auth;
 using SAV.UI.Services.Ui;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// No anunciar el servidor: reduce la información que se ofrece a quien sondea.
+builder.WebHost.ConfigureKestrel(opciones => opciones.AddServerHeader = false);
 
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
@@ -21,6 +26,16 @@ builder.Services.AddRadzenCookieThemeService(options =>
     options.Name = "SAV.Theme";
     options.Duration = TimeSpan.FromDays(365);
 });
+
+// ---------- Protección de datos ----------
+// Las claves cifran la cookie de sesión. Sin persistirlas se regeneran en cada
+// reinicio, invalidando todas las sesiones, y dos instancias no podrían leer
+// las cookies de la otra. Solo se persisten si se configura una ruta.
+var rutaClaves = builder.Configuration["DataProtection:RutaClaves"];
+var proteccion = builder.Services.AddDataProtection().SetApplicationName("SAV");
+
+if (!string.IsNullOrWhiteSpace(rutaClaves))
+    proteccion.PersistKeysToFileSystem(new DirectoryInfo(rutaClaves));
 
 // ---------- Autenticación ----------
 // La cookie transporta el JWT como claim: cifrada por Data Protection y HttpOnly,
@@ -37,7 +52,9 @@ builder.Services
         options.Cookie.HttpOnly = true;
         options.Cookie.SameSite = SameSiteMode.Lax;
         options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
-        options.LoginPath = "/login";
+        // Quien llega sin sesión aterriza en la presentación del concesionario,
+        // que explica qué es SAV y da paso al formulario de acceso.
+        options.LoginPath = "/bienvenida";
         options.LogoutPath = "/logout";
         options.AccessDeniedPath = "/acceso-denegado";
         options.ExpireTimeSpan = duracionSesion;
@@ -45,8 +62,16 @@ builder.Services
     });
 builder.Services.AddAuthorization();
 
+// ---------- Defensa del inicio de sesión ----------
+// Dos capas: el limitador frena avalanchas de peticiones; el control de intentos
+// bloquea el descubrimiento de contraseñas contando fallos por IP y cuenta.
+builder.Services.AddLimitadorDeIntentos();
+builder.Services.AddMemoryCache();
+builder.Services.AddSingleton<ControlIntentosLogin>();
+
 // ---------- Servicios de la UI ----------
 builder.Services.AddScoped<ITokenAccessor, TokenAccessor>();
+builder.Services.AddScoped<ControlSesion>();
 builder.Services.AddScoped<SesionUsuario>();
 builder.Services.AddScoped<AvisosUi>();
 builder.Services.AddApiClients(builder.Configuration, builder.Environment);
@@ -62,6 +87,8 @@ app.UseRequestLocalization(new RequestLocalizationOptions
     SupportedUICultures = culturas
 });
 
+app.UseCabecerasSeguridad();
+
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Error", createScopeForErrors: true);
@@ -70,6 +97,8 @@ if (!app.Environment.IsDevelopment())
 
 app.UseStatusCodePagesWithReExecute("/not-found", createScopeForStatusCodePages: true);
 app.UseHttpsRedirection();
+
+app.UseRateLimiter();
 
 app.UseAuthentication();
 app.UseAuthorization();

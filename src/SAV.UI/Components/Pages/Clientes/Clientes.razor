@@ -173,10 +173,18 @@ else
         cargando = false;
     }
 
+    /// <summary>
+    /// Vuelve a la primera página y relanza la consulta con la búsqueda actual.
+    /// </summary>
+    /// <remarks>
+    /// FirstPage necesita forceReload: sin él, estando ya en la primera página no
+    /// dispara LoadData y el botón «Buscar» no producía ningún efecto.
+    /// </remarks>
     private async Task AplicarFiltrosAsync()
     {
         paginaActual = 1;
-        if (rejilla is not null) await rejilla.FirstPage();
+
+        if (rejilla is not null) await rejilla.FirstPage(true);
         else await ConsultarAsync();
     }
 

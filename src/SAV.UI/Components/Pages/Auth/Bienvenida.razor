@@ -1,0 +1,111 @@
+@page "/bienvenida"
+@attribute [AllowAnonymous]
+@layout EmptyLayout
+
+@inject NavigationManager Nav
+
+@*
+    Presentación institucional previa al inicio de sesión. Explica qué
+    concesionario administra SAV antes de pedir credenciales. No es una
+    segunda pantalla de login: solo informa y da paso a ella.
+*@
+
+<PageTitle>NovaDrive Motors — SAV</PageTitle>
+
+<div class="sav-landing">
+    <div class="sav-landing__contenido">
+
+        <header class="sav-landing__cabecera">
+            <div class="sav-auth__logo-container">
+                <RadzenIcon Icon="directions_car" class="sav-auth__logo" />
+            </div>
+            <p class="sav-landing__sistema">SAV · Sistema de Administración Vehicular</p>
+            <h1 class="sav-landing__titulo">NovaDrive Motors</h1>
+            <p class="sav-landing__lema">Concesionario de vehículos</p>
+        </header>
+
+        <section class="sav-landing__panel">
+            <p class="sav-landing__texto">
+                <strong>NovaDrive Motors</strong> es un concesionario de vehículos cuya gestión
+                administrativa y operativa se apoya en <strong>SAV</strong>, una plataforma que
+                centraliza en un único lugar el inventario de automóviles, el catálogo de marcas
+                y modelos, la red de servicios oficiales, el equipo de ventas, la cartera de
+                clientes y el registro de operaciones.
+            </p>
+            <p class="sav-landing__texto">
+                El sistema está reservado al personal del concesionario. Cada usuario accede
+                únicamente a las funciones que su rol permite.
+            </p>
+
+            <ul class="sav-landing__capacidades">
+                <li><RadzenIcon Icon="directions_car" /><span>Inventario y stock</span></li>
+                <li><RadzenIcon Icon="menu_book" /><span>Catálogo y equipamiento</span></li>
+                <li><RadzenIcon Icon="receipt_long" /><span>Ventas y extras</span></li>
+                <li><RadzenIcon Icon="hub" /><span>Red comercial y clientes</span></li>
+            </ul>
+        </section>
+
+        <section class="sav-landing__panel">
+            <h2 class="sav-landing__subtitulo">
+                <RadzenIcon Icon="place" />
+                Dónde estamos
+            </h2>
+            <p class="sav-landing__direccion">
+                Avenida Lope de Vega, Polígono Central, Santo Domingo de Guzmán<br />
+                Distrito Nacional, 03201, República Dominicana
+            </p>
+
+            @* Mapa incrustado de OpenStreetMap: sin librerías ni claves de API. *@
+            <div class="sav-mapa">
+                <iframe class="sav-mapa__marco"
+                        title="Ubicación de NovaDrive Motors en OpenStreetMap"
+                        loading="lazy"
+                        referrerpolicy="no-referrer-when-downgrade"
+                        src="@UrlMapa"></iframe>
+            </div>
+            <p class="sav-landing__credito">Cartografía © colaboradores de OpenStreetMap</p>
+        </section>
+
+        <div class="sav-landing__acciones">
+            <RadzenButton Text="Continuar al inicio de sesión" Icon="login"
+                          Size="ButtonSize.Large" Click="IrAlLogin" />
+        </div>
+
+        <p class="sav-landing__aviso">
+            Esta página web fue desarrollada como parte de un proyecto universitario.
+        </p>
+    </div>
+</div>
+
+@code {
+    /// <summary>Se conserva para devolver al usuario a donde iba tras identificarse.</summary>
+    [SupplyParameterFromQuery(Name = "returnUrl")] private string? ReturnUrl { get; set; }
+
+    // Coordenadas de la dirección indicada, en Ensanche Naco.
+    private const string Latitud = "18.4719";
+    private const string Longitud = "-69.9297";
+
+    private static readonly string UrlMapa =
+    "https://www.openstreetmap.org/export/embed.html" +
+    "?bbox=-69.941342%2C18.472046%2C-69.921342%2C18.492046" +
+    "&layer=mapnik" +
+    "&marker=18.482046%2C-69.931342";
+
+    private void IrAlLogin()
+    {
+        var destino = DestinoSeguro();
+
+        Nav.NavigateTo(
+            string.IsNullOrEmpty(destino) ? "/login" : $"/login?returnUrl={destino}",
+            forceLoad: true);
+    }
+
+    /// <summary>Solo rutas locales, para no convertir esto en una redirección abierta.</summary>
+    private string DestinoSeguro()
+    {
+        if (string.IsNullOrWhiteSpace(ReturnUrl)) return string.Empty;
+        if (!ReturnUrl.StartsWith('/') || ReturnUrl.StartsWith("//")) return string.Empty;
+
+        return Uri.EscapeDataString(ReturnUrl);
+    }
+}

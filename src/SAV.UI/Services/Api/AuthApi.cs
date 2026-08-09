@@ -14,8 +14,8 @@ public interface IAuthApi
 
 public sealed class AuthApi : ApiClienteBase, IAuthApi
 {
-    public AuthApi(HttpClient http, ITokenAccessor tokenAccessor, ILogger<AuthApi> logger)
-        : base(http, tokenAccessor, logger) { }
+    public AuthApi(HttpClient http, ITokenAccessor tokenAccessor, ControlSesion sesion, ILogger<AuthApi> logger)
+        : base(http, tokenAccessor, sesion, logger) { }
 
     public Task<ResultadoApi<ResultadoAutenticacionDto>> LoginAsync(
         LoginDto credenciales, CancellationToken ct = default)

@@ -1,53 +1,173 @@
+@implements IDisposable
+@inject NavigationManager Nav
+
 @*
     Navegación por rol. Cada entrada se muestra solo a quien la API permite usarla,
     de modo que nadie llegue a una pantalla para recibir un 403.
+
+    El estado activo lo decide RutaActiva: gana la ruta más específica del menú
+    que encaje con la dirección actual. Sin eso, NavLink usa coincidencia por
+    prefijo y una entrada padre seguiría marcada al entrar en una hija
+    (por ejemplo, «Automóviles» permanecía activa dentro de «Alta por lote»).
 *@
 
 <nav class="sav-nav" aria-label="Navegación principal">
     <RadzenPanelMenu>
 
-        <RadzenPanelMenuItem Text="Inicio" Icon="dashboard" Path="/" Match="NavLinkMatch.All" />
+        <RadzenPanelMenuItem Text="Inicio" Icon="dashboard" Path="@RutaInicio"
+                             Match="@Coincidencia(RutaInicio)" />
 
         <AuthorizeView Roles="@Roles.AdminOVendedor">
             <RadzenPanelMenuItem Text="Inventario" Icon="directions_car" Expanded="true">
-                <RadzenPanelMenuItem Text="Automóviles" Icon="list" Path="/automoviles" />
-                <RadzenPanelMenuItem Text="Resumen de stock" Icon="inventory_2" Path="/stock" />
+                <RadzenPanelMenuItem Text="Automóviles" Icon="list" Path="@RutaAutomoviles"
+                                     Match="@Coincidencia(RutaAutomoviles)" />
+                <RadzenPanelMenuItem Text="Resumen de stock" Icon="inventory_2" Path="@RutaStock"
+                                     Match="@Coincidencia(RutaStock)" />
                 <AuthorizeView Roles="@Roles.Administrador" Context="soloAdmin">
-                    <RadzenPanelMenuItem Text="Alta por lote" Icon="library_add" Path="/automoviles/lote" />
+                    <RadzenPanelMenuItem Text="Alta por lote" Icon="library_add" Path="@RutaLote"
+                                         Match="@Coincidencia(RutaLote)" />
                 </AuthorizeView>
             </RadzenPanelMenuItem>
 
             <RadzenPanelMenuItem Text="Catálogo" Icon="menu_book">
-                <RadzenPanelMenuItem Text="Marcas" Icon="sell" Path="/marcas" />
-                <RadzenPanelMenuItem Text="Modelos" Icon="category" Path="/modelos" />
-                <RadzenPanelMenuItem Text="Características" Icon="tune" Path="/caracteristicas" />
+                <RadzenPanelMenuItem Text="Marcas" Icon="sell" Path="@RutaMarcas"
+                                     Match="@Coincidencia(RutaMarcas)" />
+                <RadzenPanelMenuItem Text="Modelos" Icon="category" Path="@RutaModelos"
+                                     Match="@Coincidencia(RutaModelos)" />
+                <RadzenPanelMenuItem Text="Características" Icon="tune" Path="@RutaCaracteristicas"
+                                     Match="@Coincidencia(RutaCaracteristicas)" />
                 <AuthorizeView Roles="@Roles.Administrador" Context="soloAdmin">
-                    <RadzenPanelMenuItem Text="Importar de fábrica" Icon="cloud_download" Path="/fabrica" />
+                    <RadzenPanelMenuItem Text="Importar de fábrica" Icon="cloud_download" Path="@RutaFabrica"
+                                         Match="@Coincidencia(RutaFabrica)" />
                 </AuthorizeView>
             </RadzenPanelMenuItem>
 
             <RadzenPanelMenuItem Text="Ventas" Icon="receipt_long">
-                <RadzenPanelMenuItem Text="Listado" Icon="list_alt" Path="/ventas" />
-                <RadzenPanelMenuItem Text="Nueva venta" Icon="add_shopping_cart" Path="/ventas/nueva" />
+                <RadzenPanelMenuItem Text="Listado" Icon="list_alt" Path="@RutaVentas"
+                                     Match="@Coincidencia(RutaVentas)" />
+                <RadzenPanelMenuItem Text="Nueva venta" Icon="add_shopping_cart" Path="@RutaVentaNueva"
+                                     Match="@Coincidencia(RutaVentaNueva)" />
             </RadzenPanelMenuItem>
 
-            <RadzenPanelMenuItem Text="Clientes" Icon="groups" Path="/clientes" />
+            <RadzenPanelMenuItem Text="Clientes" Icon="groups" Path="@RutaClientes"
+                                 Match="@Coincidencia(RutaClientes)" />
 
             <RadzenPanelMenuItem Text="Red comercial" Icon="hub">
-                <RadzenPanelMenuItem Text="Concesionario" Icon="store" Path="/concesionario" />
-                <RadzenPanelMenuItem Text="Servicios oficiales" Icon="build" Path="/servicios-oficiales" />
+                <RadzenPanelMenuItem Text="Concesionario" Icon="store" Path="@RutaConcesionario"
+                                     Match="@Coincidencia(RutaConcesionario)" />
+                <RadzenPanelMenuItem Text="Servicios oficiales" Icon="build" Path="@RutaServicios"
+                                     Match="@Coincidencia(RutaServicios)" />
                 <AuthorizeView Roles="@Roles.Administrador" Context="soloAdmin">
-                    <RadzenPanelMenuItem Text="Vendedores" Icon="badge" Path="/vendedores" />
+                    <RadzenPanelMenuItem Text="Vendedores" Icon="badge" Path="@RutaVendedores"
+                                         Match="@Coincidencia(RutaVendedores)" />
                 </AuthorizeView>
             </RadzenPanelMenuItem>
         </AuthorizeView>
 
         <AuthorizeView Roles="@Roles.Administrador">
             <RadzenPanelMenuItem Text="Seguridad" Icon="admin_panel_settings">
-                <RadzenPanelMenuItem Text="Usuarios" Icon="manage_accounts" Path="/usuarios" />
-                <RadzenPanelMenuItem Text="Registrar usuario" Icon="person_add" Path="/usuarios/nuevo" />
+                <RadzenPanelMenuItem Text="Usuarios" Icon="manage_accounts" Path="@RutaUsuarios"
+                                     Match="@Coincidencia(RutaUsuarios)" />
+                <RadzenPanelMenuItem Text="Registrar usuario" Icon="person_add" Path="@RutaUsuarioNuevo"
+                                     Match="@Coincidencia(RutaUsuarioNuevo)" />
             </RadzenPanelMenuItem>
         </AuthorizeView>
 
     </RadzenPanelMenu>
 </nav>
+
+@code {
+    private const string RutaInicio = "/";
+    private const string RutaAutomoviles = "/automoviles";
+    private const string RutaStock = "/stock";
+    private const string RutaLote = "/automoviles/lote";
+    private const string RutaMarcas = "/marcas";
+    private const string RutaModelos = "/modelos";
+    private const string RutaCaracteristicas = "/caracteristicas";
+    private const string RutaFabrica = "/fabrica";
+    private const string RutaVentas = "/ventas";
+    private const string RutaVentaNueva = "/ventas/nueva";
+    private const string RutaClientes = "/clientes";
+    private const string RutaConcesionario = "/concesionario";
+    private const string RutaServicios = "/servicios-oficiales";
+    private const string RutaVendedores = "/vendedores";
+    private const string RutaUsuarios = "/usuarios";
+    private const string RutaUsuarioNuevo = "/usuarios/nuevo";
+
+    /// <summary>
+    /// Todas las rutas del menú. Se consultan en conjunto para saber cuál es la
+    /// más específica en cada momento; añadir una entrada nueva aquí basta para
+    /// que el mecanismo la tenga en cuenta.
+    /// </summary>
+    private static readonly string[] Rutas =
+    [
+        RutaInicio, RutaAutomoviles, RutaStock, RutaLote,
+        RutaMarcas, RutaModelos, RutaCaracteristicas, RutaFabrica,
+        RutaVentas, RutaVentaNueva, RutaClientes,
+        RutaConcesionario, RutaServicios, RutaVendedores,
+        RutaUsuarios, RutaUsuarioNuevo
+    ];
+
+    private string rutaActual = RutaInicio;
+
+    protected override void OnInitialized()
+    {
+        rutaActual = RutaRelativa(Nav.Uri);
+        Nav.LocationChanged += AlCambiarUbicacion;
+    }
+
+    public void Dispose() => Nav.LocationChanged -= AlCambiarUbicacion;
+
+    private void AlCambiarUbicacion(object? remitente, LocationChangedEventArgs args)
+    {
+        rutaActual = RutaRelativa(args.Location);
+        StateHasChanged();
+    }
+
+    /// <summary>
+    /// Devuelve la coincidencia que debe usar una entrada del menú.
+    /// </summary>
+    /// <remarks>
+    /// Solo la ruta más específica usa coincidencia por prefijo, de modo que es
+    /// la única que queda activa. Además, al ser por prefijo, sigue marcándose
+    /// cuando se navega a una página hija que no está en el menú —el detalle de
+    /// un automóvil, por ejemplo—, que es el comportamiento deseado.
+    /// Las demás pasan a coincidencia exacta y, al no serlo, quedan apagadas.
+    /// </remarks>
+    private NavLinkMatch Coincidencia(string ruta)
+        => ruta == RutaMasEspecifica() ? NavLinkMatch.Prefix : NavLinkMatch.All;
+
+    /// <summary>Ruta del menú más larga que encaja con la dirección actual.</summary>
+    private string RutaMasEspecifica()
+    {
+        var elegida = RutaInicio;
+
+        foreach (var ruta in Rutas)
+        {
+            if (!EncajaCon(ruta, rutaActual)) continue;
+            if (ruta.Length > elegida.Length) elegida = ruta;
+        }
+
+        return elegida;
+    }
+
+    /// <summary>
+    /// Comprueba que la ruta sea un segmento completo de la dirección actual:
+    /// «/venta» no debe considerarse parte de «/ventas».
+    /// </summary>
+    private static bool EncajaCon(string ruta, string actual)
+    {
+        if (ruta == RutaInicio) return true;
+        if (!actual.StartsWith(ruta, StringComparison.OrdinalIgnoreCase)) return false;
+
+        return actual.Length == ruta.Length || actual[ruta.Length] == '/';
+    }
+
+    private string RutaRelativa(string uri)
+    {
+        var relativa = Nav.ToBaseRelativePath(uri);
+        var sinConsulta = relativa.Split('?', '#')[0].TrimEnd('/');
+
+        return "/" + sinConsulta;
+    }
+}

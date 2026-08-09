@@ -48,7 +48,8 @@ public sealed class AvisosUi
         {
             Severity = severidad,
             Summary = resumen,
-            Detail = detalle,
+            // Detail no admite nulos: se omite el segundo renglón si no hay detalle.
+            Detail = detalle ?? string.Empty,
             Duration = duracion
         });
 }

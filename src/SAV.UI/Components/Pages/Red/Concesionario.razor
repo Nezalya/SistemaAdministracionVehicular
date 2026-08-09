@@ -203,11 +203,11 @@
         public string Nombre { get; set; } = string.Empty;
 
         [Required(ErrorMessage = "El NIF es obligatorio.")]
-        [RegularExpression(@"^\d{11}$", ErrorMessage = "El NIF debe contener exactamente 11 dígitos.")]
+        [RegularExpression(@"^\d{11}$", ErrorMessage = "El NIF debe contener exactamente 11 caracteres numericos.")]
         public string Nif { get; set; } = string.Empty;
 
         [Required(ErrorMessage = "El teléfono es obligatorio.")]
-        [RegularExpression(@"^\d{10}$", ErrorMessage = "El teléfono debe contener exactamente 10 dígitos.")]
+        [RegularExpression(@"^\d{10}$", ErrorMessage = "El teléfono debe contener exactamente 10 caracteres numericos.")]
         public string Telefono { get; set; } = string.Empty;
 
         [Required(ErrorMessage = "El correo es obligatorio.")]
