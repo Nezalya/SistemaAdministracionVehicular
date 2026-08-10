@@ -49,13 +49,15 @@
                     }
                     else
                     {
+                        @* Sin TitleTemplate: ese contenido se pinta en el hueco
+                           central del donut, y el <span class="sav-ayuda"> traía
+                           el tamaño y el color del texto de ayuda de formulario,
+                           que ahí quedaba descolocado. El panel ya se titula
+                           «Situación del inventario» y la leyenda identifica la
+                           serie, así que el rótulo central sobraba. *@
                         <RadzenChart>
                             <RadzenDonutSeries Data="@DatosInventario" CategoryProperty="Etiqueta"
-                                               ValueProperty="Cantidad" Title="Automóviles">
-                                <TitleTemplate>
-                                    <span class="sav-ayuda">Inventario</span>
-                                </TitleTemplate>
-                            </RadzenDonutSeries>
+                                               ValueProperty="Cantidad" Title="Automóviles" />
                         </RadzenChart>
                     }
                 </section>
