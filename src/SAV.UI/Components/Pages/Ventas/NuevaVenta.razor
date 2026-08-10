@@ -78,55 +78,77 @@
 
         @* ---------------------------------------------------- 2. Cliente *@
         <RadzenStepsItem Text="Cliente">
-            <EstadoDatos TDato="IReadOnlyList<ClienteDto>" Datos="clientes" Cargando="cargandoClientes"
-                         Error="@errorClientes" AlReintentar="CargarClientesAsync"
-                         IconoVacio="groups"
-                         TituloVacio="Aún no hay clientes"
-                         TextoVacio="Da de alta el cliente para poder continuar con la venta.">
-                <AccionVacio>
-                    <RadzenButton Text="Nuevo cliente" Icon="person_add" Click="CrearClienteAsync" />
-                </AccionVacio>
+            @* El desplegable NO puede vivir dentro de EstadoDatos: al buscar en
+               servidor, cada pulsación alternaba Cargando/Datos/Error y Blazor
+               desmontaba el control a media escritura, perdiendo el texto y el
+               foco. EstadoDatos gobierna solo la carga inicial; a partir de ahí
+               el desplegable permanece montado pase lo que pase. *@
+            @if (cargandoClientesInicial)
+            {
+                <EstadoDatos TDato="object" Cargando="true" TextoCargando="Cargando clientes…" />
+            }
+            else if (errorClientesInicial is not null)
+            {
+                <EstadoDatos TDato="object" Cargando="false" Error="@errorClientesInicial"
+                             AlReintentar="CargarClientesAsync" />
+            }
+            else if (!hayAlgunCliente)
+            {
+                <EstadoDatos TDato="object" Cargando="false"
+                             IconoVacio="groups"
+                             TituloVacio="Aún no hay clientes"
+                             TextoVacio="Da de alta el cliente para poder continuar con la venta.">
+                    <AccionVacio>
+                        <RadzenButton Text="Nuevo cliente" Icon="person_add" Click="CrearClienteAsync" />
+                    </AccionVacio>
+                </EstadoDatos>
+            }
+            else
+            {
+                <div class="sav-fila" style="justify-content:space-between">
+                    <p class="sav-ayuda">Selecciona quién compra el vehículo.</p>
+                    <RadzenButton Text="Nuevo cliente" Icon="person_add" Variant="Variant.Outlined"
+                                  ButtonStyle="ButtonStyle.Base" Size="ButtonSize.Small"
+                                  Click="CrearClienteAsync" />
+                </div>
 
-                <ChildContent>
-                    <div class="sav-fila" style="justify-content:space-between">
-                        <p class="sav-ayuda">Selecciona quién compra el vehículo.</p>
-                        <RadzenButton Text="Nuevo cliente" Icon="person_add" Variant="Variant.Outlined"
-                                      ButtonStyle="ButtonStyle.Base" Size="ButtonSize.Small"
-                                      Click="CrearClienteAsync" />
-                    </div>
-
-                    <div class="sav-campo sav-separado-corto">
-                        <label class="sav-label" for="cliente">Cliente</label>
-                        @* La búsqueda se resuelve en el servidor: no se descarga
-                           la lista completa de clientes al abrir la pantalla. *@
-                        <RadzenDropDown @bind-Value="clienteId" Data="@clientes" Name="cliente"
-                                        TextProperty="Nombre" ValueProperty="Id"
-                                        AllowFiltering="true" LoadData="BuscarClientesAsync"
-                                        FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive"
-                                        Placeholder="Busca por nombre o NIF…" class="sav-input" />
-                    </div>
-
-                    @if (ClienteSeleccionado is not null)
+                <div class="sav-campo sav-separado-corto">
+                    <label class="sav-label" for="cliente">Cliente</label>
+                    @* La búsqueda se resuelve en el servidor: no se descarga
+                       la lista completa de clientes al abrir la pantalla. *@
+                    <RadzenDropDown TValue="int?" @bind-Value="clienteId" Data="@clientes" Name="cliente"
+                                    TextProperty="Nombre" ValueProperty="Id"
+                                    AllowFiltering="true" AllowClear="true"
+                                    LoadData="BuscarClientesAsync"
+                                    Change="AlCambiarCliente"
+                                    Placeholder="Busca por nombre, NIF, correo o teléfono…"
+                                    class="sav-input" />
+                    @if (buscandoClientes)
                     {
-                        <div class="sav-panel sav-separado">
-                            <dl class="sav-datos">
-                                <div>
-                                    <p class="sav-dato__etiqueta">Nombre</p>
-                                    <p class="sav-dato__valor">@ClienteSeleccionado.Nombre</p>
-                                </div>
-                                <div>
-                                    <p class="sav-dato__etiqueta">NIF</p>
-                                    <p class="sav-dato__valor">@ClienteSeleccionado.Nif</p>
-                                </div>
-                                <div>
-                                    <p class="sav-dato__etiqueta">Contacto</p>
-                                    <p class="sav-dato__valor">@Formato.OGuion(ClienteSeleccionado.Telefono)</p>
-                                </div>
-                            </dl>
-                        </div>
+                        <p class="sav-ayuda">Buscando…</p>
                     }
-                </ChildContent>
-            </EstadoDatos>
+                </div>
+
+                @if (clienteSeleccionado is not null)
+                {
+                    <div class="sav-panel sav-separado">
+                        <dl class="sav-datos">
+                            <div>
+                                <p class="sav-dato__etiqueta">Nombre</p>
+                                <p class="sav-dato__valor">@clienteSeleccionado.Nombre</p>
+                            </div>
+                            <div>
+                                <p class="sav-dato__etiqueta">NIF</p>
+                                <p class="sav-dato__valor">@clienteSeleccionado.Nif</p>
+                            </div>
+                            <div>
+                                <p class="sav-dato__etiqueta">Contacto</p>
+                                <p class="sav-dato__valor">@Formato.OGuion(clienteSeleccionado.Telefono)</p>
+                            </div>
+                        </dl>
+                    </div>
+                }
+            }
 
             <div class="sav-form__acciones">
                 <RadzenButton Text="Atrás" Icon="arrow_back" Variant="Variant.Text"
@@ -290,7 +312,7 @@
                         </div>
                         <div>
                             <p class="sav-dato__etiqueta">Cliente</p>
-                            <p class="sav-dato__valor">@ClienteSeleccionado?.Nombre</p>
+                            <p class="sav-dato__valor">@clienteSeleccionado?.Nombre</p>
                         </div>
                         <div>
                             <p class="sav-dato__etiqueta">Extras</p>
@@ -329,9 +351,23 @@
     // Paso 2
     private IReadOnlyList<ClienteDto>? clientes;
     private int? clienteId;
-    private bool cargandoClientes = true;
-    private string? errorClientes;
-    private ClienteDto? ClienteSeleccionado => clientes?.FirstOrDefault(c => c.Id == clienteId);
+
+    /// <summary>
+    /// El cliente elegido se guarda aparte de la lista de resultados. Si se
+    /// dedujera de <c>clientes</c>, al teclear otra búsqueda desaparecería del
+    /// listado y el panel de datos quedaría en blanco con la venta ya asignada.
+    /// </summary>
+    private ClienteDto? clienteSeleccionado;
+
+    // La carga inicial sí puede gobernar la pantalla; los refiltrados no.
+    private bool cargandoClientesInicial = true;
+    private string? errorClientesInicial;
+    private bool hayAlgunCliente;
+    private bool buscandoClientes;
+
+    /// <summary>Descarta las respuestas que otra búsqueda más reciente ya superó.</summary>
+    private int secuenciaBusqueda;
+    private CancellationTokenSource? ctsBusqueda;
 
     // Paso 3
     private ConfiguracionModeloDto? configuracion;
@@ -398,31 +434,89 @@
         cargandoAutos = false;
     }
 
-    private async Task CargarClientesAsync() => await BuscarClientesAsync(null);
-
     /// <summary>
-    /// Alimenta el desplegable de clientes. Se dispara al abrirlo y al teclear,
-    /// de modo que la búsqueda la resuelve el servidor y no el navegador.
+    /// Primera carga. Es la única que puede gobernar la pantalla: decide si hay
+    /// clientes en el sistema y si se pudo contactar con la API.
     /// </summary>
-    private async Task BuscarClientesAsync(LoadDataArgs? args)
+    private async Task CargarClientesAsync()
     {
-        cargandoClientes = true;
-        errorClientes = null;
+        cargandoClientesInicial = true;
+        errorClientesInicial = null;
 
-        var filtro = new FiltroClienteDto
+        var resultado = await ClienteApi.BuscarAsync(new FiltroClienteDto
         {
             Page = 1,
             PageSize = 25,
-            SortBy = "nombre",
-            Busqueda = string.IsNullOrWhiteSpace(args?.Filter) ? null : args.Filter
-        };
+            SortBy = "nombre"
+        });
 
-        var resultado = await ClienteApi.BuscarAsync(filtro);
+        if (resultado.Exito && resultado.Datos is not null)
+        {
+            clientes = resultado.Datos.Items;
+            hayAlgunCliente = resultado.Datos.TotalCount > 0;
+        }
+        else
+        {
+            errorClientesInicial = resultado.Mensaje;
+        }
 
-        if (resultado.Exito && resultado.Datos is not null) clientes = resultado.Datos.Items;
-        else errorClientes = resultado.Mensaje;
+        cargandoClientesInicial = false;
+    }
 
-        cargandoClientes = false;
+    /// <summary>
+    /// Alimenta el desplegable mientras el usuario teclea; la búsqueda la
+    /// resuelve el servidor y no el navegador. Nunca desmonta el control ni
+    /// vacía la lista ante un fallo: se conservan los últimos resultados
+    /// válidos para que se pueda seguir escribiendo.
+    /// </summary>
+    private async Task BuscarClientesAsync(LoadDataArgs args)
+    {
+        var miSecuencia = ++secuenciaBusqueda;
+
+        // Escribir rápido lanza peticiones solapadas. Sin esto ganaría la que
+        // respondiera última, no la que el usuario escribió última.
+        ctsBusqueda?.Cancel();
+        ctsBusqueda?.Dispose();
+        ctsBusqueda = new CancellationTokenSource();
+
+        buscandoClientes = true;
+
+        try
+        {
+            var resultado = await ClienteApi.BuscarAsync(new FiltroClienteDto
+            {
+                Page = 1,
+                PageSize = 25,
+                SortBy = "nombre",
+                Busqueda = string.IsNullOrWhiteSpace(args.Filter) ? null : args.Filter.Trim()
+            }, ctsBusqueda.Token);
+
+            if (miSecuencia != secuenciaBusqueda) return; // respuesta obsoleta
+
+            if (resultado.Exito && resultado.Datos is not null)
+                clientes = resultado.Datos.Items;
+        }
+        catch (OperationCanceledException)
+        {
+            // Búsqueda superada por otra más reciente: no es un error.
+        }
+        finally
+        {
+            if (miSecuencia == secuenciaBusqueda) buscandoClientes = false;
+        }
+    }
+
+    /// <summary>Fija el cliente elegido a partir de los resultados visibles.</summary>
+    private void AlCambiarCliente(object? _)
+    {
+        if (clienteId is null)
+        {
+            clienteSeleccionado = null;
+            return;
+        }
+
+        var encontrado = clientes?.FirstOrDefault(c => c.Id == clienteId);
+        if (encontrado is not null) clienteSeleccionado = encontrado;
     }
 
     private async Task CargarResponsablesAsync()
@@ -506,7 +600,9 @@
             if (recientes.Exito && recientes.Datos is not null)
             {
                 clientes = recientes.Datos.Items;
-                clienteId = clientes.FirstOrDefault()?.Id;
+                clienteSeleccionado = clientes.FirstOrDefault();
+                clienteId = clienteSeleccionado?.Id;
+                hayAlgunCliente = true;
             }
         }
     }

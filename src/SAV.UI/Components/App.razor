@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <base href="/" />
     <ResourcePreloader />
-    <RadzenTheme Theme="material" Wcag="true" @rendermode="@ModoDeRenderizado" />
+    <RadzenTheme Theme="@TemaInicial" Wcag="true" @rendermode="@ModoDeRenderizado" />
     <link rel="stylesheet" href="@Assets["app.css"]" />
     <link rel="stylesheet" href="@Assets["SAV.UI.styles.css"]" />
     <ImportMap />
@@ -32,4 +32,27 @@
     // para emitir o eliminar la cookie de autenticación.
     private IComponentRenderMode? ModoDeRenderizado =>
         HttpContext.AcceptsInteractiveRouting() ? InteractiveServer : null;
+
+    // Nombre de la cookie que escribe CookieThemeService (configurado en Program.cs).
+    private const string CookieTema = "SAV.Theme";
+    private const string TemaClaro = "material";
+    private const string TemaOscuro = "material-dark";
+
+    /// <summary>
+    /// Tema con el que arranca la página, leído de la cookie de preferencia.
+    /// </summary>
+    /// <remarks>
+    /// Antes el tema estaba escrito a fuego («material»), así que cada recarga
+    /// completa volvía a claro por mucho que el usuario hubiera elegido oscuro:
+    /// CookieThemeService persiste la preferencia desde el navegador, pero nadie
+    /// la leía en el servidor. Resolverla aquí, antes del primer renderizado,
+    /// hace que la página se pinte ya con el tema correcto y evita el parpadeo
+    /// de claro a oscuro al conectarse el circuito.
+    ///
+    /// La cookie la escribe el navegador, así que su valor es de origen no
+    /// confiable y alimenta la ruta del CSS del tema: por eso no se propaga tal
+    /// cual, solo se admite el tema oscuro conocido y todo lo demás cae en claro.
+    /// </remarks>
+    private string TemaInicial =>
+        HttpContext.Request.Cookies[CookieTema] == TemaOscuro ? TemaOscuro : TemaClaro;
 }
