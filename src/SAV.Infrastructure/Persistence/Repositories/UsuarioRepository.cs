@@ -15,5 +15,10 @@
         {
             return await _entities.FirstOrDefaultAsync(u => u.Email == email);
         }
+
+        public async Task<Usuario?> ObtenerPorVendedorId(int vendedorId)
+        {
+            return await _entities.FirstOrDefaultAsync(u => u.VendedorId == vendedorId);
+        }
     }
 }

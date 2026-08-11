@@ -5,10 +5,12 @@
         private readonly IVendedorRepository _vendedorRepository;
         private readonly IConcesionarioRepository _concesionarioRepository;
         private readonly IVentaRepository _ventaRepository;
-        public VendedorService(IVendedorRepository vendedorRepository, IConcesionarioRepository concesionarioRepository)
+        private readonly IUsuarioRepository _usuarioRepository;
+        public VendedorService(IVendedorRepository vendedorRepository, IConcesionarioRepository concesionarioRepository, IUsuarioRepository usuarioRepository)
         {
             _vendedorRepository = vendedorRepository;
             _concesionarioRepository = concesionarioRepository;
+            _usuarioRepository = usuarioRepository;
         }
         public async Task<IEnumerable<Vendedor>> ObtenerTodosLosVendedores()
         {
@@ -48,6 +50,9 @@
             if (await _vendedorRepository.TieneVentas(id))
                 throw new BusinessException(
                     "No se puede eliminar el vendedor porque tiene ventas registradas.");
+            var cuenta = await _usuarioRepository.ObtenerPorVendedorId(id);
+            if (cuenta is not null)
+                await _usuarioRepository.Delete(cuenta.Id);
 
             await _vendedorRepository.Delete(id);
             await _vendedorRepository.SaveChanges();
